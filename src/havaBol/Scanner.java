@@ -19,11 +19,20 @@ public class Scanner {
 	private int linePosition;
 	private int lineNumber;
 	
-	private StringBuilder tokenBuilder = new StringBuilder();
+	private StringBuilder tokenBuilder;
 
+	/**
+	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
+	 * Local line number information will be initilized to 1
+	 * 
+	 * @param path - Path to the HavaBol source code we are scanning in
+	 * @param symbolTable - SymbolTable object used to store symbols and keywords
+	 * @throws IOException - If the file is not found or is not in a readable format throw an IOException
+	 */
 	public Scanner(String path, SymbolTable symbolTable) throws IOException {
 		FileReader reader = new FileReader(path);
 		file = new BufferedReader(reader);
+		tokenBuilder = new StringBuilder();
 		this.symbolTable = symbolTable;
 		this.currentToken = new Token();
 		this.nextToken = new Token();
@@ -33,7 +42,14 @@ public class Scanner {
 		this.linePosition = 0;
 	}
 
-	public String getNext() throws IOException {
+	/**
+	 * Populates the public currentToken property with the appropriate token information and
+	 * returns the Token's tokenString value
+	 * 
+	 * @return a String representation of the token
+	 * @throws Exception 
+	 */
+	public String getNext() throws Exception {
 		
 		int tokenStart;
 		int tokenEnd;
@@ -64,11 +80,9 @@ public class Scanner {
 			}
 		}
 		tokenStart = linePosition;	
-		//tokenBuilder.append(Character.toString(currentLine[linePosition]));
 		
 		while (!delimiters.contains( Character.toString(currentLine[linePosition]) )) {
 			linePosition++;
-			//tokenBuilder.append(Character.toString(currentLine[linePosition]));
 		}
 		tokenEnd = linePosition;
 		
@@ -77,7 +91,15 @@ public class Scanner {
 		return this.currentToken.tokenStr;
 	}
 
-	private void classify(int tokenStart, int tokenEnd) throws IOException {
+	/***
+	 * Sets the primClassif and subClassf features of the currentToken depending
+	 * on the string found within tokenStart and tokenEnd on the currentLine
+	 * 
+	 * @param tokenStart - Beginning index of the token
+	 * @param tokenEnd - Ending index of the token
+	 * @throws Exception
+	 */
+	private void classify(int tokenStart, int tokenEnd) throws Exception {
 		
 		this.currentToken.iSourceLineNr = this.lineNumber;
 		this.currentToken.iColPos = tokenStart;
@@ -103,8 +125,14 @@ public class Scanner {
 		
 	}
 
+	/**
+	 * Helper method to the classify method used to set values for a numeric constant
+	 * 
+	 * @param tokenStart - Beginning index of the token
+	 * @param tokenEnd - Ending index of the token
+	 * @throws NumberFormatException
+	 */
 	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws NumberFormatException {
-		// TODO Auto-generated method stub
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		
 		if (token.contains("."))
@@ -123,6 +151,12 @@ public class Scanner {
 		}
 	}
 
+	/**
+	 * Helper method to the classify method used to set values for a numeric constant
+	 * 
+	 * @param tokenStart - Beginning index of the token
+	 * @param tokenEnd - Ending index of the token
+	 */
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 		
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
@@ -131,7 +165,14 @@ public class Scanner {
 		this.currentToken.tokenStr = token;
 	}
 
-	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws IOException {
+	/**
+	 * Helper method to the classify method used to set values for a special characters
+	 * 
+	 * @param tokenStart - Beginning index of the token
+	 * @param tokenEnd - Ending index of the token
+	 * @throws Exception
+	 */
+	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws Exception {
 		
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart+1);
 		this.linePosition++;
@@ -171,13 +212,22 @@ public class Scanner {
 		}
 	}
 
-	private void readStringConstant(int tokenStart) {
+	/**
+	 * Helper method used to complete the reading of a string constant. 
+	 * 
+	 * @param tokenStart - Beginning of the string
+	 * @throws StringFormatException - Custom exception in case of a format error
+	 */
+	private void readStringConstant(int tokenStart) throws StringFormatException {
 		
 		int tokenEnd = tokenStart+1;
 		
 		while (currentLine[tokenStart] != currentLine[tokenEnd] || currentLine[tokenEnd-1] == '\\')
 		{
 			tokenEnd++;
+			if (tokenEnd >= currentLine.length)
+				throw new StringFormatException("Invalid string format found");
+			
 		}
 		
 		String token = new String(currentLine, tokenStart+1, tokenEnd - tokenStart - 1);
