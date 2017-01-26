@@ -53,9 +53,6 @@ public class Scanner {
 		
 		int tokenStart;
 		int tokenEnd;
-		int type;
-		boolean isDelimiter;
-		//this.currentToken = this.nextToken;
 		
 		// Skip white space
 		while (currentLine.length == this.linePosition || currentLine[linePosition] == '\t' || currentLine[linePosition] == ' ')
@@ -135,14 +132,14 @@ public class Scanner {
 	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws NumberFormatException {
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		
-		if (token.contains("."))
+		if (token.contains(".")) // For floating point values
 		{
 			Double.parseDouble(token);
 			this.currentToken.primClassif = Token.OPERAND;
 			this.currentToken.subClassif = Token.FLOAT;
 			this.currentToken.tokenStr = token;
 		}
-		else
+		else // For integer values
 		{
 			Integer.parseInt(token);
 			this.currentToken.primClassif = Token.OPERAND;
@@ -188,6 +185,7 @@ public class Scanner {
 		case '=':
 		case '#':
 		case '^':
+			// All above symbols are operators
 			this.currentToken.primClassif = Token.OPERATOR;
 			this.currentToken.subClassif = 0;
 			this.currentToken.tokenStr = token;
@@ -199,12 +197,14 @@ public class Scanner {
 		case '[':
 		case ']':
 		case ',':
+			// All above symbols are separators
 			this.currentToken.primClassif = Token.SEPARATOR;
 			this.currentToken.subClassif = 0;
 			this.currentToken.tokenStr = token;
 			break;
 		case '\'':
 		case '\"':
+			// Symbols used for string constants
 			readStringConstant(tokenStart);
 			break;
 		default:

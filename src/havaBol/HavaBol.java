@@ -18,7 +18,7 @@
 package havaBol;
 
 
-public class HavaBol 
+public class HavaBol
 {
     public static void main(String[] args) 
     {
@@ -38,6 +38,7 @@ public class HavaBol
             {
                 scan.currentToken.printToken();
             }
+            // Print the 
         }
         catch (Exception e)
         {
