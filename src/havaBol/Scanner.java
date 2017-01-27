@@ -24,6 +24,7 @@ public class Scanner {
 	/**
 	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
 	 * Local line number information will be initilized to 1
+	 * <p>
 	 * 
 	 * @param path - Path to the HavaBol source code we are scanning in
 	 * @param symbolTable - SymbolTable object used to store symbols and keywords
@@ -45,6 +46,7 @@ public class Scanner {
 	/**
 	 * Populates the public currentToken property with the appropriate token information and
 	 * returns the Token's tokenString value
+	 * <p>
 	 * 
 	 * @return a String representation of the token
 	 * @throws Exception 
@@ -57,8 +59,10 @@ public class Scanner {
 		// Skip white space
 		while (currentLine.length == this.linePosition || currentLine[linePosition] == '\t' || currentLine[linePosition] == ' ')
 		{
+			// If we have reached the end of the line
 			if (currentLine.length == this.linePosition)
 			{
+				// Read the next line
 				String line = file.readLine();
 				if (line == null)
 				{
@@ -77,12 +81,13 @@ public class Scanner {
 			}
 		}
 		tokenStart = linePosition;	
-		
+		// Find the next delimiter
 		while (!delimiters.contains( Character.toString(currentLine[linePosition]) )) {
 			linePosition++;
 		}
 		tokenEnd = linePosition;
 		
+		// get the classf and subClassf for the token using starting and ending position
 		classify(tokenStart, tokenEnd);
 		
 		return this.currentToken.tokenStr;
@@ -91,6 +96,7 @@ public class Scanner {
 	/***
 	 * Sets the primClassif and subClassf features of the currentToken depending
 	 * on the string found within tokenStart and tokenEnd on the currentLine
+	 * <p>
 	 * 
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
@@ -124,6 +130,7 @@ public class Scanner {
 
 	/**
 	 * Helper method to the classify method used to set values for a numeric constant
+	 * <p>
 	 * 
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
@@ -132,14 +139,16 @@ public class Scanner {
 	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws NumberFormatException {
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		
-		if (token.contains(".")) // For floating point values
+		// For floating point values
+		if (token.contains("."))
 		{
 			Double.parseDouble(token);
 			this.currentToken.primClassif = Token.OPERAND;
 			this.currentToken.subClassif = Token.FLOAT;
 			this.currentToken.tokenStr = token;
 		}
-		else // For integer values
+		// For integer values
+		else 
 		{
 			Integer.parseInt(token);
 			this.currentToken.primClassif = Token.OPERAND;
@@ -150,7 +159,8 @@ public class Scanner {
 
 	/**
 	 * Helper method to the classify method used to set values for a numeric constant
-	 * 
+	 * <p>
+	 * TODO This function will need to be updated to use the SymbolTable for classifications
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 */
@@ -164,6 +174,7 @@ public class Scanner {
 
 	/**
 	 * Helper method to the classify method used to set values for a special characters
+	 * <p>
 	 * 
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
@@ -204,7 +215,7 @@ public class Scanner {
 			break;
 		case '\'':
 		case '\"':
-			// Symbols used for string constants
+			// Above symbols are used for string constants
 			readStringConstant(tokenStart);
 			break;
 		default:
@@ -214,6 +225,7 @@ public class Scanner {
 
 	/**
 	 * Helper method used to complete the reading of a string constant. 
+	 * <p>
 	 * 
 	 * @param tokenStart - Beginning of the string
 	 * @throws StringFormatException - Custom exception in case of a format error
@@ -221,10 +233,11 @@ public class Scanner {
 	private void readStringConstant(int tokenStart) throws StringFormatException {
 		
 		int tokenEnd = tokenStart+1;
-		
+		// While we are still within a valid string constant
 		while (currentLine[tokenStart] != currentLine[tokenEnd] || currentLine[tokenEnd-1] == '\\')
 		{
 			tokenEnd++;
+			// If we have gone past the end of the line
 			if (tokenEnd >= currentLine.length)
 				throw new StringFormatException("Invalid string format found");
 			
