@@ -18,8 +18,8 @@ public class Scanner {
 	private char[] currentLine;
 	private int linePosition;
 	private int lineNumber;
+	private String sourceFileName;
 	
-	private StringBuilder tokenBuilder;
 
 	/**
 	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
@@ -33,7 +33,8 @@ public class Scanner {
 	public Scanner(String path, SymbolTable symbolTable) throws IOException {
 		FileReader reader = new FileReader(path);
 		file = new BufferedReader(reader);
-		tokenBuilder = new StringBuilder();
+		
+		this.sourceFileName = path;
 		this.symbolTable = symbolTable;
 		this.currentToken = new Token();
 		this.nextToken = new Token();
@@ -136,24 +137,39 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws NumberFormatException
 	 */
-	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws NumberFormatException {
+	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws Exception {
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		
 		// For floating point values
 		if (token.contains("."))
 		{
-			Double.parseDouble(token);
-			this.currentToken.primClassif = Token.OPERAND;
-			this.currentToken.subClassif = Token.FLOAT;
-			this.currentToken.tokenStr = token;
+			try
+			{
+				Double.parseDouble(token);
+				this.currentToken.primClassif = Token.OPERAND;
+				this.currentToken.subClassif = Token.FLOAT;
+				this.currentToken.tokenStr = token;
+			}
+			catch (Exception e)
+			{
+				error("Could not parse floating point token %s at position %d", token, tokenStart);
+			}
 		}
 		// For integer values
 		else 
 		{
-			Integer.parseInt(token);
-			this.currentToken.primClassif = Token.OPERAND;
-			this.currentToken.subClassif = Token.INTEGER;
-			this.currentToken.tokenStr = token;
+			try
+			{
+				
+				Integer.parseInt(token);
+				this.currentToken.primClassif = Token.OPERAND;
+				this.currentToken.subClassif = Token.INTEGER;
+				this.currentToken.tokenStr = token;
+			}
+			catch (Exception e)
+			{
+				error("Could not parse integer token %s at position %d", token, tokenStart);
+			}
 		}
 	}
 
@@ -219,7 +235,7 @@ public class Scanner {
 			readStringConstant(tokenStart);
 			break;
 		default:
-				throw new IOException();
+				error("Could not read symbol %c at position %d", currentLine[tokenStart], tokenStart);
 		}
 	}
 
@@ -230,7 +246,7 @@ public class Scanner {
 	 * @param tokenStart - Beginning of the string
 	 * @throws StringFormatException - Custom exception in case of a format error
 	 */
-	private void readStringConstant(int tokenStart) throws StringFormatException {
+	private void readStringConstant(int tokenStart) throws Exception {
 		
 		int tokenEnd = tokenStart+1;
 		// While we are still within a valid string constant
@@ -239,7 +255,7 @@ public class Scanner {
 			tokenEnd++;
 			// If we have gone past the end of the line
 			if (tokenEnd >= currentLine.length)
-				throw new StringFormatException("Invalid string format found");
+				error("Reached end of line while reading string constant at position %d", tokenStart);
 			
 		}
 		
@@ -249,6 +265,14 @@ public class Scanner {
 		this.currentToken.subClassif = Token.STRING;
 		this.currentToken.tokenStr = token;
 	}
+
+	public void error(String fmt, Object... varArgs) throws Exception
+	  {
+	      String diagnosticTxt = String.format(fmt, varArgs);
+	      throw new ParserException(this.lineNumber
+	            , diagnosticTxt
+	            , this.sourceFileName);
+	  }
 
 }
 
