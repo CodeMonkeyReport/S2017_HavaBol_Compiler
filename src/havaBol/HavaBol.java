@@ -36,7 +36,7 @@ public class HavaBol
             Scanner scan = new Scanner(args[0], symbolTable);
             while (! scan.getNext().isEmpty())
             {
-                scan.currentToken.printToken();
+                    scan.currentToken.printToken();
             }
             // Print the 
         }
