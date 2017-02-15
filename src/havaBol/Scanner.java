@@ -299,7 +299,7 @@ public class Scanner {
 
 		int tokenEnd = tokenStart+1;
 		// While we are still within a valid string constant
-		while (currentLine[tokenStart] != currentLine[tokenEnd] || currentLine[tokenEnd-1] == '\\')
+		while (currentLine[tokenStart] != currentLine[tokenEnd] || (currentLine[tokenEnd-1] == '\\' && currentLine[tokenEnd-2] != '\\'))
 		{
 			tokenEnd++;
 			// If we have gone past the end of the line
@@ -324,6 +324,7 @@ public class Scanner {
                         break;
                     case '\\':
                         retCharM[charPosition] = '\\';
+                        break;
                     case 'n':
                         retCharM[charPosition] = 0x0A;
                         break;
