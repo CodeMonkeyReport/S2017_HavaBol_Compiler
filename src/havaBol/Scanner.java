@@ -29,7 +29,8 @@ public class Scanner {
 	 * @param symbolTable - SymbolTable object used to store symbols and keywords
 	 * @throws IOException - If the file is not found or is not in a readable format throw an IOException
 	 */
-	public Scanner(String path, SymbolTable symbolTable) throws IOException {
+	public Scanner(String path, SymbolTable symbolTable) throws Exception 
+	{
 		FileReader reader = new FileReader(path);
 		file = new BufferedReader(reader);
 
@@ -41,17 +42,21 @@ public class Scanner {
         String line = file.readLine();
 		this.currentLine = line.toCharArray();
 		this.lineNumber = 1;
-		this.linePosition = 0;
-        if(line != null)
-            System.out.printf("    %d %s\n", lineNumber+1, line);
-		try {
-			do{
-				getNext();
-			}
-			while(nextToken.tokenStr.isEmpty() && currentLine != null);
-		}catch (Exception exception){
-			exception.printStackTrace();
-		}
+		this.linePosition = 0; // reset position
+		getNext(); // Read the first token into current
+		
+		// What is this code?
+//        if(line != null)
+//            System.out.printf("    %d %s\n", lineNumber+1, line);
+//		try {
+//			do{
+//				getNext();
+//			}
+//			while(nextToken.tokenStr.isEmpty() && currentLine != null);
+//		}catch (Exception exception){
+//			exception.printStackTrace();
+//		}
+		
 	}
 
 	/**
@@ -85,7 +90,6 @@ public class Scanner {
 					nextToken.tokenStr = "";
 					return currentToken.tokenStr;
 				}
-                System.out.printf("    %d %s\n", lineNumber + 1, line);
                 this.currentLine = line.toCharArray();
 				this.lineNumber++;
 				this.linePosition = 0;
@@ -107,7 +111,7 @@ public class Scanner {
 		// get the classf and subClassf for the token using starting and ending position
 		classify(tokenStart, tokenEnd);
 
-		return this.currentToken.tokenStr;
+		return this.nextToken.tokenStr;
 	}
 
 	/***
@@ -199,6 +203,8 @@ public class Scanner {
 	 */
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 
+		// IF stEntry = st.getSymbol() HAS VALUE
+			// 
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		this.nextToken.primClassif = Token.OPERAND;
 		this.nextToken.subClassif = Token.IDENTIFIER;
@@ -236,7 +242,6 @@ public class Scanner {
 						}
 						break;
 					}
-                    System.out.printf("    %d %s\n", lineNumber + 1, line);
 					this.currentLine = line.toCharArray();
 					this.lineNumber++;
 					this.linePosition = 0;
@@ -250,6 +255,8 @@ public class Scanner {
 			case '>':
 			case '!':
 			case '=':
+			case '*':
+			case '#':
                 if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '='))
                 {
                     nextToken.tokenStr = String.valueOf(currentLine, tokenStart, 2);
@@ -258,8 +265,6 @@ public class Scanner {
                     linePosition++;
                     break;
                 }
-            case '*':
-			case '#':
 			case '^':
 				// All above symbols are operators
 				this.nextToken.primClassif = Token.OPERATOR;
