@@ -56,7 +56,6 @@ public class Scanner {
 //		}catch (Exception exception){
 //			exception.printStackTrace();
 //		}
-		
 	}
 
 	/**
@@ -204,7 +203,9 @@ public class Scanner {
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 
 		// IF stEntry = st.getSymbol() HAS VALUE
-			// 
+			// set classifications based on resulting values from stEntry
+		// ELSE st.putSymbol(TOKEN) add the token as an identifier to ST
+		
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		this.nextToken.primClassif = Token.OPERAND;
 		this.nextToken.subClassif = Token.IDENTIFIER;
