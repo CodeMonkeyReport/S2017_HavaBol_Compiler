@@ -11,7 +11,4 @@ public class STControl extends STEntry {
 		
 		this.subClassif = subClassif;
 	}
-	
-	
-
 }

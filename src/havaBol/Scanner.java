@@ -197,16 +197,47 @@ public class Scanner {
 	 * Helper method to the classify method used to set values for a numeric constant
 	 * <p>
 	 * TODO This function will need to be updated to use the SymbolTable for classifications
+	 * Currently classifications are not working, Identifier subClassif not working correctly.
+	 * classification of new functions and identifiers not working correctly. TODO
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 */
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 
+		STEntry found;
+		STControl foundControl;
+		STFunction foundFunction;
+		STIdentifier foundIdentifier;
+		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		// IF stEntry = st.getSymbol() HAS VALUE
+		found = symbolTable.getSymbol(token);
+		if (found != null)
+		{
 			// set classifications based on resulting values from stEntry
+			if (found instanceof STControl)
+			{
+				foundControl = (STControl) found;
+				this.nextToken.primClassif = foundControl.primClassif;
+				this.nextToken.subClassif = foundControl.subClassif;
+				this.nextToken.tokenStr = token;
+			}
+			if (found instanceof STEntry)
+			{
+				foundFunction = (STFunction) found;
+				this.nextToken.primClassif = foundFunction.primClassif;
+				this.nextToken.subClassif = foundFunction.definedBy;
+				this.nextToken.tokenStr = token;
+			}
+			if (found instanceof STIdentifier)
+			{
+				foundIdentifier = (STIdentifier) found;
+				this.nextToken.primClassif = foundIdentifier.primClassif;
+				//this.nextToken.subClassif = foundIdentifier.subClassif;
+				this.nextToken.tokenStr = token;
+			}
+		}
 		// ELSE st.putSymbol(TOKEN) add the token as an identifier to ST
 		
-		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		this.nextToken.primClassif = Token.OPERAND;
 		this.nextToken.subClassif = Token.IDENTIFIER;
 		this.nextToken.tokenStr = token;
