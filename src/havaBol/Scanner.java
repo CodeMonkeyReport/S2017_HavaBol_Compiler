@@ -29,10 +29,10 @@ public class Scanner {
 	 * @param symbolTable - SymbolTable object used to store symbols and keywords
 	 * @throws IOException - If the file is not found or is not in a readable format throw an IOException
 	 */
-	public Scanner(String path, SymbolTable symbolTable) throws Exception 
+	public Scanner(String path, BufferedReader reader, SymbolTable symbolTable) throws Exception 
 	{
-		FileReader reader = new FileReader(path);
-		file = new BufferedReader(reader);
+		//FileReader reader = new FileReader(path);
+		file = reader;
 
 		this.sourceFileName = path;
 		this.symbolTable = symbolTable;
@@ -43,6 +43,7 @@ public class Scanner {
 		this.currentLine = line.toCharArray();
 		this.lineNumber = 1;
 		this.linePosition = 0; // reset position
+		System.out.printf(" %d %s\n", this.lineNumber, line);
 		getNext(); // Read the first token into current
 		
 		// What is this code?
@@ -92,6 +93,7 @@ public class Scanner {
                 this.currentLine = line.toCharArray();
 				this.lineNumber++;
 				this.linePosition = 0;
+				System.out.printf(" %d %s\n", this.lineNumber, line);
 			}
 			else
 			{
@@ -221,7 +223,7 @@ public class Scanner {
 				this.nextToken.subClassif = foundControl.subClassif;
 				this.nextToken.tokenStr = token;
 			}
-			if (found instanceof STEntry)
+			if (found instanceof STFunction)
 			{
 				foundFunction = (STFunction) found;
 				this.nextToken.primClassif = foundFunction.primClassif;
@@ -235,12 +237,20 @@ public class Scanner {
 				//this.nextToken.subClassif = foundIdentifier.subClassif;
 				this.nextToken.tokenStr = token;
 			}
+			else
+			{
+				this.nextToken.primClassif = found.primClassif;
+				this.nextToken.subClassif = found.subClassif;
+				this.nextToken.tokenStr = token;
+			}
 		}
 		// ELSE st.putSymbol(TOKEN) add the token as an identifier to ST
-		
-		this.nextToken.primClassif = Token.OPERAND;
-		this.nextToken.subClassif = Token.IDENTIFIER;
-		this.nextToken.tokenStr = token;
+		else 
+		{
+			this.nextToken.primClassif = Token.OPERAND;
+			this.nextToken.subClassif = Token.IDENTIFIER;
+			this.nextToken.tokenStr = token;
+		}
 	}
 
 	/**

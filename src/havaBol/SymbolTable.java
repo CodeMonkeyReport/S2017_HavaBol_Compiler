@@ -61,11 +61,14 @@ public class SymbolTable {
 	    globalST.put("ELEM", new STFunction("ELEM", Token.INTEGER, Token.BUILTIN, 1));
 	    globalST.put("MAXELEM", new STFunction("MAXELEM", Token.INTEGER, Token.BUILTIN, 1));
 	    
-	    globalST.put("and", new STEntry("and", Token.OPERATOR));
-	    globalST.put("or", new STEntry("or", Token.OPERATOR));
-	    globalST.put("not", new STEntry("not", Token.OPERATOR));
-	    globalST.put("in", new STEntry("in", Token.OPERATOR));
-	    globalST.put("notin", new STEntry("notin", Token.OPERATOR));
+	    globalST.put("and", new STEntry("and", Token.OPERATOR, 0));
+	    globalST.put("or", new STEntry("or", Token.OPERATOR, 0));
+	    globalST.put("not", new STEntry("not", Token.OPERATOR, 0));
+	    globalST.put("in", new STEntry("in", Token.OPERATOR, 0));
+	    globalST.put("notin", new STEntry("notin", Token.OPERATOR, 0));
+	    
+	    globalST.put("T", new STEntry("T", Token.OPERAND, Token.BOOLEAN));
+	    globalST.put("F", new STEntry("F", Token.OPERAND, Token.BOOLEAN));
 	}
 
 }

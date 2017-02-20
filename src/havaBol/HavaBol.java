@@ -17,7 +17,8 @@
  */
 package havaBol;
 
-
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 public class HavaBol
 {
@@ -34,7 +35,12 @@ public class HavaBol
                     , "subClassif"
                     , "tokenStr");
             
-            Scanner scan = new Scanner(args[0], symbolTable);
+            // Used to abstract out the file reader
+            FileReader fr = new FileReader(args[0]);
+            BufferedReader br = new BufferedReader(fr);
+            
+            
+            Scanner scan = new Scanner(args[0], br, symbolTable);
             while (! scan.getNext().isEmpty())
             {
                     scan.currentToken.printToken();

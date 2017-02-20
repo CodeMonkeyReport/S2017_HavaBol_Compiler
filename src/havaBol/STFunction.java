@@ -14,7 +14,7 @@ public class STFunction extends STEntry
 	
 	public STFunction(String symbol, int returnType, int definedBy, int numArgs)
 	{
-		super(symbol, Token.FUNCTION);
+		super(symbol, Token.FUNCTION, definedBy);
 
 		this.returnType = returnType;
 		this.definedBy = definedBy;

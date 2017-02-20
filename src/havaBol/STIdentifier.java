@@ -31,7 +31,7 @@ public class STIdentifier extends STEntry {
 	public STIdentifier(String symbol, int dclType, int structure, int parm, int nonlocal )
 	{
 		
-		super(symbol, Token.OPERAND);
+		super(symbol, Token.OPERAND, 0);
 		
 		this.dclType = dclType;
 		this.structure = structure;

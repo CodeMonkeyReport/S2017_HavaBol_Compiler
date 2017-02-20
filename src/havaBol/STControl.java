@@ -7,7 +7,7 @@ public class STControl extends STEntry {
 	
 	public STControl(String symbol, int subClassif)
 	{
-		super(symbol, Token.CONTROL);
+		super(symbol, Token.CONTROL, subClassif);
 		
 		this.subClassif = subClassif;
 	}
