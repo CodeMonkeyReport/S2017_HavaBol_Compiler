@@ -1,8 +1,6 @@
 package havaBol;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 
 public class Scanner {
@@ -46,17 +44,6 @@ public class Scanner {
 		System.out.printf(" %d %s\n", this.lineNumber, line);
 		getNext(); // Read the first token into current
 		
-		// What is this code?
-//        if(line != null)
-//            System.out.printf("    %d %s\n", lineNumber+1, line);
-//		try {
-//			do{
-//				getNext();
-//			}
-//			while(nextToken.tokenStr.isEmpty() && currentLine != null);
-//		}catch (Exception exception){
-//			exception.printStackTrace();
-//		}
 	}
 
 	/**
@@ -69,7 +56,6 @@ public class Scanner {
 	 */
 	public String getNext() throws Exception {
 
-		//System.out.println(currentToken.tokenStr);
 		currentToken = nextToken;
 		nextToken = new Token();
 		int tokenStart;
@@ -211,7 +197,6 @@ public class Scanner {
 		STFunction foundFunction;
 		STIdentifier foundIdentifier;
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
-		// IF stEntry = st.getSymbol() HAS VALUE
 		found = symbolTable.getSymbol(token);
 		if (found != null)
 		{
@@ -234,7 +219,7 @@ public class Scanner {
 			{
 				foundIdentifier = (STIdentifier) found;
 				this.nextToken.primClassif = foundIdentifier.primClassif;
-				//this.nextToken.subClassif = foundIdentifier.subClassif;
+				this.nextToken.subClassif = Token.IDENTIFIER;
 				this.nextToken.tokenStr = token;
 			}
 			else
@@ -256,7 +241,8 @@ public class Scanner {
 	/**
 	 * Helper method to the classify method used to set values for a special characters
 	 * <p>
-	 *
+	 * Also handles skipping comments and combination of two character operators.
+	 * <p>
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 * @throws Exception
@@ -338,7 +324,8 @@ public class Scanner {
 	/**
 	 * Helper method used to complete the reading of a string constant.
 	 * <p>
-	 *
+	 * Also handles escape characters and replaces them with the correct byte codes.
+	 * <p>
 	 * @param tokenStart - Beginning of the string
 	 * @throws Exception - Custom exception in case of a format error
 	 */
@@ -402,6 +389,13 @@ public class Scanner {
 		this.nextToken.tokenStr = String.valueOf(retCharM,0,charPosition);
 	}
 
+	/**
+	 * Error method used to print appropriate messages to the user in the case of syntax errors.
+	 * <p>
+	 * @param fmt - Format string
+	 * @param varArgs - Any number of arguments used by the format string to print the error message
+	 * @throws Exception - Once the error has been generated throw a custom ParserException with the correct string representation
+	 */
 	public void error(String fmt, Object... varArgs) throws Exception
 	{
 		String diagnosticTxt = String.format(fmt, varArgs);
