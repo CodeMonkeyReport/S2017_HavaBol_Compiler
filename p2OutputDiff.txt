@@ -1,0 +1,289 @@
+2c2
+<  1 Int i;
+---
+>   1 Int i;
+5c5
+<  2 Float pi;
+---
+>   2 Float pi;
+9c9
+<  3 String day;
+---
+>   3 String day;
+13c13
+<  4    day 
+---
+>   4    day 
+15c15
+<  5    = 
+---
+>   5    = 
+17c17
+<  6    "Sunday";
+---
+>   6    "Sunday";
+20c20,21
+<  7 String name;
+---
+>                                
+>   7 String name;
+24c25
+<  8 name = "Anita Goodgrade";
+---
+>   8 name = "Anita Goodgrade";
+29c30,31
+<  9 String weird;
+---
+>                                         
+>   9 String weird;
+47a50
+>                            
+49a53
+>  15 print(">>> Checking datatype results based on left operand");
+53a58
+>                                                                             
+83a89
+>  22 print("\t1. area all float");
+109a116
+>                                  
+115a123
+>                               
+153a162
+>                                
+157a167
+>                               
+199a210
+>                                
+203a215
+>                                 
+237a250
+>                                
+241a255
+>                                 
+246a261
+>  47 i = 0;
+255a271
+>                                      
+262a279,281
+>                            
+>  50     // It is TX
+>  51     print("\tloc is", loc);
+271a291,292
+>  53     // That is why we have a semicolon
+>  54     i 
+296a318
+>                                       
+298a321
+>  63 if i >= 5:
+328a352
+>  69 print(">>> First while i < 5");    
+332a357
+>                                               
+381a407
+>                            
+403,604c429
+< CONTROL     END          endif
+<  81     else:
+< SEPARATOR   -            ;
+< CONTROL     END          else
+<  82         print("\twhile first if false i<3, i=", i);
+< SEPARATOR   -            :
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . while first if false i<3, i=
+<                          09                            
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    i
+< SEPARATOR   -            )
+<  83         if loc=="TX":
+< SEPARATOR   -            ;
+< CONTROL     FLOW         if
+< OPERAND     IDENTFIER    loc
+< OPERATOR    -            ==
+< OPERAND     STRING       TX
+<  84              print("\t\twhile 2nd inner if true loc=='TX', loc is", loc);
+< SEPARATOR   -            :
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . . while 2nd inner if true loc=='TX', loc is
+<                          0909                                         
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    loc
+< SEPARATOR   -            )
+<  85              i = i + 1;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            =
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            +
+< OPERAND     INTEGER      1
+<  86         else:
+< SEPARATOR   -            ;
+< CONTROL     END          else
+<  87              print("\t\twhile 2nd inner if false ... wrong");
+< SEPARATOR   -            :
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . . while 2nd inner if false ... wrong
+<                          0909                                  
+< SEPARATOR   -            )
+<  88              i = i + 10;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            =
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            +
+< OPERAND     INTEGER      10
+<  89         endif;
+< SEPARATOR   -            ;
+< CONTROL     END          endif
+<  90         print("\twhile first if false after inner if");
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . while first if false after inner if
+<                          09                                   
+< SEPARATOR   -            )
+<  91     endif;
+< SEPARATOR   -            ;
+< CONTROL     END          endif
+<  92     print("\tbottom of while, i=", i);
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . bottom of while, i=
+<                          09                   
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    i
+< SEPARATOR   -            )
+<  93 endwhile;
+< SEPARATOR   -            ;
+< CONTROL     END          endwhile
+<  94 print("\tAfter first while");
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . After first while
+<                          09                 
+< SEPARATOR   -            )
+<  95 
+<  96 // nested while loops
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       >>> Second while i < 5 ... with nested while
+< SEPARATOR   -            )
+<  98 i = 1;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            =
+< OPERAND     INTEGER      1
+<  99 Int j;
+< SEPARATOR   -            ;
+< CONTROL     DECLARE      Int
+< OPERAND     IDENTFIER    j
+<  100 Bool bFlag;
+< SEPARATOR   -            ;
+< CONTROL     DECLARE      Bool
+< OPERAND     IDENTFIER    bFlag
+<  101 bFlag = T;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    bFlag
+< OPERATOR    -            =
+< OPERAND     BOOLEAN      T
+<  102 while i < 5:
+< SEPARATOR   -            ;
+< CONTROL     FLOW         while
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            <
+< OPERAND     INTEGER      5
+<  103     j = i;
+< SEPARATOR   -            :
+< OPERAND     IDENTFIER    j
+< OPERATOR    -            =
+< OPERAND     IDENTFIER    i
+<  104     print("\ttop of while, i=", i, "j=", j);
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . top of while, i=
+<                          09                
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    i
+< SEPARATOR   -            ,
+< OPERAND     STRING       j=
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    j
+< SEPARATOR   -            )
+<  105     print("\t>>> Inner while j <= 3");
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . >>> Inner while j <= 3
+<                          09                      
+< SEPARATOR   -            )
+<  106     while  j <= 3:
+< SEPARATOR   -            ;
+< CONTROL     FLOW         while
+< OPERAND     IDENTFIER    j
+< OPERATOR    -            <=
+< OPERAND     INTEGER      3
+<  107         print("\t\tinner while, j=", j);
+< SEPARATOR   -            :
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . . inner while, j=
+<                          0909               
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    j
+< SEPARATOR   -            )
+<  108         j = j + 1;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    j
+< OPERATOR    -            =
+< OPERAND     IDENTFIER    j
+< OPERATOR    -            +
+< OPERAND     INTEGER      1
+<  109     endwhile;
+< SEPARATOR   -            ;
+< CONTROL     END          endwhile
+<  110     bFlag = F;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    bFlag
+< OPERATOR    -            =
+< OPERAND     BOOLEAN      F
+<  111     print("\tbottom of while, i=", i, "j=", j);
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . bottom of while, i=
+<                          09                   
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    i
+< SEPARATOR   -            ,
+< OPERAND     STRING       j=
+< SEPARATOR   -            ,
+< OPERAND     IDENTFIER    j
+< SEPARATOR   -            )
+<  112     i = i + 1;
+< SEPARATOR   -            ;
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            =
+< OPERAND     IDENTFIER    i
+< OPERATOR    -            +
+< OPERAND     INTEGER      1
+<  113 endwhile;
+< SEPARATOR   -            ;
+< CONTROL     END          endwhile
+<  114 print("\tAfter outer while");
+< SEPARATOR   -            ;
+< FUNCTION    BUILTIN      print
+< SEPARATOR   -            (
+< OPERAND     STRING       . After outer while
+<                          09                 
+< SEPARATOR   -            )
+<  115         
+< SEPARATOR   -            ;
+---
+> CONTROL     END          endif
+\ No newline at end of file
