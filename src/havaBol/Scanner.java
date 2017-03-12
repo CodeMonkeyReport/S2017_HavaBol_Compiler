@@ -10,12 +10,12 @@ public class Scanner {
 	public Token currentToken;
 	public Token nextToken;
 	private BufferedReader file;
-	private SymbolTable symbolTable;
+	public SymbolTable symbolTable;
 
 	public char[] currentLine;
 	private int linePosition;
 	private int lineNumber;
-	private String sourceFileName;
+	public String sourceFileName;
 
 
     /**
@@ -74,6 +74,8 @@ public class Scanner {
 					// EOF
 					nextToken.primClassif = Token.EOF;
 					nextToken.tokenStr = "";
+					nextToken.iColPos = this.linePosition;
+					nextToken.iSourceLineNr = this.lineNumber;
 					return currentToken.tokenStr;
 				}
                 this.currentLine = line.toCharArray();

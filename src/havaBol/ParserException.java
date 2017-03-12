@@ -16,7 +16,7 @@ public class ParserException extends Exception
   // Exceptions are required to provide tosString()
   public String toString()
   {
-      StringBuffer sb = new StringBuffer();      
+      StringBuffer sb = new StringBuffer();
       sb.append("Line ");
       sb.append(Integer.toString(iLineNr));
       sb.append(" ");
