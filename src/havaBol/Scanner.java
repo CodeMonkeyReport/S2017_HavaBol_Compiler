@@ -14,7 +14,7 @@ public class Scanner {
 
 	public char[] currentLine;
 	private int linePosition;
-	private int lineNumber;
+	public int lineNumber;
 	public String sourceFileName;
 
 

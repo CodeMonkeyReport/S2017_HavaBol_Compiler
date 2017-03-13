@@ -17,7 +17,7 @@ public class Type {
 	
 	// Primitive variable value types
 	public static final int INT = 0;
-	public static final int DOUBLE = 1;
+	public static final int FLOAT = 1;
 	public static final int STRING = 2;
 	public static final int BOOL = 3;
 	public static final int DATE = 4;
