@@ -1,0 +1,104 @@
+Int x;
+Float pi;
+String yStr;
+
+ 
+x = x + 1;
+pi = 3.14;
+print ("x=", x);
+print ("pi=", pi);
+
+yStr = 'Hello';
+print ("yStr=", yStr);
+
+yStr = "Can't\" not me";
+print ("yStr=", yStr);
+
+x = 10*3 + 7;
+if x > 20:primClassif subClassif   tokenStr
+OPERAND     IDENTFIER    Int
+OPERAND     IDENTFIER    x
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    Float
+OPERAND     IDENTFIER    pi
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    String
+OPERAND     IDENTFIER    yStr
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    x
+OPERATOR    -            =
+OPERAND     IDENTFIER    x
+OPERATOR    -            +
+OPERAND     INTEGER      1
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    pi
+OPERATOR    -            =
+OPERAND     FLOAT        3.14
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    print
+SEPARATOR   -            (
+OPERAND     STRING       x=
+SEPARATOR   -            ,
+OPERAND     IDENTFIER    x
+SEPARATOR   -            )
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    print
+SEPARATOR   -            (
+OPERAND     STRING       pi=
+SEPARATOR   -            ,
+OPERAND     IDENTFIER    pi
+SEPARATOR   -            )
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    yStr
+OPERATOR    -            =
+OPERAND     STRING       Hello
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    print
+SEPARATOR   -            (
+OPERAND     STRING       yStr=
+SEPARATOR   -            ,
+OPERAND     IDENTFIER    yStr
+SEPARATOR   -            )
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    yStr
+OPERATOR    -            =
+OPERAND     STRING       Can't\" not me
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    print
+SEPARATOR   -            (
+OPERAND     STRING       yStr=
+SEPARATOR   -            ,
+OPERAND     IDENTFIER    yStr
+SEPARATOR   -            )
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    x
+OPERATOR    -            =
+OPERAND     INTEGER      10
+OPERATOR    -            *
+OPERAND     INTEGER      3
+OPERATOR    -            +
+OPERAND     INTEGER      7
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    if
+OPERAND     IDENTFIER    x
+OPERATOR    -            >
+OPERAND     INTEGER      20
+SEPARATOR   -            :
+OPERAND     IDENTFIER    print
+SEPARATOR   -            (
+Line 19 Reached end of line while reading string constant at position 11, File: p1Input.txt
+	at havaBol.Scanner.error(Scanner.java:272)
+	at havaBol.Scanner.readStringConstant(Scanner.java:258)
+	at havaBol.Scanner.classifySpecialCharacter(Scanner.java:235)
+	at havaBol.Scanner.classify(Scanner.java:114)
+	at havaBol.Scanner.getNext(Scanner.java:92)
+	at havaBol.HavaBol.main(HavaBol.java:37)
+
+    print ("x=, x);
+    yStr = "yes";
+else:
+   print ("x is low");
+endif;
+
+yStr = 'Can\'t wait';
+print (yStr);

@@ -16,11 +16,11 @@ public class Type {
 	public static final int STRUCT = 3; // May never be implemented
 	
 	// Primitive variable value types
-	public static final int INT = 0;
-	public static final int FLOAT = 1;
-	public static final int STRING = 2;
-	public static final int BOOL = 3;
-	public static final int DATE = 4;
+	public static final String INT = "Int";
+	public static final String FLOAT = "Float";
+	public static final String STRING = "String";
+	public static final String BOOL = "Bool";
+	public static final String DATE = "Date";
 	
 	// Variable reference type
 	public static final int VALUE = 1;

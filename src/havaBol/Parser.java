@@ -1,10 +1,12 @@
 package havaBol;
 
+import java.util.Stack;
+
 public class Parser {
 
 	Scanner scanner;
 	StorageManager storageManager;
-	
+
 	public Parser(Scanner scanner, StorageManager storageManager)
 	{
 		this.scanner = scanner;
@@ -35,7 +37,7 @@ public class Parser {
 					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
 					, scanner.sourceFileName);
 		}
-		
+
 		// TODO This line will need modification based on by reference parameter passing later
 		STIdentifier newIdentifier = new STIdentifier(scanner.nextToken.tokenStr, scanner.currentToken.tokenStr, 1, 1, 0);
 		
@@ -43,9 +45,9 @@ public class Parser {
 		
 		ResultValue variableValue = new ResultValue(scanner.currentToken.tokenStr); // Create a new result value and set its type string
 		storageManager.putVariableValue(scanner.nextToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
-		
+
 	}
-	
+
 	/**
 	 * Handles assignment statements.
 	 * <p>
@@ -94,7 +96,7 @@ public class Parser {
 						, scanner.sourceFileName);
 			}
 			subResult2 = Utility.concat(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+			Utility.assign(this, targetResult, subResult2);
 		}
 		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we cant do any of the following assignments
 		{
@@ -105,30 +107,34 @@ public class Parser {
 		else if (operatorToken.tokenStr.equals("-="))
 		{
 			subResult2 = Utility.subtract(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+
+			Utility.assign(this, targetResult, subResult2);
 		}
 		else if (operatorToken.tokenStr.equals("+="))
 		{
 			subResult2 = Utility.add(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+
+			Utility.assign(this, targetResult, subResult2);
 		}
 		else if (operatorToken.tokenStr.equals("*="))
 		{
 			subResult2 = Utility.multiply(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+
+			Utility.assign(this, targetResult, subResult2);
 		}
 		else if (operatorToken.tokenStr.equals("/="))
 		{
 			subResult2 = Utility.divide(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+
+			Utility.assign(this, targetResult, subResult2);
 		}
 		else if (operatorToken.tokenStr.equals("^="))
 		{
 			subResult2 = Utility.exponentiate(this, targetResult, subResult1);
-			targetResult.internalValue = subResult2.internalValue;
+
+			Utility.assign(this, targetResult, subResult2);
 		}
-		
-		
+
 		return targetResult;
 	}
 
@@ -136,15 +142,133 @@ public class Parser {
 	 * TODO Evaluate an expression and return the result.
 	 * <p>
 	 * Expressions are in Infix notation so a stack will be used to parse.
+	 * A stack of ResultValue will be used for the output
+	 * <p>
+	 * Assume currentToken is on the first operand of the expression on entering the method.
 	 * <p>
 	 * @return
+	 * @throws ParserException 
 	 */
-	private ResultValue expression() {
-
+	private ResultValue expression() throws ParserException 
+	{
+		Stack<StackToken> operatorStack = new Stack<StackToken>();
+		Stack<ResultValue> outputStack = new Stack<ResultValue>();
+		ResultValue res, tempRes01, tempRes02, tempRes03;
+		
+		Token temp;
+		StackToken popped, sToken;
+		
+		int expected = Token.OPERAND; // The type of term we are expecting next
+		
+		while(!scanner.currentToken.tokenStr.equals(";")) // Until we reach a semicolon?
+		{
+			switch (scanner.currentToken.primClassif)
+			{
+			case Token.OPERAND:
+				if (expected != Token.OPERAND)
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, "Unexpected operand \'" + scanner.currentToken.tokenStr + "\' in expression"
+							, scanner.sourceFileName);
+							
+				tempRes01 = this.evaluateOperand(scanner.currentToken);
+				outputStack.push(tempRes01);
+				break;
+			case Token.OPERATOR:
+				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
+				{
+					temp = scanner.currentToken;
+					temp.tokenStr = "u-";
+					sToken = new StackToken(temp);
+				}
+				else if (expected != Token.OPERATOR) // Error Unexpected operator
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, "Unexpected operator \'" + scanner.currentToken.tokenStr + "\' in expression"
+							, scanner.sourceFileName);
+				
+				sToken = new StackToken(scanner.currentToken);
+				if (operatorStack.isEmpty())
+				{
+					operatorStack.push(sToken);
+				}
+				else
+				{
+					if (sToken.iPrecedence > operatorStack.peek().iStackPrecedence) // If precedence is greater push onto stack
+					{
+						operatorStack.push(sToken);
+					}
+					else // Otherwise loop until it is not the case
+					{
+						popped = operatorStack.pop();
+						while (!operatorStack.isEmpty() && popped.iPrecedence <= operatorStack.peek().iStackPrecedence)
+						{
+							if (popped.iOperancCnt == 1) // Unary operator is a unique case
+							{
+								tempRes01 = outputStack.pop(); // get a single operand
+								tempRes02 = Utility.evaluateUnaryOperator(this, tempRes01, popped.token);
+							}
+							else
+							{
+								tempRes01 = outputStack.pop(); // Get two operands for our operator
+								tempRes02 = outputStack.pop();
+								
+								tempRes03 = Utility.evaluateBinaryOperator(this, tempRes01, tempRes02, popped.token);
+							}
+						}
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
 		return null;
 	}
-	
-	
+
+	private ResultValue evaluateOperand(Token operandToken) throws ParserException {
+		ResultValue res = null;
+		
+		if (operandToken.primClassif != Token.OPERAND)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Token \'" + operandToken.tokenStr + "\' is not an operand"
+					, scanner.sourceFileName);
+		}
+		switch (operandToken.subClassif)
+		{
+		case Token.IDENTIFIER:
+			res = this.storageManager.getVariableValue(operandToken.tokenStr);
+			if (res == null)
+			{
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unknown identifier \'" + operandToken.tokenStr + "\' found in expression"
+						, scanner.sourceFileName);
+			}
+			break;
+		case Token.INTEGER:
+			res = Utility.parseInt(this, operandToken);
+			break;
+		case Token.FLOAT:
+			res = Utility.parseFloat(this, operandToken);
+			break;
+		case Token.BOOLEAN:
+			res = Utility.parseBool(this, operandToken);
+			break;
+		case Token.STRING:
+			res = Utility.parseString(this, operandToken);
+			break;
+		case Token.DATE:
+			res = Utility.parseDate(this, operandToken);
+			break;
+		case Token.VOID:
+			res = null;
+			break;
+		default:
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Unknown identifier type \'" + operandToken.tokenStr + "\' found"
+					, scanner.sourceFileName);
+		}
+		return res;
+	}
 	
 	
 }

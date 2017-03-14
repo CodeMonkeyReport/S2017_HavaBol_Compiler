@@ -4,40 +4,15 @@ public class Utility {
 	
 	public static boolean isNumeric(ResultValue value)
 	{
-		if (value.type.equals("Int"))
+		if (value.type.equals(Type.INT))
 		{
 			return true;
 		}
-		else if (value.type.equals("Float"))
+		else if (value.type.equals(Type.FLOAT))
 		{
 			return true;
 		}
 		return false;
-	}
-
-	public static int getType(ResultValue value)
-	{
-		if (value.type.equals("Int"))
-		{
-			return Type.INT;
-		}
-		else if (value.type.equals("Float"))
-		{
-			return Type.FLOAT;
-		}
-		else if (value.type.equals("String"))
-		{
-			return Type.STRING;
-		}
-		else if (value.type.equals("Bool"))
-		{
-			return Type.BOOL;
-		}
-		else if (value.type.equals("Date"))
-		{
-			return Type.DATE;
-		}
-		return -1;
 	}
 	
 	/**
@@ -51,13 +26,12 @@ public class Utility {
 	 */
 	public static void assign(Parser parser, ResultValue target, ResultValue value) throws ParserException 
 	{
-		// TODO Auto-generated method stub
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
 			target.internalValue = value.internalValue;
 			return;
 		}
-		switch (Utility.getType(target))
+		switch (target.type)
 		{
 		case (Type.INT):
 			target.internalValue = coerceToInt(parser, value);
@@ -185,7 +159,7 @@ public class Utility {
 	 */
 	public static ResultValue concat(Parser parser, ResultValue first, ResultValue second) 
 	{
-		ResultValue newResult = new ResultValue(first.type);
+		ResultValue newResult = new ResultValue(Type.STRING);
 		
 		StringBuilder sb = new StringBuilder(first.internalValue);
 		sb.append(second.internalValue);
@@ -208,7 +182,7 @@ public class Utility {
 	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		String temp;
-		if (leftValue.type.equals("Int")) // Integer case
+		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			temp = Utility.coerceToInt(parser, rightValue);
 			int minuend = Integer.parseInt(leftValue.internalValue);
@@ -216,7 +190,7 @@ public class Utility {
 			int result = minuend - subtrahend;
 			subResult.internalValue = String.valueOf(result);
 		}
-		else if (leftValue.type.equals("Float")) // Float case
+		else if (leftValue.type.equals(Type.FLOAT)) // Float case
 		{
 			temp = Utility.coerceToFloat(parser, rightValue);
 			double minuend = Double.parseDouble(leftValue.internalValue);
@@ -247,7 +221,7 @@ public class Utility {
 	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		String temp;
-		if (leftValue.type.equals("Int")) // Integer case
+		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			temp = Utility.coerceToInt(parser, rightValue);
 			int addend1 = Integer.parseInt(leftValue.internalValue);
@@ -255,7 +229,7 @@ public class Utility {
 			int result = addend1 + addend2;
 			subResult.internalValue = String.valueOf(result);
 		}
-		else if (leftValue.type.equals("Float")) // Float case
+		else if (leftValue.type.equals(Type.FLOAT)) // Float case
 		{
 			temp = Utility.coerceToFloat(parser, rightValue);
 			double addend1 = Double.parseDouble(leftValue.internalValue);
@@ -286,7 +260,7 @@ public class Utility {
 	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		String temp;
-		if (leftValue.type.equals("Int")) // Integer case
+		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			temp = Utility.coerceToInt(parser, rightValue);
 			int multiplier = Integer.parseInt(leftValue.internalValue);
@@ -294,7 +268,7 @@ public class Utility {
 			int result = multiplier * multiplicand;
 			subResult.internalValue = String.valueOf(result);
 		}
-		else if (leftValue.type.equals("Float")) // Float case
+		else if (leftValue.type.equals(Type.FLOAT)) // Float case
 		{
 			temp = Utility.coerceToFloat(parser, rightValue);
 			double multiplier = Double.parseDouble(leftValue.internalValue);
@@ -325,7 +299,7 @@ public class Utility {
 	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		String temp;
-		if (leftValue.type.equals("Int")) // Integer case
+		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			temp = Utility.coerceToInt(parser, rightValue);
 			int base = Integer.parseInt(leftValue.internalValue);
@@ -333,7 +307,7 @@ public class Utility {
 			int result = (int)Math.pow(base,  power);
 			subResult.internalValue = String.valueOf(result);
 		}
-		else if (leftValue.type.equals("Float")) // Float case
+		else if (leftValue.type.equals(Type.FLOAT)) // Float case
 		{
 			temp = Utility.coerceToFloat(parser, rightValue);
 			double base = Double.parseDouble(leftValue.internalValue);
@@ -364,7 +338,7 @@ public class Utility {
 	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		String temp;
-		if (leftValue.type.equals("Int")) // Integer case
+		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			temp = Utility.coerceToInt(parser, rightValue);
 			int dividend = Integer.parseInt(leftValue.internalValue);
@@ -372,7 +346,7 @@ public class Utility {
 			int result = dividend / divisor;
 			subResult.internalValue = String.valueOf(result);
 		}
-		else if (leftValue.type.equals("Float")) // Float case
+		else if (leftValue.type.equals(Type.FLOAT)) // Float case
 		{
 			temp = Utility.coerceToFloat(parser, rightValue);
 			double dividend = Double.parseDouble(leftValue.internalValue);
@@ -389,4 +363,78 @@ public class Utility {
 		return subResult;
 	}
 
+	public static ResultValue parseInt(Parser parser, Token intToken) throws ParserException {
+		ResultValue res = new ResultValue(Type.INT);
+		try {
+			Integer.parseInt(intToken.tokenStr);
+		} catch (Exception e)
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not parse \'" + intToken.tokenStr + "\' as Int"
+					, parser.scanner.sourceFileName);
+		}
+		res.internalValue = intToken.tokenStr;
+		return res;
+	}
+	
+	public static ResultValue parseFloat(Parser parser, Token floatToken) throws ParserException {
+		
+		ResultValue res = new ResultValue(Type.FLOAT);
+		try {
+			Double.parseDouble(floatToken.tokenStr);
+		} catch (Exception e)
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not parse \'" + floatToken.tokenStr + "\' as Float"
+					, parser.scanner.sourceFileName);
+		}
+		
+		res.internalValue = floatToken.tokenStr;
+		return res;
+	}
+
+	public static ResultValue parseString(Parser parser, Token stringToken) throws ParserException {
+		
+		ResultValue res = new ResultValue(Type.STRING);
+		if (stringToken.tokenStr == null)
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not parse \'NULL\' as String"
+					, parser.scanner.sourceFileName);
+		}
+		
+		res.internalValue = stringToken.tokenStr;
+		return res;
+	}
+	
+	public static ResultValue parseBool(Parser parser, Token stringToken) throws ParserException {
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		res.internalValue = stringToken.tokenStr;
+		
+		res.internalValue = coerceToBool(parser, res);
+		
+		return res;
+	}
+	
+	public static ResultValue parseDate(Parser parser, Token dateToken) throws ParserException {
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		res.internalValue = dateToken.tokenStr;
+		
+		res.internalValue = coerceToDate(parser, res);
+		
+		return res;
+	}
+
+	public static ResultValue evaluateBinaryOperator(Parser parser, ResultValue operandOne, ResultValue operandTwo, Token operator)
+	{
+		
+		return null;
+	}
+
+	public static ResultValue evaluateUnaryOperator(Parser parser, ResultValue tempRes01, Token token) {
+		
+		return null;
+	}
 }
