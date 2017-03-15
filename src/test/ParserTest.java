@@ -61,7 +61,7 @@ public class ParserTest {
 			assertEquals(storageManager.getVariableValue("i").internalValue, "5");
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -287,7 +287,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -326,7 +326,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -374,7 +374,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -413,7 +413,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -452,7 +452,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -491,7 +491,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -530,7 +530,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -569,7 +569,7 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -616,7 +616,54 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canDoSimpleComparisons()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String s = \"5.0\";\n"
+						 + "Float f = 5.0;\n"
+						 + "Bool b = f == s;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on String, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have s declared, now declare and initilize f
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have f declared, now declare and initilize b
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("T", storageManager.getVariableValue("b").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}

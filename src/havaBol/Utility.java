@@ -362,7 +362,356 @@ public class Utility {
 		}
 		return subResult;
 	}
+	
+	/**
+	 * Evaluate a less than comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue lessThan(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 < iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 < fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult < 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not apply comparison \'<\' to type \'" + Type.BOOL + "\'"
+					, parser.scanner.sourceFileName);
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
 
+	
+	/**
+	 * Evaluate a greater than comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue greaterThan(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 > iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 > fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult > 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not apply comparison \'>\' to type \'" + Type.BOOL + "\'"
+					, parser.scanner.sourceFileName);
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
+	
+	/**
+	 * Evaluate a equal to comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue eqalTo(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 == iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 == fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL: // In this case bool is the same as string
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult == 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
+
+	/**
+	 * Evaluate a less than or equal to comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue lessThanEqalTo(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 <= iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 <= fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult <= 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not apply comparison \'<=\' to type \'" + Type.BOOL + "\'"
+					, parser.scanner.sourceFileName);
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
+	
+	/**
+	 * Evaluate a less than or equal to comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue greaterThanEqalTo(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 >= iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 >= fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult >= 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not apply comparison \'>=\' to type \'" + Type.BOOL + "\'"
+					, parser.scanner.sourceFileName);
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
+	
+	/**
+	 * Evaluate a less than or equal to comparison on two ResultValues
+	 * 
+	 * @param parser
+	 * @param operandOne
+	 * @param operandTwo
+	 * @return
+	 * @throws ParserException 
+	 */
+	public static ResultValue notEqalTo(Parser parser, ResultValue operandOne, ResultValue operandTwo) throws ParserException 
+	{
+		
+		ResultValue res = new ResultValue(Type.BOOL);
+		String temp;
+		
+		switch (operandOne.type)
+		{
+		case Type.INT:
+			temp = Utility.coerceToInt(parser, operandTwo);
+			int iOp1 = Integer.parseInt(operandOne.internalValue);
+			int iOp2 = Integer.parseInt(temp);
+			if (iOp1 != iOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.FLOAT:
+			temp = Utility.coerceToFloat(parser, operandTwo);
+			double fOp1 = Double.parseDouble(operandOne.internalValue);
+			double fOp2 = Double.parseDouble(temp);
+			if (fOp1 != fOp2)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;
+		case Type.BOOL: // In this case bool is the same as string
+		case Type.STRING:
+			int comResult = operandOne.internalValue.compareTo(operandTwo.internalValue);
+			if (comResult != 0)
+				res.internalValue = "T";
+			else
+				res.internalValue = "F";
+			break;	
+		case Type.DATE:
+			throw new ParserException(parser.scanner.lineNumber
+					, "DATE type not implemented \'" + operandOne.internalValue + "\'"
+					, parser.scanner.sourceFileName);
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown type \'" + operandOne.type + "\'"
+					, parser.scanner.sourceFileName);
+				
+		}
+		return res;
+	}
+	
 	public static ResultValue parseInt(Parser parser, Token intToken) throws ParserException {
 		ResultValue res = new ResultValue(Type.INT);
 		try {
@@ -455,19 +804,25 @@ public class Utility {
 		case "^":
 			res = Utility.exponentiate(parser, operandOne, operandTwo);
 			break;
-		case "<": // TODO NOT YET IMPLEMENTED
-
+		case "<": 
+			res = Utility.lessThan(parser,operandOne, operandTwo);
+			break;
 		case ">":
-
+			res = Utility.greaterThan(parser, operandOne, operandTwo);
+			break;
 		case "<=":
-
+			res = Utility.lessThanEqalTo(parser, operandOne, operandTwo);
+			break;
 		case ">=":
-
+			res = Utility.greaterThanEqalTo(parser, operandOne, operandTwo);
+			break;
 		case "==":
-
+			res = Utility.eqalTo(parser, operandOne, operandTwo);
+			break;
 		case "!=":
-
-		case "in":
+			res = Utility.notEqalTo(parser, operandOne, operandTwo);
+			break;
+		case "in": // TODO NOT YET IMPLEMENTED
 
 		case "notin":
 
@@ -485,6 +840,7 @@ public class Utility {
 		return res;
 	}
 
+
 	public static ResultValue evaluateUnaryOperator(Parser parser, ResultValue operand, Token operator) throws ParserException 
 	{
 		ResultValue res = null;
@@ -498,7 +854,7 @@ public class Utility {
 		
 		switch (operator.tokenStr)
 		{
-		case "u-": // NOT YET IMPLEMENTED
+		case "u-":
 			
 			res = new ResultValue(operand.type);
 			if (!Utility.isNumeric(res))

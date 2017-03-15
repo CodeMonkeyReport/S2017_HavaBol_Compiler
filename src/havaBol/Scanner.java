@@ -41,7 +41,7 @@ public class Scanner {
 		this.currentLine = line.toCharArray();
 		this.lineNumber = 1;
 		this.linePosition = 0; // reset position
-		System.out.printf(" %d %s\n", this.lineNumber, line);
+		//System.out.printf(" %d %s\n", this.lineNumber, line);
 		getNext(); // Read the first token into current
 		
 	}
@@ -81,7 +81,7 @@ public class Scanner {
                 this.currentLine = line.toCharArray();
 				this.lineNumber++;
 				this.linePosition = 0;
-				System.out.printf(" %d %s\n", this.lineNumber, line);
+				//System.out.printf(" %d %s\n", this.lineNumber, line);
 			}
 			else
 			{

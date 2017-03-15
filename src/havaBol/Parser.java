@@ -14,6 +14,19 @@ public class Parser {
 	}
 
 	/**
+	 * Function for handling a list of statements. (A program)
+	 * <p>
+	 * This function determines which statement subroutine to run next and makes the appropriate call.
+	 * <p>
+	 * TODO
+	 * @return
+	 */
+	public ResultValue statements()
+	{
+		return null;
+	}
+	
+	/**
 	 * Function for handling declarations of variables.
 	 * <p>
 	 * Example: Int i;
@@ -54,6 +67,7 @@ public class Parser {
 	 * Assume that the current token is the identifier we are assigning into.
 	 * <p>
 	 * When this function completes we will have parsed through until the end of a following expression.
+	 * Current token will be on ';'
 	 * <p>
 	 * @return
 	 * @throws Exception
@@ -93,7 +107,7 @@ public class Parser {
 			if (!targetResult.type.equals("String")) // If the target is not a string we can't concat.
 			{
 				throw new ParserException(scanner.currentToken.iSourceLineNr
-						, "Can not concatinate to non String variable: \'" + targetToken.tokenStr + "\'"
+						, "Target of concatination assignment must be String type, found: \'" + targetResult.type + "\'"
 						, scanner.sourceFileName);
 			}
 			subResult2 = Utility.concat(this, targetResult, subResult1);
@@ -162,7 +176,7 @@ public class Parser {
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		
-		while(!scanner.currentToken.tokenStr.equals(";")) // Until we reach a semicolon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(";") && !scanner.currentToken.tokenStr.equals(":")) // Until we reach a semicolon, colon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
