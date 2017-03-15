@@ -455,7 +455,7 @@ public class Utility {
 		case "^":
 			res = Utility.exponentiate(parser, operandOne, operandTwo);
 			break;
-		case "<": // NOT YET IMPLEMENTED
+		case "<": // TODO NOT YET IMPLEMENTED
 
 		case ">":
 

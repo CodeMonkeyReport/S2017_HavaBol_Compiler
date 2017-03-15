@@ -291,4 +291,333 @@ public class ParserTest {
 			assertTrue("Unable to read input stream", false);
 		}
 	}
+	
+	@Test
+	public void canAssignAcrossVariables()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5;\n"
+						 + "Int j = i;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have i declared, now declare and initilize j
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("5", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canPerformArithmeticOnVariables()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5;\n"
+				         + "Int j = i;\n"
+				         + "Int k = i * j;";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have i declared, now declare and initilize j
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have j declared, now declare and initilize k
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("25", storageManager.getVariableValue("k").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canTruncateIntegerValuesFromInteger()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5;\n"
+						 + "Int j = i / 2;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have i declared, now declare and initilize j
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("2", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canTruncateIntegerValuesFromFloat()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Float f = 5.0;\n"
+						 + "Int j = f / 2;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Float, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have f declared, now declare and initilize j
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("2", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canCalculateFloatValues()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Float f = 5.0;\n"
+						 + "Float j = f / 2;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Float, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have f declared, now declare and initilize j
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("2.5", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canAddStringValuesToInts()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String s = \"5\";\n"
+						 + "Int i = 2 + s;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on String, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have s declared, now declare and initilize i
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("7", storageManager.getVariableValue("i").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canAddStringValuesToFloats()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String s = \"5.0\";\n"
+						 + "Float f = 2.0 + s;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on String, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have s declared, now declare and initilize i
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("7.0", storageManager.getVariableValue("f").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canAddAcrossStringIntAndFloatTypes()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String s = \"5.0\";\n"
+						 + "Float f = 2.0 + s;\n"
+						 + "Int i = f + s;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on String, declare the variable and assign to it
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have s declared, now declare and initilize f
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			testScanner.getNext();
+			
+			// Should now have f declared, now declare and initilize i
+			parser.declareVarStmt();
+			testScanner.getNext();
+			parser.assignmentStmt();
+			
+			assertEquals("12", storageManager.getVariableValue("i").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
 }

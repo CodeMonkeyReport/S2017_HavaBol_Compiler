@@ -162,7 +162,7 @@ public class Parser {
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		
-		while(!scanner.currentToken.tokenStr.equals(";")) // Until we reach a semicolon?
+		while(!scanner.currentToken.tokenStr.equals(";")) // Until we reach a semicolon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -301,6 +301,12 @@ public class Parser {
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expression parse missmatch"
+					, scanner.sourceFileName);
+		}
+		if (!scanner.currentToken.tokenStr.equals(";"))
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \';\' at end of input"
 					, scanner.sourceFileName);
 		}
 		return res;
