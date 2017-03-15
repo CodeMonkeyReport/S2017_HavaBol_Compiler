@@ -82,6 +82,7 @@ public class Parser {
 		ResultValue subResult1;
 		ResultValue subResult2;
 		
+		scanner.getNext();
 		subResult1 = expression();
 		if (operatorToken.tokenStr.equals("="))
 		{													// Assignment is the simple case.
@@ -147,9 +148,9 @@ public class Parser {
 	 * Assume currentToken is on the first operand of the expression on entering the method.
 	 * <p>
 	 * @return
-	 * @throws ParserException 
+	 * @throws Exception 
 	 */
-	private ResultValue expression() throws ParserException 
+	public ResultValue expression() throws Exception 
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
@@ -159,6 +160,7 @@ public class Parser {
 		StackToken popped, sToken;
 		
 		int expected = Token.OPERAND; // The type of term we are expecting next
+		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		
 		while(!scanner.currentToken.tokenStr.equals(";")) // Until we reach a semicolon?
 		{
@@ -172,6 +174,7 @@ public class Parser {
 							
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				outputStack.push(tempRes01);
+				expected = Token.OPERATOR;
 				break;
 			case Token.OPERATOR:
 				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
@@ -198,30 +201,109 @@ public class Parser {
 					}
 					else // Otherwise loop until it is not the case
 					{
-						popped = operatorStack.pop();
-						while (!operatorStack.isEmpty() && popped.iPrecedence <= operatorStack.peek().iStackPrecedence)
+						while (!operatorStack.isEmpty() && sToken.iPrecedence <= (popped = operatorStack.pop()).iStackPrecedence)
 						{
-							if (popped.iOperancCnt == 1) // Unary operator is a unique case
+							if (popped.iOperandCnt == 1) // Unary operator is a unique case
 							{
 								tempRes01 = outputStack.pop(); // get a single operand
 								tempRes02 = Utility.evaluateUnaryOperator(this, tempRes01, popped.token);
+								outputStack.push(tempRes02); // Push result back onto stack
 							}
 							else
 							{
-								tempRes01 = outputStack.pop(); // Get two operands for our operator
-								tempRes02 = outputStack.pop();
+								tempRes02 = outputStack.pop(); // Get two operands for our operator
+								tempRes01 = outputStack.pop();
 								
 								tempRes03 = Utility.evaluateBinaryOperator(this, tempRes01, tempRes02, popped.token);
+								
+								outputStack.push(tempRes03); // Push result back onto stack
 							}
 						}
+						operatorStack.push(sToken); // Then push the new operator on
 					}
+				}
+				expected = Token.OPERAND;
+				break;
+			case Token.SEPARATOR:
+				switch (scanner.currentToken.tokenStr)
+				{
+				case ")":
+					bFound = false;
+					while (!operatorStack.isEmpty())
+					{
+						popped = operatorStack.pop();
+						if (popped.token.tokenStr.equals("(")) // If we found the lparn break
+						{
+							bFound = true;
+							break; 
+						}
+
+						if (popped.iOperandCnt == 1) // Unary operator is a unique case
+						{
+							tempRes01 = outputStack.pop(); // get a single operand
+							tempRes02 = Utility.evaluateUnaryOperator(this, tempRes01, popped.token);
+							outputStack.push(tempRes02); // Push result back onto stack
+						}
+						else
+						{
+							tempRes02 = outputStack.pop(); // Get two operands for our operator
+							tempRes01 = outputStack.pop();
+							
+							tempRes03 = Utility.evaluateBinaryOperator(this, tempRes01, tempRes02, popped.token);
+							
+							outputStack.push(tempRes03); // Push result back onto stack
+						}
+					} // if bFound TODO
+					break;
+				case "(":
+					sToken = new StackToken(scanner.currentToken);
+					operatorStack.push(sToken);
+					break;
+				default:
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, "Unexpected separator \'" + scanner.currentToken.tokenStr + "\' in expression"
+							, scanner.sourceFileName);
 				}
 				break;
 			default:
 				break;
 			}
+			scanner.getNext();
 		}
-		return null;
+		while (!operatorStack.isEmpty())
+		{
+			popped = operatorStack.pop();
+			if (popped.token.tokenStr.equals("(")) // If we found the lparn break
+			{
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unexpected separator \'" + popped.token.tokenStr + "\' in expression"
+						, scanner.sourceFileName);
+			}
+
+			if (popped.iOperandCnt == 1) // Unary operator is a unique case
+			{
+				tempRes01 = outputStack.pop(); // get a single operand
+				tempRes02 = Utility.evaluateUnaryOperator(this, tempRes01, popped.token);
+				outputStack.push(tempRes02); // Push result back onto stack
+			}
+			else
+			{
+				tempRes02 = outputStack.pop(); // Get two operands for our operator
+				tempRes01 = outputStack.pop();
+				
+				tempRes03 = Utility.evaluateBinaryOperator(this, tempRes01, tempRes02, popped.token);
+				
+				outputStack.push(tempRes03); // Push result back onto stack
+			}
+		}
+		res = outputStack.pop();
+		if (!outputStack.isEmpty())
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expression parse missmatch"
+					, scanner.sourceFileName);
+		}
+		return res;
 	}
 
 	private ResultValue evaluateOperand(Token operandToken) throws ParserException {

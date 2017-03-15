@@ -427,14 +427,103 @@ public class Utility {
 		return res;
 	}
 
-	public static ResultValue evaluateBinaryOperator(Parser parser, ResultValue operandOne, ResultValue operandTwo, Token operator)
+	public static ResultValue evaluateBinaryOperator(Parser parser, ResultValue operandOne, ResultValue operandTwo, Token operator) throws ParserException
 	{
+		ResultValue res = null;
 		
-		return null;
+		if (operator.primClassif != Token.OPERATOR)
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unable to evaluate non operator \'" + operator.tokenStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		
+		switch (operator.tokenStr)
+		{
+		case "+":
+			res = Utility.add(parser, operandOne, operandTwo);
+			break;
+		case "-":
+			res = Utility.subtract(parser, operandOne, operandTwo);
+			break;
+		case "*":
+			res = Utility.multiply(parser, operandOne, operandTwo);
+			break;
+		case "/":
+			res = Utility.divide(parser, operandOne, operandTwo);
+			break;
+		case "^":
+			res = Utility.exponentiate(parser, operandOne, operandTwo);
+			break;
+		case "<": // NOT YET IMPLEMENTED
+
+		case ">":
+
+		case "<=":
+
+		case ">=":
+
+		case "==":
+
+		case "!=":
+
+		case "in":
+
+		case "notin":
+
+		case "and":
+
+		case "or":
+			System.out.println("NOT IMPLEMENTED");
+			res = new ResultValue("Bool");
+			res.internalValue = "F";
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown operator \'" + operator.tokenStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		return res;
 	}
 
-	public static ResultValue evaluateUnaryOperator(Parser parser, ResultValue tempRes01, Token token) {
+	public static ResultValue evaluateUnaryOperator(Parser parser, ResultValue operand, Token operator) throws ParserException 
+	{
+		ResultValue res = null;
 		
-		return null;
+		if (operator.primClassif != Token.OPERATOR)
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unable to evaluate non operator \'" + operator.tokenStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		
+		switch (operator.tokenStr)
+		{
+		case "u-": // NOT YET IMPLEMENTED
+			
+			res = new ResultValue(operand.type);
+			if (!Utility.isNumeric(res))
+				throw new ParserException(parser.scanner.lineNumber
+						, "Can not take negative of non numeric type \'" + res.type + "\'"
+						, parser.scanner.sourceFileName);
+			
+			res.internalValue = "-" + operand.internalValue;
+			break;
+		case "not":
+			res = new ResultValue(operand.type);
+			if (!res.type.equals("Bool"))
+				throw new ParserException(parser.scanner.lineNumber
+						, "Can not negate non boolean type \'" + res.type + "\'"
+						, parser.scanner.sourceFileName);
+			if (operand.internalValue.equals("T"))
+				res.internalValue = "F";
+			else 
+				res.internalValue = "T";
+			break;
+		default:
+			throw new ParserException(parser.scanner.lineNumber
+					, "Unknown operator \'" + operator.tokenStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		return res;
 	}
 }
