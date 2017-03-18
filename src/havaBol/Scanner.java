@@ -42,8 +42,16 @@ public class Scanner {
 		this.lineNumber = 1;
 		this.linePosition = 0; // reset position
 		//System.out.printf(" %d %s\n", this.lineNumber, line);
-		getNext(); // Read the first token into current
-		
+		getNext(); // Read the first token into next
+		this.currentToken.tokenStr = "PROGRAM_START";
+	}
+	
+	public void skipTo(String target) throws ParserException
+	{
+		while (!this.currentToken.tokenStr.equals(target))
+		{
+			this.getNext();
+		}
 	}
 
 	/**
@@ -54,7 +62,7 @@ public class Scanner {
 	 * @return a String representation of the token
 	 * @throws Exception
 	 */
-	public String getNext() throws Exception {
+	public String getNext() throws ParserException {
 
 		currentToken = nextToken;
 		nextToken = new Token();
@@ -68,7 +76,16 @@ public class Scanner {
 			if (currentLine.length == this.linePosition)
 			{
 				// Read the next line
-				String line = file.readLine();
+				String line;
+				try {
+					line = file.readLine();
+				} catch (IOException e) {
+					
+					throw new ParserException(this.currentToken.iSourceLineNr
+							, "Unable to read file"
+							, this.sourceFileName);
+					
+				}
 				if (line == null)
 				{
 					// EOF
@@ -112,7 +129,7 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws Exception
 	 */
-	private void classify(int tokenStart, int tokenEnd) throws Exception {
+	private void classify(int tokenStart, int tokenEnd) throws ParserException {
 
 		this.nextToken.iSourceLineNr = this.lineNumber;
 		this.nextToken.iColPos = tokenStart;
@@ -147,7 +164,7 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws NumberFormatException
 	 */
-	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws Exception {
+	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException {
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 
 		// For floating point values
@@ -249,7 +266,7 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws Exception
 	 */
-	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws Exception {
+	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws ParserException {
 
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart+1);
 		this.linePosition++;
@@ -258,7 +275,14 @@ public class Scanner {
 			case '/':
 				if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '/'))
 				{
-					String line = file.readLine();
+					String line;
+					try {
+						line = file.readLine();
+					} catch (IOException e) {
+						throw new ParserException(this.currentToken.iSourceLineNr
+								, "Unable to read file"
+								, this.sourceFileName);
+					}
 					if (line == null)
 					{
 						// EOF
@@ -331,7 +355,7 @@ public class Scanner {
 	 * @param tokenStart - Beginning of the string
 	 * @throws Exception - Custom exception in case of a format error
 	 */
-	private void readStringConstant(int tokenStart) throws Exception {
+	private void readStringConstant(int tokenStart) throws ParserException {
 
 		int tokenEnd = tokenStart+1;
 		// While we are still within a valid string constant
@@ -398,7 +422,7 @@ public class Scanner {
 	 * @param varArgs - Any number of arguments used by the format string to print the error message
 	 * @throws Exception - Once the error has been generated throw a custom ParserException with the correct string representation
 	 */
-	public void error(String fmt, Object... varArgs) throws Exception
+	public void error(String fmt, Object... varArgs) throws ParserException
 	{
 		String diagnosticTxt = String.format(fmt, varArgs);
 		throw new ParserException(this.lineNumber

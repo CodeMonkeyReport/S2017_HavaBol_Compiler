@@ -13,19 +13,97 @@ public class Parser {
 		this.storageManager = storageManager;
 	}
 
+
 	/**
-	 * Function for handling a list of statements. (A program)
+	 * 	This method executes a list of statements until an expected terminating string.
 	 * <p>
-	 * This function determines which statement subroutine to run next and makes the appropriate call.
+	 * This method is called as the main program loop with the parameters true and "" indicating EOF
 	 * <p>
-	 * TODO
-	 * @return
+	 * 
+	 * @param bExecuting - Indicates if the method should execute the list of statements
+	 * @param expectedTerminator
+	 * @throws Exception 
 	 */
-	public ResultValue statements()
+	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
-		return null;
+		boolean state;
+		ResultValue res = null;
+		// Get next token
+		while (!scanner.currentToken.tokenStr.equals("")) // While we have not reached the EOF
+		{
+			scanner.getNext();
+			switch (scanner.currentToken.primClassif)
+			{
+			case Token.CONTROL:
+				switch (scanner.currentToken.subClassif)
+				{
+				case Token.DECLARE:
+					declareStmt(bExecuting);
+					break;
+				case Token.FLOW:
+					if (scanner.currentToken.tokenStr.equals("if"))
+						res = ifStmt(bExecuting);
+					if (scanner.currentToken.tokenStr.equals("while"))
+						res = whileStmt(bExecuting);
+					if (scanner.currentToken.tokenStr.equals("for"))
+						res = forStmt(bExecuting);
+					break;
+				case Token.END:
+					//return bExecuting;
+				default:
+					break;
+				}
+			case Token.IDENTIFIER:
+				assignmentStmt(bExecuting);
+				break;
+				// Function call
+			}
+		}
+		
+		return res;
 	}
 	
+	
+	
+	private ResultValue forStmt(boolean bExecuting) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	private ResultValue whileStmt(boolean bExecuting) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	private ResultValue ifStmt(boolean bExecuting) throws ParserException {
+		ResultValue res;
+		
+		if (bExecuting == false) // If we are not executing then we don't care
+		{
+			scanner.skipTo(":");
+			res = statements(false);
+			return res;
+		}
+		
+		scanner.getNext();
+		res = expression(":");
+		
+		if (res.internalValue.equals("T"))
+			statements(true);
+		else 
+			statements(false);
+		
+		if (scanner.currentToken.tokenStr.equals("endif") == false)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'endif\' after if statement"
+					, scanner.sourceFileName);
+		
+		return res;
+	}
+
+
 	/**
 	 * Function for handling declarations of variables.
 	 * <p>
@@ -36,7 +114,13 @@ public class Parser {
 	 * @throws ParserException 
 	 * 
 	 */
-	public void declareVarStmt() throws ParserException {
+	public void declareStmt(boolean bExecuting) throws ParserException {
+		
+		if (bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return;
+		}
 		
 		if (scanner.nextToken.primClassif != Token.OPERAND && scanner.nextToken.subClassif != Token.IDENTIFIER) // If the next token is not an identifier
 		{
@@ -69,11 +153,19 @@ public class Parser {
 	 * When this function completes we will have parsed through until the end of a following expression.
 	 * Current token will be on ';'
 	 * <p>
+	 * If bExecuting is false then simply skip to ';' and return null
+	 * <p>
 	 * @return
 	 * @throws Exception
 	 */
-	public ResultValue assignmentStmt() throws Exception
+	public ResultValue assignmentStmt(boolean bExecuting) throws ParserException
 	{
+		
+		if (bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return null;
+		}
 		
 		if (scanner.currentToken.subClassif != Token.IDENTIFIER) // Current token should be an identifier.
 		{
@@ -97,14 +189,15 @@ public class Parser {
 		ResultValue subResult2;
 		
 		scanner.getNext();
-		subResult1 = expression();
+		String expectedTerminator = ";";
+		subResult1 = expression(expectedTerminator);
 		if (operatorToken.tokenStr.equals("="))
 		{													// Assignment is the simple case.
 			Utility.assign(this, targetResult, subResult1);
 		}
 		else if (operatorToken.tokenStr.equals("#="))
 		{
-			if (!targetResult.type.equals("String")) // If the target is not a string we can't concat.
+			if (!targetResult.type.equals("String")) // If the target is not a string we can't concatenate.
 			{
 				throw new ParserException(scanner.currentToken.iSourceLineNr
 						, "Target of concatination assignment must be String type, found: \'" + targetResult.type + "\'"
@@ -113,7 +206,7 @@ public class Parser {
 			subResult2 = Utility.concat(this, targetResult, subResult1);
 			Utility.assign(this, targetResult, subResult2);
 		}
-		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we cant do any of the following assignments
+		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we can't do any of the following assignments
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Can not perform operation \'" + operatorToken.tokenStr + "\' on non numeric variable \'" + targetToken.tokenStr + "\'"
@@ -160,11 +253,12 @@ public class Parser {
 	 * A stack of ResultValue will be used for the output
 	 * <p>
 	 * Assume currentToken is on the first operand of the expression on entering the method.
+	 * When this method completes, the current token will be on the separator indicating the end of the expression.
 	 * <p>
 	 * @return
 	 * @throws Exception 
 	 */
-	public ResultValue expression() throws Exception 
+	public ResultValue expression(String expectedTerminator) throws ParserException 
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
@@ -176,7 +270,7 @@ public class Parser {
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		
-		while(!scanner.currentToken.tokenStr.equals(";") && !scanner.currentToken.tokenStr.equals(":")) // Until we reach a semicolon, colon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) ) // Until we reach a semicolon, colon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -267,7 +361,7 @@ public class Parser {
 							
 							outputStack.push(tempRes03); // Push result back onto stack
 						}
-					} // if bFound TODO
+					} // if bFound OR if we found a function call TODO
 					break;
 				case "(":
 					sToken = new StackToken(scanner.currentToken);
@@ -317,10 +411,10 @@ public class Parser {
 					, "Expression parse missmatch"
 					, scanner.sourceFileName);
 		}
-		if (!scanner.currentToken.tokenStr.equals(";"))
+		if (!scanner.currentToken.tokenStr.equals(expectedTerminator))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \';\' at end of input"
+					, "Expected \'" + expectedTerminator + "\' at end of expression"
 					, scanner.sourceFileName);
 		}
 		return res;
