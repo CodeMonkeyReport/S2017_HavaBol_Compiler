@@ -63,7 +63,6 @@ public class Parser {
 					if (temp.tokenStr.equals("while"))
 					{
 						res = whileStmt(bExecuting);
-						
 					}
 					if (temp.tokenStr.equals("for"))
 						res = forStmt(bExecuting);
@@ -105,7 +104,11 @@ public class Parser {
 					break;
 				}
 				break;
-			case Token.IDENTIFIER:
+			case Token.OPERAND:
+				if (temp.subClassif != Token.IDENTIFIER)
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, "Unexpected litteral value \'" + temp.tokenStr + "\'"
+							, scanner.sourceFileName);
 				assignmentStmt(bExecuting);
 				break;
 			case Token.FUNCTION:
@@ -124,12 +127,44 @@ public class Parser {
 		return null;
 	}
 	
-	private ResultValue functionStmt(boolean bExecuting) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * Not yet implemented
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException 
+	 */
+	private ResultValue functionStmt(boolean bExecuting) throws ParserException 
+	{
+		ResultValue res = null;
+		Token functionToken;
+		
+		functionToken = scanner.currentToken;
+		
+		if (functionToken.subClassif == Token.BUILTIN)
+		{
+			System.out.println("Function calls not yet implemented");
+			scanner.skipTo(";");
+		}
+		else
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Builtin functions not yet implemented, can not execute function \'" + functionToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		}
+		
+		return res;
 	}
 
-
+	/**
+	 * Handles execution of the else branch of an if-than-else statement
+	 * <p>
+	 * On entering this method the current token should be on 'else'
+	 * On exiting this method the current token should be on 'endif'
+	 * <p>
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
 	public ResultValue elseStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res = new ResultValue(Type.BOOL);
@@ -153,6 +188,11 @@ public class Parser {
 		return res;
 	}
 	
+	/**
+	 * Not yet implemented
+	 * @param bExecuting
+	 * @return
+	 */
 	public ResultValue forStmt(boolean bExecuting) 
 	{
 		// TODO Auto-generated method stub
@@ -160,6 +200,15 @@ public class Parser {
 	}
 
 
+	/**
+	 * handles the execution of while statements
+	 * <p>
+	 * On entering the method the currentToken should be on 'while'
+	 * On exiting the method the currentToken should be on 'endwhile'
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
 	public ResultValue whileStmt(boolean bExecuting) throws ParserException 
 	{
 		ResultValue res;
@@ -183,6 +232,14 @@ public class Parser {
 			res = expression(":");
 		}
 		res = statements(false);
+		
+		if (! scanner.currentToken.tokenStr.equals("endwhile"))
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'endwhile\' after \'while\' statement"
+					, scanner.sourceFileName);
+		}
+		
 		return res;
 	}
 
@@ -295,6 +352,14 @@ public class Parser {
 		Token operatorToken = scanner.currentToken; // Store the operation we are performing
 		
 		ResultValue targetResult = storageManager.getVariableValue(targetToken.tokenStr);
+		
+		if (targetResult == null)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Undeclared identifier: \'" + targetToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		}
+		
 		ResultValue subResult1;
 		ResultValue subResult2;
 		

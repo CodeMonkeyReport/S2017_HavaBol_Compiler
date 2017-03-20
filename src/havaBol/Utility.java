@@ -768,7 +768,7 @@ public class Utility {
 	
 	public static ResultValue parseDate(Parser parser, Token dateToken) throws ParserException {
 		
-		ResultValue res = new ResultValue(Type.BOOL);
+		ResultValue res = new ResultValue(Type.DATE);
 		res.internalValue = dateToken.tokenStr;
 		
 		res.internalValue = coerceToDate(parser, res);
@@ -822,16 +822,19 @@ public class Utility {
 		case "!=":
 			res = Utility.notEqalTo(parser, operandOne, operandTwo);
 			break;
-		case "in": // TODO NOT YET IMPLEMENTED
-
-		case "notin":
-
 		case "and":
-
+			res = Utility.and(parser, operandOne, operandTwo);
+			break;
 		case "or":
-			System.out.println("NOT IMPLEMENTED");
-			res = new ResultValue("Bool");
-			res.internalValue = "F";
+			res = Utility.or(parser, operandOne, operandTwo);
+			break;
+			
+			
+		case "in": // TODO NOT YET IMPLEMENTED
+		case "notin":
+			throw new ParserException(parser.scanner.lineNumber
+					, "NOT YET IMPLEMENTED"
+					, parser.scanner.sourceFileName);
 		default:
 			throw new ParserException(parser.scanner.lineNumber
 					, "Unknown operator \'" + operator.tokenStr + "\'"
@@ -840,6 +843,29 @@ public class Utility {
 		return res;
 	}
 
+	private static ResultValue or(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
+		// TODO Auto-generated method stub
+		ResultValue res = new ResultValue(Type.BOOL);
+		
+		if (operandOne.internalValue.equals("T") && operandTwo.internalValue.equals("T"))
+			res.internalValue = "T";
+		else
+			res.internalValue = "F";
+		
+		return res;
+	}
+
+	private static ResultValue and(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
+
+		ResultValue res = new ResultValue(Type.BOOL);
+		
+		if (operandOne.internalValue.equals("T") || operandTwo.internalValue.equals("T"))
+			res.internalValue = "T";
+		else
+			res.internalValue = "F";
+		
+		return res;
+	}
 
 	public static ResultValue evaluateUnaryOperator(Parser parser, ResultValue operand, Token operator) throws ParserException 
 	{
@@ -859,7 +885,7 @@ public class Utility {
 			res = new ResultValue(operand.type);
 			if (!Utility.isNumeric(res))
 				throw new ParserException(parser.scanner.lineNumber
-						, "Can not take negative of non numeric type \'" + res.type + "\'"
+						, "Can not compute negative of non numeric type \'" + res.type + "\'"
 						, parser.scanner.sourceFileName);
 			
 			res.internalValue = "-" + operand.internalValue;
