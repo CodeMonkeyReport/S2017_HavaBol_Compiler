@@ -1,8 +1,6 @@
 
 package havaBol;
 
-import java.util.*;
-
 public class Token
 {
     public String tokenStr = "";

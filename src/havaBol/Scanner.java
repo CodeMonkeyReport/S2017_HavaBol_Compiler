@@ -1,9 +1,9 @@
 package havaBol;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Scanner {
 
@@ -11,13 +11,14 @@ public class Scanner {
 
 	public Token currentToken;
 	public Token nextToken;
-	private BufferedReader file;
-	private SymbolTable symbolTable;
+	//private BufferedReader file;
+	private List<String> file;
+	public SymbolTable symbolTable;
 
 	public char[] currentLine;
 	private int linePosition;
-	private int lineNumber;
-	private String sourceFileName;
+	public int lineNumber;
+	public String sourceFileName;
 
 
     /**
@@ -32,33 +33,77 @@ public class Scanner {
 	public Scanner(String path, BufferedReader reader, SymbolTable symbolTable) throws Exception 
 	{
 		//FileReader reader = new FileReader(path);
-		file = reader;
+		String tmpLine = reader.readLine();
+		this.file = new ArrayList<String>();
+		while (tmpLine != null)
+		{
+			this.file.add(tmpLine);
+			tmpLine = reader.readLine();
+		}
 
 		this.sourceFileName = path;
 		this.symbolTable = symbolTable;
 		this.currentToken = new Token();
 		this.nextToken = new Token();
 
-        String line = file.readLine();
-		this.currentLine = line.toCharArray();
-		this.lineNumber = 1;
-		this.linePosition = 0; // reset position
-		System.out.printf(" %d %s\n", this.lineNumber, line);
-		getNext(); // Read the first token into current
 		
-		// What is this code?
-//        if(line != null)
-//            System.out.printf("    %d %s\n", lineNumber+1, line);
-//		try {
-//			do{
-//				getNext();
-//			}
-//			while(nextToken.tokenStr.isEmpty() && currentLine != null);
-//		}catch (Exception exception){
-//			exception.printStackTrace();
-//		}
+		this.lineNumber = 0;
+		this.linePosition = 0; // reset position
+		
+        String line = this.readLine();
+		this.currentLine = line.toCharArray();
+		//System.out.printf(" %d %s\n", this.lineNumber, line);
+		getNext(); // Read the first token into next
+		this.currentToken.tokenStr = "PROGRAM_START";
+	}
+	
+	public void skipTo(String target) throws ParserException
+	{
+		while (!this.currentToken.tokenStr.equals(target))
+		{
+			if (this.getNext().equals(""))
+					throw new ParserException(this.currentToken.iSourceLineNr
+							, "Error missing \'" + target + "\'"
+							, this.sourceFileName);
+		}
 	}
 
+	public void jumpToPosition(int lineNumber, int linePosition) throws ParserException
+	{
+		if (lineNumber > this.lineNumber)
+		{
+			throw new ParserException(this.currentToken.iSourceLineNr
+					, "Jumping forward detected"
+					, this.sourceFileName);
+		}
+		// Read the line
+		String line;
+		this.lineNumber = lineNumber-1;
+		this.linePosition = linePosition;
+		line = this.readLine();
+		if (line == null)
+		{
+			// Out of bounds error
+			return;
+		}
+        this.currentLine = line.toCharArray();
+        this.getNext(); // Read the current token
+        this.getNext(); // and the next
+	}
+	
+	private String readLine()
+	{
+		String tmpLine;
+		this.lineNumber++;
+		try {
+			tmpLine = file.get(this.lineNumber-1);
+		} catch (IndexOutOfBoundsException e)
+		{
+			return null;
+		}
+		return tmpLine;
+	}
+	
 	/**
 	 * Populates the public currentToken property with the appropriate token information and
 	 * returns the Token's tokenString value
@@ -67,9 +112,8 @@ public class Scanner {
 	 * @return a String representation of the token
 	 * @throws Exception
 	 */
-	public String getNext() throws Exception {
+	public String getNext() throws ParserException {
 
-		//System.out.println(currentToken.tokenStr);
 		currentToken = nextToken;
 		nextToken = new Token();
 		int tokenStart;
@@ -82,18 +126,21 @@ public class Scanner {
 			if (currentLine.length == this.linePosition)
 			{
 				// Read the next line
-				String line = file.readLine();
+				String line;
+
+				line = this.readLine();
 				if (line == null)
 				{
 					// EOF
 					nextToken.primClassif = Token.EOF;
 					nextToken.tokenStr = "";
+					nextToken.iColPos = this.linePosition;
+					nextToken.iSourceLineNr = this.lineNumber;
 					return currentToken.tokenStr;
 				}
                 this.currentLine = line.toCharArray();
-				this.lineNumber++;
 				this.linePosition = 0;
-				System.out.printf(" %d %s\n", this.lineNumber, line);
+				//System.out.printf(" %d %s\n", this.lineNumber, line);
 			}
 			else
 			{
@@ -124,7 +171,7 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws Exception
 	 */
-	private void classify(int tokenStart, int tokenEnd) throws Exception {
+	private void classify(int tokenStart, int tokenEnd) throws ParserException {
 
 		this.nextToken.iSourceLineNr = this.lineNumber;
 		this.nextToken.iColPos = tokenStart;
@@ -159,7 +206,7 @@ public class Scanner {
 	 * @param tokenEnd - Ending index of the token
 	 * @throws NumberFormatException
 	 */
-	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws Exception {
+	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException {
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 
 		// For floating point values
@@ -211,7 +258,6 @@ public class Scanner {
 		STFunction foundFunction;
 		STIdentifier foundIdentifier;
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
-		// IF stEntry = st.getSymbol() HAS VALUE
 		found = symbolTable.getSymbol(token);
 		if (found != null)
 		{
@@ -234,7 +280,7 @@ public class Scanner {
 			{
 				foundIdentifier = (STIdentifier) found;
 				this.nextToken.primClassif = foundIdentifier.primClassif;
-				//this.nextToken.subClassif = foundIdentifier.subClassif;
+				this.nextToken.subClassif = Token.IDENTIFIER;
 				this.nextToken.tokenStr = token;
 			}
 			else
@@ -256,12 +302,13 @@ public class Scanner {
 	/**
 	 * Helper method to the classify method used to set values for a special characters
 	 * <p>
-	 *
+	 * Also handles skipping comments and combination of two character operators.
+	 * <p>
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 * @throws Exception
 	 */
-	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws Exception {
+	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws ParserException {
 
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart+1);
 		this.linePosition++;
@@ -270,7 +317,9 @@ public class Scanner {
 			case '/':
 				if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '/'))
 				{
-					String line = file.readLine();
+					String line;
+
+					line = this.readLine();
 					if (line == null)
 					{
 						// EOF
@@ -285,7 +334,6 @@ public class Scanner {
 						break;
 					}
 					this.currentLine = line.toCharArray();
-					this.lineNumber++;
 					this.linePosition = 0;
 					nextToken = currentToken;
 					getNext();
@@ -338,11 +386,12 @@ public class Scanner {
 	/**
 	 * Helper method used to complete the reading of a string constant.
 	 * <p>
-	 *
+	 * Also handles escape characters and replaces them with the correct byte codes.
+	 * <p>
 	 * @param tokenStart - Beginning of the string
 	 * @throws Exception - Custom exception in case of a format error
 	 */
-	private void readStringConstant(int tokenStart) throws Exception {
+	private void readStringConstant(int tokenStart) throws ParserException {
 
 		int tokenEnd = tokenStart+1;
 		// While we are still within a valid string constant
@@ -402,7 +451,14 @@ public class Scanner {
 		this.nextToken.tokenStr = String.valueOf(retCharM,0,charPosition);
 	}
 
-	public void error(String fmt, Object... varArgs) throws Exception
+	/**
+	 * Error method used to print appropriate messages to the user in the case of syntax errors.
+	 * <p>
+	 * @param fmt - Format string
+	 * @param varArgs - Any number of arguments used by the format string to print the error message
+	 * @throws Exception - Once the error has been generated throw a custom ParserException with the correct string representation
+	 */
+	public void error(String fmt, Object... varArgs) throws ParserException
 	{
 		String diagnosticTxt = String.format(fmt, varArgs);
 		throw new ParserException(this.lineNumber
