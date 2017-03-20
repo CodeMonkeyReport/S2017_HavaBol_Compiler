@@ -40,6 +40,47 @@ public class ScannerTest {
 	}
 	
 	@Test
+	public void canMatchLineNumbers() 
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "x\n"
+		         		 + "y\n"
+		         		 + "Z Int i\n"
+		         		 + "Hello\n"
+		         		 + "Int\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		
+		SymbolTable st = new SymbolTable();
+		try {
+			
+			Scanner testScanner = new Scanner("TEST", br, st);
+			// Use this area to run tests
+			
+			testScanner.getNext(); // Read a single token
+			Token testToken = testScanner.currentToken; // get the token
+			assertEquals(1, testToken.iSourceLineNr); // check the token
+			
+			testScanner.getNext(); // Read a single token
+			testToken = testScanner.currentToken; // get the token
+			assertEquals(2, testToken.iSourceLineNr); // check the token
+			
+			testScanner.getNext(); // Read a single token
+			testToken = testScanner.currentToken; // get the token
+			assertEquals(3, testToken.iSourceLineNr); // check the token
+			
+			testScanner.getNext(); // Read a single token
+			testToken = testScanner.currentToken; // get the token
+			assertEquals(3, testToken.iSourceLineNr); // check the token
+			
+			//***
+		} catch (Exception e) {
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
 	public void canReadNextToken()
 	{
 		// Set up the inital 'file' to be read
@@ -63,6 +104,52 @@ public class ScannerTest {
 			testToken = testScanner.nextToken;
 			
 			assertEquals("b", testToken.tokenStr); // check the token
+			
+			//***
+		} catch (Exception e) {
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canJumpToPosition()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "while T:\n"
+						 + "  i++;\n"
+						 + "endwhile";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		Token testToken;
+		
+		SymbolTable st = new SymbolTable();
+		try {
+			
+			Scanner testScanner = new Scanner("TEST", br, st);
+			// Use this area to run tests 
+			
+			testScanner.getNext();
+			testToken = testScanner.currentToken;
+			assertEquals("while", testToken.tokenStr); // check the token
+			
+			testScanner.getNext();
+			testToken = testScanner.currentToken;
+			assertEquals("T", testToken.tokenStr); // check the token
+			
+			testScanner.getNext();
+			testToken = testScanner.currentToken;
+			assertEquals(":", testToken.tokenStr); // check the token
+			
+			testScanner.getNext();
+			testToken = testScanner.currentToken;
+			assertEquals("i", testToken.tokenStr); // check the token
+			
+			testScanner.jumpToPosition(1, 0);
+			
+			testToken = testScanner.currentToken;
+			assertEquals("while", testToken.tokenStr); // check the token
+			testToken = testScanner.nextToken;	
+			assertEquals("T", testToken.tokenStr); // check the token
 			
 			//***
 		} catch (Exception e) {
@@ -95,6 +182,56 @@ public class ScannerTest {
 			testToken = testScanner.currentToken; // get the token
 			assertEquals("y", testToken.tokenStr); // check the token
 			
+			//***
+		} catch (Exception e) {
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canReadAcrossManyNewLines() 
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "x\n"
+				         + "y\n"
+				         + "Z Int i\n"
+				         + "Hello\n"
+				         + "Int\n";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		Token testToken;
+		
+		SymbolTable st = new SymbolTable();
+		try {
+			
+			Scanner testScanner = new Scanner("TEST", br, st);
+			// Use this area to run tests
+			
+			testScanner.getNext(); // Read a single token should be x
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("x", testToken.tokenStr); // check the token
+			
+			
+			
+			testScanner.getNext(); // Read a single token should be y
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("y", testToken.tokenStr); // check the token
+			
+			testScanner.getNext(); // Read a single token should be y
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("Z", testToken.tokenStr); // check the token
+
+			testScanner.getNext(); // Read a single token should be y
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("Int", testToken.tokenStr); // check the token
+			
+			testScanner.getNext(); // Read a single token should be y
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("i", testToken.tokenStr); // check the token
+			
+			testScanner.getNext(); // Read a single token should be y
+			testToken = testScanner.currentToken; // get the token
+			assertEquals("Hello", testToken.tokenStr); // check the token
 			//***
 		} catch (Exception e) {
 			assertTrue("Unable to read input stream", false);
@@ -356,6 +493,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -384,6 +522,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -412,6 +551,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -440,6 +580,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -468,6 +609,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -496,6 +638,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -524,6 +667,7 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -552,6 +696,8 @@ public class ScannerTest {
 			
 			//***
 		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
 			assertTrue("Unable to read input stream", false);
 		}
 	}

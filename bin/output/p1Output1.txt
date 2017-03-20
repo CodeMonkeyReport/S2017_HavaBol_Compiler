@@ -1,0 +1,25 @@
+primClassif subClassif   tokenStr
+OPERAND     IDENTFIER    Int
+OPERAND     IDENTFIER    x
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    Float
+OPERAND     IDENTFIER    pie
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    String
+OPERAND     IDENTFIER    yStr
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    x
+OPERATOR    -            =
+OPERAND     IDENTFIER    x
+OPERATOR    -            +
+OPERAND     INTEGER      1
+SEPARATOR   -            ;
+OPERAND     IDENTFIER    pie
+OPERATOR    -            =
+Line 7 Could not parse floating point token 3.1.4 at position 6, File: p1Input.txt
+	at havaBol.Scanner.error(Scanner.java:272)
+	at havaBol.Scanner.classifyNumericConstant(Scanner.java:155)
+	at havaBol.Scanner.classify(Scanner.java:126)
+	at havaBol.Scanner.getNext(Scanner.java:92)
+	at havaBol.HavaBol.main(HavaBol.java:37)
+	
