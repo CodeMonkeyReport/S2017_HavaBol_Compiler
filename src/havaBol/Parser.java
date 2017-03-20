@@ -29,56 +29,168 @@ public class Parser {
 		boolean state;
 		ResultValue res = null;
 		// Get next token
-		while (!scanner.currentToken.tokenStr.equals("")) // While we have not reached the EOF
+		while (! scanner.getNext().isEmpty() ) // While we have not reached the EOF
 		{
-			scanner.getNext();
-			switch (scanner.currentToken.primClassif)
+			Token temp = scanner.currentToken;
+			switch (temp.primClassif)
 			{
 			case Token.CONTROL:
-				switch (scanner.currentToken.subClassif)
+				switch (temp.subClassif)
 				{
 				case Token.DECLARE:
 					declareStmt(bExecuting);
+					if (scanner.nextToken.primClassif == Token.OPERATOR)
+						assignmentStmt(bExecuting);
 					break;
 				case Token.FLOW:
-					if (scanner.currentToken.tokenStr.equals("if"))
+					if (temp.tokenStr.equals("if"))
+					{
 						res = ifStmt(bExecuting);
-					if (scanner.currentToken.tokenStr.equals("while"))
+						if (res.terminatingStr.equals("else"))
+						{
+							if (res.internalValue.equals("T")) // If we executed the if part
+								elseStmt(false);	// Don't execute else
+							else
+								elseStmt(bExecuting); // Or do
+						}
+						else if (! res.terminatingStr.equals("endif"))
+						{
+							throw new ParserException(scanner.currentToken.iSourceLineNr
+									, "Expected \'endif\' after \'if\' statement"
+									, scanner.sourceFileName);
+						}
+					}
+					if (temp.tokenStr.equals("while"))
+					{
 						res = whileStmt(bExecuting);
-					if (scanner.currentToken.tokenStr.equals("for"))
+						
+					}
+					if (temp.tokenStr.equals("for"))
 						res = forStmt(bExecuting);
 					break;
 				case Token.END:
-					//return bExecuting;
+					if (temp.tokenStr.equals("else"))
+					{
+						res = new ResultValue(Type.BOOL); // Build a result object and return it
+						if (bExecuting)
+							res.internalValue = "T";
+						else
+							res.internalValue = "F";
+						res.terminatingStr = "else";
+						scanner.getNext(); // move past the else statement
+						return res;
+					}
+					else if (temp.tokenStr.equals("endif"))
+					{						
+						res = new ResultValue(Type.BOOL); // Build a result object and return it
+						if (bExecuting)
+							res.internalValue = "T";
+						else
+							res.internalValue = "F";
+						res.terminatingStr = "endif";
+						return res;
+					}
+					else if (temp.tokenStr.equals("endwhile"))
+					{
+						res = new ResultValue(Type.BOOL); // Build a result object and return it
+						if (bExecuting)
+							res.internalValue = "T";
+						else
+							res.internalValue = "F";
+						res.terminatingStr = "endwhile";
+						return res;
+					}
+					break;
 				default:
 					break;
 				}
+				break;
 			case Token.IDENTIFIER:
 				assignmentStmt(bExecuting);
 				break;
+			case Token.FUNCTION:
+				functionStmt(bExecuting);
 				// Function call
+			case Token.SEPARATOR:
+				 // TODO maybe some error checking needed?
+				break;
+			default:
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unknown token found: \'" + temp.tokenStr + "\'"
+						, scanner.sourceFileName);
 			}
 		}
+		
+		return null;
+	}
+	
+	private ResultValue functionStmt(boolean bExecuting) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	public ResultValue elseStmt(boolean bExecuting) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.BOOL);
+		res.terminatingStr = "endif";
+		
+		if (bExecuting == false) // If we are not executing then we don't care
+		{
+			scanner.skipTo(":");
+			res = statements(false);
+			
+			return res;
+		}
+		
+		res = statements(bExecuting);
+		
+		if (scanner.currentToken.tokenStr.equals("endif") == false)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'endif\' after if statement"
+					, scanner.sourceFileName);
 		
 		return res;
 	}
 	
-	
-	
-	private ResultValue forStmt(boolean bExecuting) {
+	public ResultValue forStmt(boolean bExecuting) 
+	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
-	private ResultValue whileStmt(boolean bExecuting) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	private ResultValue ifStmt(boolean bExecuting) throws ParserException {
+	public ResultValue whileStmt(boolean bExecuting) throws ParserException 
+	{
 		ResultValue res;
+		Token whileToken = scanner.currentToken;
+		
+		if (bExecuting == false)
+		{
+			scanner.skipTo(":");
+			res = statements(false);
+			return res;
+		}
+		
+		scanner.getNext();
+		res = expression(":");
+		
+		while (res.internalValue.equals("T"))
+		{
+			statements(true);
+			scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
+			scanner.getNext();
+			res = expression(":");
+		}
+		res = statements(false);
+		return res;
+	}
+
+	
+	
+	private ResultValue ifStmt(boolean bExecuting) throws ParserException 
+	{
+		ResultValue res = new ResultValue(Type.BOOL);
 		
 		if (bExecuting == false) // If we are not executing then we don't care
 		{
@@ -91,14 +203,9 @@ public class Parser {
 		res = expression(":");
 		
 		if (res.internalValue.equals("T"))
-			statements(true);
+			res = statements(true);
 		else 
-			statements(false);
-		
-		if (scanner.currentToken.tokenStr.equals("endif") == false)
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \'endif\' after if statement"
-					, scanner.sourceFileName);
+			res = statements(false);
 		
 		return res;
 	}
@@ -109,8 +216,10 @@ public class Parser {
 	 * <p>
 	 * Example: Int i;
 	 * 	Assume currentToken is on "Int" when entering this method.
-	 * 	This function should create a new entry into the symbol table and assign it the appropriate information.
+	 * 	This method should create a new entry into the symbol table and assign it the appropriate information.
+	 * 
 	 * <p>
+	 * On exiting the method the current token should be on ';'
 	 * @throws ParserException 
 	 * 
 	 */
@@ -142,7 +251,8 @@ public class Parser {
 		
 		ResultValue variableValue = new ResultValue(scanner.currentToken.tokenStr); // Create a new result value and set its type string
 		storageManager.putVariableValue(scanner.nextToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
-
+		
+		scanner.getNext();
 	}
 
 	/**
@@ -191,6 +301,14 @@ public class Parser {
 		scanner.getNext();
 		String expectedTerminator = ";";
 		subResult1 = expression(expectedTerminator);
+		
+		if (! subResult1.terminatingStr.equals(";"))
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Missing \';\' after assignment statement"
+					, scanner.sourceFileName);
+		}
+		
 		if (operatorToken.tokenStr.equals("="))
 		{													// Assignment is the simple case.
 			Utility.assign(this, targetResult, subResult1);
@@ -417,6 +535,7 @@ public class Parser {
 					, "Expected \'" + expectedTerminator + "\' at end of expression"
 					, scanner.sourceFileName);
 		}
+		res.terminatingStr = expectedTerminator;
 		return res;
 	}
 

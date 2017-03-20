@@ -55,7 +55,7 @@ public class ParserTest {
 			
 			// current token is now on Int, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals(storageManager.getVariableValue("i").internalValue, "5");
@@ -320,14 +320,14 @@ public class ParserTest {
 			
 			// current token is now on Int, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have i declared, now declare and initilize j
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("5", storageManager.getVariableValue("j").internalValue);
@@ -345,7 +345,7 @@ public class ParserTest {
 		// Set up the inital 'file' to be read
 		String testInput = "Int i = 5;\n"
 				         + "Int j = i;\n"
-				         + "Int k = i * j;";
+				         + "Int k = i * j;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -361,21 +361,21 @@ public class ParserTest {
 			
 			// current token is now on Int, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have i declared, now declare and initilize j
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have j declared, now declare and initilize k
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("25", storageManager.getVariableValue("k").internalValue);
@@ -383,6 +383,7 @@ public class ParserTest {
 			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
+			e.printStackTrace();
 			assertTrue("Unable to read input stream", false);
 		}
 	}
@@ -407,14 +408,14 @@ public class ParserTest {
 			
 			// current token is now on Int, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have i declared, now declare and initilize j
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("2", storageManager.getVariableValue("j").internalValue);
@@ -446,14 +447,14 @@ public class ParserTest {
 			
 			// current token is now on Float, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have f declared, now declare and initilize j
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("2", storageManager.getVariableValue("j").internalValue);
@@ -485,14 +486,14 @@ public class ParserTest {
 			
 			// current token is now on Float, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have f declared, now declare and initilize j
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("2.5", storageManager.getVariableValue("j").internalValue);
@@ -524,14 +525,14 @@ public class ParserTest {
 			
 			// current token is now on String, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have s declared, now declare and initilize i
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("7", storageManager.getVariableValue("i").internalValue);
@@ -563,14 +564,14 @@ public class ParserTest {
 			
 			// current token is now on String, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have s declared, now declare and initilize i
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("7.0", storageManager.getVariableValue("f").internalValue);
@@ -603,21 +604,21 @@ public class ParserTest {
 			
 			// current token is now on String, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have s declared, now declare and initilize f
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have f declared, now declare and initilize i
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("12", storageManager.getVariableValue("i").internalValue);
@@ -650,21 +651,21 @@ public class ParserTest {
 			
 			// current token is now on String, declare the variable and assign to it
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have s declared, now declare and initilize f
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			testScanner.getNext();
 			
 			// Should now have f declared, now declare and initilize b
 			parser.declareStmt(true);
-			testScanner.getNext();
+
 			parser.assignmentStmt(true);
 			
 			assertEquals("T", storageManager.getVariableValue("b").internalValue);

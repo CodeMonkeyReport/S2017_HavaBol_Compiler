@@ -2,6 +2,8 @@ package havaBol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Scanner {
 
@@ -9,7 +11,8 @@ public class Scanner {
 
 	public Token currentToken;
 	public Token nextToken;
-	private BufferedReader file;
+	//private BufferedReader file;
+	private List<String> file;
 	public SymbolTable symbolTable;
 
 	public char[] currentLine;
@@ -30,17 +33,25 @@ public class Scanner {
 	public Scanner(String path, BufferedReader reader, SymbolTable symbolTable) throws Exception 
 	{
 		//FileReader reader = new FileReader(path);
-		file = reader;
+		String tmpLine = reader.readLine();
+		this.file = new ArrayList<String>();
+		while (tmpLine != null)
+		{
+			this.file.add(tmpLine);
+			tmpLine = reader.readLine();
+		}
 
 		this.sourceFileName = path;
 		this.symbolTable = symbolTable;
 		this.currentToken = new Token();
 		this.nextToken = new Token();
 
-        String line = file.readLine();
-		this.currentLine = line.toCharArray();
-		this.lineNumber = 1;
+		
+		this.lineNumber = 0;
 		this.linePosition = 0; // reset position
+		
+        String line = this.readLine();
+		this.currentLine = line.toCharArray();
 		//System.out.printf(" %d %s\n", this.lineNumber, line);
 		getNext(); // Read the first token into next
 		this.currentToken.tokenStr = "PROGRAM_START";
@@ -50,10 +61,49 @@ public class Scanner {
 	{
 		while (!this.currentToken.tokenStr.equals(target))
 		{
-			this.getNext();
+			if (this.getNext().equals(""))
+					throw new ParserException(this.currentToken.iSourceLineNr
+							, "Error missing \'" + target + "\'"
+							, this.sourceFileName);
 		}
 	}
 
+	public void jumpToPosition(int lineNumber, int linePosition) throws ParserException
+	{
+		if (lineNumber > this.lineNumber)
+		{
+			throw new ParserException(this.currentToken.iSourceLineNr
+					, "Jumping forward detected"
+					, this.sourceFileName);
+		}
+		// Read the line
+		String line;
+		this.lineNumber = lineNumber-1;
+		this.linePosition = linePosition;
+		line = this.readLine();
+		if (line == null)
+		{
+			// Out of bounds error
+			return;
+		}
+        this.currentLine = line.toCharArray();
+        this.getNext(); // Read the current token
+        this.getNext(); // and the next
+	}
+	
+	private String readLine()
+	{
+		String tmpLine;
+		this.lineNumber++;
+		try {
+			tmpLine = file.get(this.lineNumber-1);
+		} catch (IndexOutOfBoundsException e)
+		{
+			return null;
+		}
+		return tmpLine;
+	}
+	
 	/**
 	 * Populates the public currentToken property with the appropriate token information and
 	 * returns the Token's tokenString value
@@ -77,15 +127,8 @@ public class Scanner {
 			{
 				// Read the next line
 				String line;
-				try {
-					line = file.readLine();
-				} catch (IOException e) {
-					
-					throw new ParserException(this.currentToken.iSourceLineNr
-							, "Unable to read file"
-							, this.sourceFileName);
-					
-				}
+
+				line = this.readLine();
 				if (line == null)
 				{
 					// EOF
@@ -96,7 +139,6 @@ public class Scanner {
 					return currentToken.tokenStr;
 				}
                 this.currentLine = line.toCharArray();
-				this.lineNumber++;
 				this.linePosition = 0;
 				//System.out.printf(" %d %s\n", this.lineNumber, line);
 			}
@@ -276,13 +318,8 @@ public class Scanner {
 				if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '/'))
 				{
 					String line;
-					try {
-						line = file.readLine();
-					} catch (IOException e) {
-						throw new ParserException(this.currentToken.iSourceLineNr
-								, "Unable to read file"
-								, this.sourceFileName);
-					}
+
+					line = this.readLine();
 					if (line == null)
 					{
 						// EOF
@@ -297,7 +334,6 @@ public class Scanner {
 						break;
 					}
 					this.currentLine = line.toCharArray();
-					this.lineNumber++;
 					this.linePosition = 0;
 					nextToken = currentToken;
 					getNext();
