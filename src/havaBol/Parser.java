@@ -430,7 +430,7 @@ public class Parser {
 			subResult2 = Utility.concat(this, targetResult, subResult1);
 			Utility.assign(this, targetResult, subResult2);
 		}
-		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we can't do any of the following assignments
+		else if (!Utility.isNumeric(this, targetResult)) // If the target is not numeric we can't do any of the following assignments
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Can not perform operation \'" + operatorToken.tokenStr + "\' on non numeric variable \'" + targetToken.tokenStr + "\'"

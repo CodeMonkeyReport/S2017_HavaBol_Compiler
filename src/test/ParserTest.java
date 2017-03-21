@@ -634,6 +634,46 @@ public class ParserTest {
 	}
 	
 	@Test
+	public void canCoerceToFloat()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String s = \"5.0\";\n"
+						 + "Float f = s + \"1\";\n";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on String, declare the variable and assign to it
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			testScanner.getNext();
+			
+			// Should now have s declared, now declare and initilize i
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			assertEquals("6.0", storageManager.getVariableValue("f").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
 	public void canAddAcrossStringIntAndFloatTypes()
 	{
 		// Set up the inital 'file' to be read
