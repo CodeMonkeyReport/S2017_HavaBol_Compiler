@@ -908,4 +908,13 @@ public class Utility {
 		}
 		return res;
 	}
+
+	public static void printResult(Parser parser, ResultValue res) {
+		
+		System.out.println("On line " 
+				+ parser.scanner.lineNumber + " expression evaluates to: "
+				+ res.type + ", " 
+				+ res.internalValue);
+		
+	}
 }

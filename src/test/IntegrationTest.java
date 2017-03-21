@@ -316,9 +316,7 @@ public class IntegrationTest {
 				
 				// Use this area to run tests	
 				parser.statements(true);
-				
-				//assertEquals("26", storageManager.getVariableValue("k").internalValue);
-				
+								
 				//***
 			} catch (Exception e) {
 				System.out.println(e.toString());

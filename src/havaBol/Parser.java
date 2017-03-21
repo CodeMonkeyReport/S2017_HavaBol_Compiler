@@ -6,6 +6,10 @@ public class Parser {
 
 	Scanner scanner;
 	StorageManager storageManager;
+	
+	boolean bShowToken = false;
+	boolean bShowExpr = true;
+	boolean bShowAssign = false;
 
 	public Parser(Scanner scanner, StorageManager storageManager)
 	{
@@ -100,6 +104,10 @@ public class Parser {
 						return res;
 					}
 					break;
+				case Token.DEBUG:
+					// Handle debug statments here
+					res = debugStmt(bExecuting);
+					break;
 				default:
 					break;
 				}
@@ -128,6 +136,23 @@ public class Parser {
 	}
 	
 	/**
+	 * Handle debug statements
+	 * <p>
+	 * for the example input: debug Expr on;
+	 * On entering this method we expect to be on 'debug'
+	 * On exiting this method we expect to be on ';'
+	 * The result of this example should be to set the local value this.bShowExpr to true
+	 * <p>
+	 * @param bExecuting
+	 * @return
+	 */
+	private ResultValue debugStmt(boolean bExecuting) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	/**
 	 * Not yet implemented
 	 * @param bExecuting
 	 * @return
@@ -142,6 +167,16 @@ public class Parser {
 		
 		if (functionToken.subClassif == Token.BUILTIN)
 		{
+			switch (functionToken.tokenStr)
+			{
+			case "print":
+				res = functionPrint(bExecuting);
+				break;
+			default:
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unknown builtin function: \'" + functionToken.tokenStr + "\'"
+						, scanner.sourceFileName);					
+			}
 			System.out.println("Function calls not yet implemented");
 			scanner.skipTo(";");
 		}
@@ -154,6 +189,12 @@ public class Parser {
 		
 		return res;
 	}
+
+	private ResultValue functionPrint(boolean bExecuting) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 	/**
 	 * Handles execution of the else branch of an if-than-else statement
@@ -452,6 +493,7 @@ public class Parser {
 		
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
+		boolean bOperatorFound = false;
 		
 		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) ) // Until we reach a semicolon, colon or end of file?
 		{
@@ -468,6 +510,7 @@ public class Parser {
 				expected = Token.OPERATOR;
 				break;
 			case Token.OPERATOR:
+				bOperatorFound = true;
 				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
 				{
 					temp = scanner.currentToken;
@@ -588,6 +631,7 @@ public class Parser {
 			}
 		}
 		res = outputStack.pop();
+		
 		if (!outputStack.isEmpty())
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -601,6 +645,10 @@ public class Parser {
 					, scanner.sourceFileName);
 		}
 		res.terminatingStr = expectedTerminator;
+		
+		if (bShowExpr && bOperatorFound)
+			Utility.printResult(this, res);
+		
 		return res;
 	}
 
