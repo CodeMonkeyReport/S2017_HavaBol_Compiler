@@ -388,6 +388,56 @@ public class ParserTest {
 		}
 	}
 	
+	
+	@Test
+	public void canPerformArithmeticOnVariablesWithUnaryMinus()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5;\n"
+				         + "Int j = i;\n"
+				         + "Int k = i * -j;\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			testScanner.getNext();
+			
+			// Should now have i declared, now declare and initilize j
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			testScanner.getNext();
+			
+			// Should now have j declared, now declare and initilize k
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			assertEquals("-25", storageManager.getVariableValue("k").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
 	@Test
 	public void canTruncateIntegerValuesFromInteger()
 	{

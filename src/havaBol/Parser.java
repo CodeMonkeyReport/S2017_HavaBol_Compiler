@@ -482,7 +482,7 @@ public class Parser {
 	 * @return
 	 * @throws Exception 
 	 */
-	public ResultValue expression(String expectedTerminator) throws ParserException 
+	public ResultValue expression(String expectedTerminator) throws ParserException
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
