@@ -71,9 +71,9 @@ public class IntegrationTest {
 		//***
 		assertTrue("Expected Undeclared identifier error", false);
 	}
-	
-	
-	
+
+
+
 	@Test
 	public void simpleIfStatementsTestOne()
 	{
@@ -398,7 +398,7 @@ public class IntegrationTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	@Test
 	public void nestedIfWhileStatementTest()
 	{
