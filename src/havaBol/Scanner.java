@@ -158,6 +158,11 @@ public class Scanner {
 
 		// get the classf and subClassf for the token using starting and ending position
 		classify(tokenStart, tokenEnd);
+		
+		if(Parser.bShowToken)
+		{
+			currentToken.printToken();
+		}
 
 		return this.nextToken.tokenStr;
 	}

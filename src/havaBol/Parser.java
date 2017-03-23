@@ -7,9 +7,9 @@ public class Parser {
 	Scanner scanner;
 	StorageManager storageManager;
 	
-	boolean bShowToken = false;
-	boolean bShowExpr = true;
-	boolean bShowAssign = false;
+	public static boolean bShowToken = false;
+	boolean bShowExpr = false;
+	public boolean bShowAssign = false;
 
 	public Parser(Scanner scanner, StorageManager storageManager)
 	{
@@ -146,8 +146,29 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	private ResultValue debugStmt(boolean bExecuting) {
+	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
 		// TODO Auto-generated method stub
+		scanner.getNext();
+		
+		switch (scanner.currentToken.tokenStr)
+		{
+			case "Expr":
+				this.bShowExpr = true;
+				break;
+			case "Assign":
+				this.bShowAssign = true;
+				break;
+			case "Token" :
+				this.bShowToken = true;
+				break;
+			default:
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Non Implemented Debug type: \'" + scanner.currentToken.tokenStr + "\'"
+						, "scanner.sourceFileName");
+		}
+		
+		scanner.getNext();
+			
 		return null;
 	}
 
@@ -170,15 +191,15 @@ public class Parser {
 			switch (functionToken.tokenStr)
 			{
 			case "print":
-				res = functionPrint(bExecuting);
+				functionPrint(bExecuting);
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
 						, "Unknown builtin function: \'" + functionToken.tokenStr + "\'"
-						, scanner.sourceFileName);					
+						, scanner.sourceFileName);	
 			}
-			System.out.println("Function calls not yet implemented");
-			scanner.skipTo(";");
+			//System.out.println("Function calls not yet implemented");
+			//scanner.skipTo(";");
 		}
 		else
 		{
@@ -189,10 +210,51 @@ public class Parser {
 		
 		return res;
 	}
-
-	private ResultValue functionPrint(boolean bExecuting) {
-		// TODO Auto-generated method stub
-		return null;
+	//expected upon function entry : print("\tradius=", radius, "twoPi=", twoPi, "circum=", circum);
+	//expected upon function exit : ;
+	private void functionPrint(boolean bExecuting) throws ParserException {
+		
+		if(bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return;
+		}
+		
+		scanner.getNext();
+		
+		if(!scanner.currentToken.tokenStr.equals("("))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'(\' after print statement"
+					, scanner.sourceFileName);
+		
+				
+		while(1==1)
+		{
+			scanner.getNext();
+			
+			if(scanner.currentToken.primClassif != Token.OPERAND)
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Expected Operand but got \'" + scanner.currentToken.tokenStr + "\' in print statement"
+						, scanner.sourceFileName);
+			else if(scanner.currentToken.subClassif == Token.STRING)
+			{
+				System.out.print(scanner.currentToken.tokenStr);
+			}
+			else{
+				System.out.print(storageManager.getVariableValue(scanner.currentToken.tokenStr).internalValue);
+			}
+			
+			scanner.getNext();
+			
+			if(!scanner.currentToken.tokenStr.equals(","))
+			{
+				break;
+			}
+		
+		}
+		System.out.println();
+		
+		return;
 	}
 
 
@@ -466,6 +528,15 @@ public class Parser {
 
 			Utility.assign(this, targetResult, subResult2);
 		}
+		
+		/*if(bShowAssign)
+		{
+			if(subResult2 == null)
+			{
+				subResult2 = subResult1;
+			}
+			Utility.printAssign(this, targetResult, subResult2);
+		}*/
 
 		return targetResult;
 	}

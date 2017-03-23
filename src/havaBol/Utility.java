@@ -51,6 +51,11 @@ public class Utility {
 		default: // Not a known type
 			break;
 		}
+		
+		if(parser.bShowAssign)
+		{
+			Utility.printAssign(parser, target, value);
+		}
 	}
 
 	/**
@@ -917,4 +922,15 @@ public class Utility {
 				+ res.internalValue);
 		
 	}
+	
+	public static void printAssign(Parser parser, ResultValue target, ResultValue result)
+	{
+		System.out.println("On line " 
+				+ parser.scanner.lineNumber + " variable " 
+				+ target.internalValue + " of type " 
+				+ target.type + " has value " 
+				+ result.internalValue);
+	}
+	
+	
 }
