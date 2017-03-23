@@ -25,6 +25,7 @@ public class IntegrationTest {
 		String testInput = "Int i;\n"
 						 + "i = 12;\n"
 						 + "Int j = 3 + i;";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -70,9 +71,9 @@ public class IntegrationTest {
 		//***
 		assertTrue("Expected Undeclared identifier error", false);
 	}
-	
-	
-	
+
+
+
 	@Test
 	public void simpleIfStatementsTestOne()
 	{
@@ -82,6 +83,7 @@ public class IntegrationTest {
 						 + "  i = 12;\n"
 						 + "endif\n"
 						 + "Int j = 3 + i;";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -112,6 +114,7 @@ public class IntegrationTest {
 						 + "  i = 12;\n"
 						 + "endif\n"
 						 + "Int j = 3 + i;";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -134,6 +137,72 @@ public class IntegrationTest {
 	}
 	
 	@Test
+	public void nestedIfStatementsTestOne()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 3;\n"
+						 + "if T:"
+						 + "  if i == 3:\n"
+						 + "     i = 12;\n"
+						 + "  endif\n"
+						 + "endif\n"
+						 + "Int j = 3 + i;\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("15", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void nestedIfStatementsTestTwo()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 3;\n"
+						 + "if T:"
+						 + "  if F:\n"
+						 + "     i = 12;\n"
+						 + "  endif\n"
+						 + "endif\n"
+						 + "Int j = 3 + i;\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("6", storageManager.getVariableValue("j").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
 	public void simpleIfElseStatementsTestOne()
 	{
 		// Set up the inital 'file' to be read
@@ -143,6 +212,7 @@ public class IntegrationTest {
 						 + "else:\n"
 						 + "  i = 3;\n"
 						 + "endif\n";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -155,6 +225,74 @@ public class IntegrationTest {
 			parser.statements(true);
 			
 			assertEquals("2", storageManager.getVariableValue("i").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void nestedIfElseStatementsTestOne()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 1;\n"
+						 + "if F:"
+						 + "  i = 2;\n"
+						 + "else:\n"
+						 + "  if T:"
+						 + "    i = 3;\n"
+						 + "  endif\n"
+						 + "endif\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("3", storageManager.getVariableValue("i").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void nestedIfElseStatementsTestTwo()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 1;\n"
+						 + "if F:"
+						 + "  i = 2;\n"
+						 + "else:\n"
+						 + "  if F:"
+						 + "    i = 3;\n"
+						 + "  endif\n"
+						 + "endif\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("1", storageManager.getVariableValue("i").internalValue);
 			
 			//***
 		} catch (Exception e) {
@@ -260,7 +398,7 @@ public class IntegrationTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	@Test
 	public void nestedIfWhileStatementTest()
 	{
@@ -316,9 +454,7 @@ public class IntegrationTest {
 				
 				// Use this area to run tests	
 				parser.statements(true);
-				
-				//assertEquals("26", storageManager.getVariableValue("k").internalValue);
-				
+								
 				//***
 			} catch (Exception e) {
 				System.out.println(e.toString());
