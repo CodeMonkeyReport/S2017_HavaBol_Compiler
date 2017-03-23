@@ -17,16 +17,15 @@ public class Parser {
 		this.storageManager = storageManager;
 	}
 
-
 	/**
-	 * 	This method executes a list of statements until an expected terminating string.
+	 * 	This method executes a list of statements until an expected terminating string
 	 * <p>
 	 * This method is called as the main program loop with the parameters true and "" indicating EOF
 	 * <p>
 	 * 
 	 * @param bExecuting - Indicates if the method should execute the list of statements
 	 * @param expectedTerminator
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
@@ -105,7 +104,7 @@ public class Parser {
 					}
 					break;
 				case Token.DEBUG:
-					// Handle debug statments here
+					// Handle debug statements here
 					res = debugStmt(bExecuting);
 					break;
 				default:
@@ -131,10 +130,9 @@ public class Parser {
 						, scanner.sourceFileName);
 			}
 		}
-		
 		return null;
 	}
-	
+
 	/**
 	 * Handle debug statements
 	 * <p>
@@ -143,6 +141,7 @@ public class Parser {
 	 * On exiting this method we expect to be on ';'
 	 * The result of this example should be to set the local value this.bShowExpr to true
 	 * <p>
+	 * 
 	 * @param bExecuting
 	 * @return
 	 */
@@ -206,8 +205,7 @@ public class Parser {
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Builtin functions not yet implemented, can not execute function \'" + functionToken.tokenStr + "\'"
 					, scanner.sourceFileName);
-		}
-		
+		}		
 		return res;
 	}
 	//expected upon function entry : print("\tradius=", radius, "twoPi=", twoPi, "circum=", circum);
@@ -308,6 +306,8 @@ public class Parser {
 	 * <p>
 	 * On entering the method the currentToken should be on 'while'
 	 * On exiting the method the currentToken should be on 'endwhile'
+	 * <p>
+	 * 
 	 * @param bExecuting
 	 * @return
 	 * @throws ParserException
@@ -342,12 +342,19 @@ public class Parser {
 					, "Expected \'endwhile\' after \'while\' statement"
 					, scanner.sourceFileName);
 		}
-		
 		return res;
 	}
-
 	
-	
+	/**
+	 * Handles execution of If-Then statements
+	 * <p>
+	 * On entering the method the currentToken should be on 'if'
+	 * On exiting the method the currenToken should be on ':'
+	 * <p>
+	 * @param bExecuting
+	 * @return - The 
+	 * @throws ParserException
+	 */
 	private ResultValue ifStmt(boolean bExecuting) throws ParserException 
 	{
 		ResultValue res = new ResultValue(Type.BOOL);
@@ -492,7 +499,7 @@ public class Parser {
 			subResult2 = Utility.concat(this, targetResult, subResult1);
 			Utility.assign(this, targetResult, subResult2);
 		}
-		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we can't do any of the following assignments
+		else if (!Utility.isNumeric(this, targetResult)) // If the target is not numeric we can't do any of the following assignments
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Can not perform operation \'" + operatorToken.tokenStr + "\' on non numeric variable \'" + targetToken.tokenStr + "\'"
@@ -553,7 +560,7 @@ public class Parser {
 	 * @return
 	 * @throws Exception 
 	 */
-	public ResultValue expression(String expectedTerminator) throws ParserException 
+	public ResultValue expression(String expectedTerminator) throws ParserException
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();

@@ -26,7 +26,6 @@ public class HavaBol
     {
         // Create the SymbolTable
         SymbolTable symbolTable = new SymbolTable();
-        
         try
         {
             // Print a column heading 
