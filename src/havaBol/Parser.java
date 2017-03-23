@@ -1,5 +1,6 @@
 package havaBol;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 public class Parser {
@@ -325,14 +326,14 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":");
+		res = expression(":", ":");
 		
 		while (res.internalValue.equals("T"))
 		{
 			statements(true);
 			scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
 			scanner.getNext();
-			res = expression(":");
+			res = expression(":", ":");
 		}
 		res = statements(false);
 		
@@ -367,7 +368,7 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":");
+		res = expression(":", ":");
 		
 		if (res.internalValue.equals("T"))
 			res = statements(true);
@@ -377,7 +378,30 @@ public class Parser {
 		return res;
 	}
 
-
+	/**
+	 * This code handles evaluation of comma separated expressions
+	 * <p>
+	 * On entering the method the currentToken should be on the first term in the expression
+	 * On exiting the method the currentToken should be on the expected terminator
+	 * <p>
+	 * @param expectedTerminator - The token we are expecting to see at the end of the argument list
+	 * @return
+	 * @throws ParserException 
+	 */
+	public ArrayList<ResultValue> argList(String expectedTerminator) throws ParserException
+	{
+		ArrayList<ResultValue> resultArray = new ArrayList<ResultValue>();
+		
+		resultArray.add(expression(",", expectedTerminator));
+		while (!scanner.getNext().equals(""))
+		{
+			resultArray.add(expression(",", expectedTerminator));
+			if (scanner.currentToken.tokenStr.equals(expectedTerminator))
+				break;
+		}
+		return resultArray;
+	}
+	
 	/**
 	 * Function for handling declarations of variables.
 	 * <p>
@@ -475,7 +499,7 @@ public class Parser {
 		
 		scanner.getNext();
 		String expectedTerminator = ";";
-		subResult1 = expression(expectedTerminator);
+		subResult1 = expression(expectedTerminator, expectedTerminator);
 		
 		if (! subResult1.terminatingStr.equals(";"))
 		{
@@ -558,9 +582,9 @@ public class Parser {
 	 * When this method completes, the current token will be on the separator indicating the end of the expression.
 	 * <p>
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public ResultValue expression(String expectedTerminator) throws ParserException
+	public ResultValue expression(String expectedTerminator, String secondaryTerminator) throws ParserException
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
@@ -573,7 +597,7 @@ public class Parser {
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		boolean bOperatorFound = false;
 		
-		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) ) // Until we reach a semicolon, colon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator)) // Until we reach a semicolon, colon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -716,7 +740,7 @@ public class Parser {
 					, "Expression parse missmatch"
 					, scanner.sourceFileName);
 		}
-		if (!scanner.currentToken.tokenStr.equals(expectedTerminator))
+		if (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'" + expectedTerminator + "\' at end of expression"
