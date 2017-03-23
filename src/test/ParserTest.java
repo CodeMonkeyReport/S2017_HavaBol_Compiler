@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 
 import org.junit.*;
 import havaBol.*;
@@ -85,7 +86,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("5", res.internalValue);
 			
@@ -114,7 +115,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("8", res.internalValue);
 			
@@ -144,7 +145,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("15", res.internalValue);
 			
@@ -173,7 +174,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("2", res.internalValue);
 			
@@ -202,7 +203,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("5", res.internalValue);
 			
@@ -231,7 +232,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("70", res.internalValue);
 			
@@ -260,7 +261,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("-6", res.internalValue);
 			
@@ -289,7 +290,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString);
+			ResultValue res = parser.expression(terminatingString, terminatingString);
 			
 			assertEquals("79", res.internalValue);
 			
@@ -669,6 +670,76 @@ public class ParserTest {
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+
+	@Test
+	public void canReadArgumentLists()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 1;\n"
+						 + "Float f = 2.0;\n"
+						 + "0, i, f, f+i;\n";
+		
+		ArrayList<ResultValue> list;
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			testScanner.getNext();
+			
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			testScanner.getNext();
+			
+			list = parser.argList(";");
+			
+			assertEquals("0", list.get(0).internalValue);
+			assertEquals("1", list.get(1).internalValue);
+			assertEquals("2.0", list.get(2).internalValue);
+			assertEquals("3.0", list.get(3).internalValue);
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canDeclareIntArray()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[5];";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("a"));
+			
+			//***
+		} catch (Exception e) {
 			assertTrue("Unable to read input stream", false);
 		}
 	}
