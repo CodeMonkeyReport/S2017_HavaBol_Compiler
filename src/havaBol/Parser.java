@@ -240,7 +240,8 @@ public class Parser {
 				System.out.print(scanner.currentToken.tokenStr);
 			}
 			else{
-				System.out.print(storageManager.getVariableValue(scanner.currentToken.tokenStr).internalValue);
+				ResultValue res = expression(",",")");
+				System.out.print(res.internalValue);
 			}
 			
 			scanner.getNext();
