@@ -1,11 +1,16 @@
 package havaBol;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 public class Parser {
 
 	Scanner scanner;
 	StorageManager storageManager;
+	
+	public static boolean bShowToken = false;
+	boolean bShowExpr = false;
+	public boolean bShowAssign = false;
 
 	public Parser(Scanner scanner, StorageManager storageManager)
 	{
@@ -13,16 +18,15 @@ public class Parser {
 		this.storageManager = storageManager;
 	}
 
-
 	/**
-	 * 	This method executes a list of statements until an expected terminating string.
+	 * 	This method executes a list of statements until an expected terminating string
 	 * <p>
 	 * This method is called as the main program loop with the parameters true and "" indicating EOF
 	 * <p>
 	 * 
 	 * @param bExecuting - Indicates if the method should execute the list of statements
 	 * @param expectedTerminator
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
@@ -100,6 +104,10 @@ public class Parser {
 						return res;
 					}
 					break;
+				case Token.DEBUG:
+					// Handle debug statements here
+					res = debugStmt(bExecuting);
+					break;
 				default:
 					break;
 				}
@@ -123,10 +131,48 @@ public class Parser {
 						, scanner.sourceFileName);
 			}
 		}
-		
 		return null;
 	}
-	
+
+	/**
+	 * Handle debug statements
+	 * <p>
+	 * for the example input: debug Expr on;
+	 * On entering this method we expect to be on 'debug'
+	 * On exiting this method we expect to be on ';'
+	 * The result of this example should be to set the local value this.bShowExpr to true
+	 * <p>
+	 * 
+	 * @param bExecuting
+	 * @return
+	 */
+	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
+		// TODO Auto-generated method stub
+		scanner.getNext();
+		
+		switch (scanner.currentToken.tokenStr)
+		{
+			case "Expr":
+				this.bShowExpr = true;
+				break;
+			case "Assign":
+				this.bShowAssign = true;
+				break;
+			case "Token" :
+				this.bShowToken = true;
+				break;
+			default:
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Non Implemented Debug type: \'" + scanner.currentToken.tokenStr + "\'"
+						, "scanner.sourceFileName");
+		}
+		
+		scanner.getNext();
+			
+		return null;
+	}
+
+
 	/**
 	 * Not yet implemented
 	 * @param bExecuting
@@ -142,18 +188,73 @@ public class Parser {
 		
 		if (functionToken.subClassif == Token.BUILTIN)
 		{
-			System.out.println("Function calls not yet implemented");
-			scanner.skipTo(";");
+			switch (functionToken.tokenStr)
+			{
+			case "print":
+				functionPrint(bExecuting);
+				break;
+			default:
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unknown builtin function: \'" + functionToken.tokenStr + "\'"
+						, scanner.sourceFileName);	
+			}
+			//System.out.println("Function calls not yet implemented");
+			//scanner.skipTo(";");
 		}
 		else
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Builtin functions not yet implemented, can not execute function \'" + functionToken.tokenStr + "\'"
 					, scanner.sourceFileName);
-		}
-		
+		}		
 		return res;
 	}
+	//expected upon function entry : print("\tradius=", radius, "twoPi=", twoPi, "circum=", circum);
+	//expected upon function exit : ;
+	private void functionPrint(boolean bExecuting) throws ParserException {
+		
+		if(bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return;
+		}
+		
+		scanner.getNext();
+		
+		if(!scanner.currentToken.tokenStr.equals("("))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'(\' after print statement"
+					, scanner.sourceFileName);
+		
+				
+		while(1==1)
+		{
+			scanner.getNext();
+			
+			
+			if(scanner.currentToken.subClassif == Token.STRING)
+			{
+				System.out.print(scanner.currentToken.tokenStr);
+				scanner.getNext();
+			}
+			else{
+				ResultValue res = expression(",",")");
+				System.out.print(res.internalValue);
+			}
+			
+			
+			
+			if(!scanner.currentToken.tokenStr.equals(","))
+			{
+				break;
+			}
+		
+		}
+		System.out.println();
+		
+		return;
+	}
+
 
 	/**
 	 * Handles execution of the else branch of an if-than-else statement
@@ -205,6 +306,8 @@ public class Parser {
 	 * <p>
 	 * On entering the method the currentToken should be on 'while'
 	 * On exiting the method the currentToken should be on 'endwhile'
+	 * <p>
+	 * 
 	 * @param bExecuting
 	 * @return
 	 * @throws ParserException
@@ -222,14 +325,14 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":");
+		res = expression(":", ":");
 		
 		while (res.internalValue.equals("T"))
 		{
 			statements(true);
 			scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
 			scanner.getNext();
-			res = expression(":");
+			res = expression(":", ":");
 		}
 		res = statements(false);
 		
@@ -239,12 +342,19 @@ public class Parser {
 					, "Expected \'endwhile\' after \'while\' statement"
 					, scanner.sourceFileName);
 		}
-		
 		return res;
 	}
-
 	
-	
+	/**
+	 * Handles execution of If-Then statements
+	 * <p>
+	 * On entering the method the currentToken should be on 'if'
+	 * On exiting the method the currenToken should be on ':'
+	 * <p>
+	 * @param bExecuting
+	 * @return - The 
+	 * @throws ParserException
+	 */
 	private ResultValue ifStmt(boolean bExecuting) throws ParserException 
 	{
 		ResultValue res = new ResultValue(Type.BOOL);
@@ -257,7 +367,7 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":");
+		res = expression(":", ":");
 		
 		if (res.internalValue.equals("T"))
 			res = statements(true);
@@ -267,7 +377,30 @@ public class Parser {
 		return res;
 	}
 
-
+	/**
+	 * This code handles evaluation of comma separated expressions
+	 * <p>
+	 * On entering the method the currentToken should be on the first term in the expression
+	 * On exiting the method the currentToken should be on the expected terminator
+	 * <p>
+	 * @param expectedTerminator - The token we are expecting to see at the end of the argument list
+	 * @return
+	 * @throws ParserException 
+	 */
+	public ArrayList<ResultValue> argList(String expectedTerminator) throws ParserException
+	{
+		ArrayList<ResultValue> resultArray = new ArrayList<ResultValue>();
+		
+		resultArray.add(expression(",", expectedTerminator));
+		while (!scanner.getNext().equals(""))
+		{
+			resultArray.add(expression(",", expectedTerminator));
+			if (scanner.currentToken.tokenStr.equals(expectedTerminator))
+				break;
+		}
+		return resultArray;
+	}
+	
 	/**
 	 * Function for handling declarations of variables.
 	 * <p>
@@ -365,7 +498,7 @@ public class Parser {
 		
 		scanner.getNext();
 		String expectedTerminator = ";";
-		subResult1 = expression(expectedTerminator);
+		subResult1 = expression(expectedTerminator, expectedTerminator);
 		
 		if (! subResult1.terminatingStr.equals(";"))
 		{
@@ -389,7 +522,7 @@ public class Parser {
 			subResult2 = Utility.concat(this, targetResult, subResult1);
 			Utility.assign(this, targetResult, subResult2);
 		}
-		else if (!Utility.isNumeric(targetResult)) // If the target is not numeric we can't do any of the following assignments
+		else if (!Utility.isNumeric(this, targetResult)) // If the target is not numeric we can't do any of the following assignments
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Can not perform operation \'" + operatorToken.tokenStr + "\' on non numeric variable \'" + targetToken.tokenStr + "\'"
@@ -425,6 +558,15 @@ public class Parser {
 
 			Utility.assign(this, targetResult, subResult2);
 		}
+		
+		/*if(bShowAssign)
+		{
+			if(subResult2 == null)
+			{
+				subResult2 = subResult1;
+			}
+			Utility.printAssign(this, targetResult, subResult2);
+		}*/
 
 		return targetResult;
 	}
@@ -439,9 +581,9 @@ public class Parser {
 	 * When this method completes, the current token will be on the separator indicating the end of the expression.
 	 * <p>
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public ResultValue expression(String expectedTerminator) throws ParserException 
+	public ResultValue expression(String expectedTerminator, String secondaryTerminator) throws ParserException
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
@@ -452,8 +594,9 @@ public class Parser {
 		
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
+		boolean bOperatorFound = false;
 		
-		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) ) // Until we reach a semicolon, colon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator)) // Until we reach a semicolon, colon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -468,6 +611,7 @@ public class Parser {
 				expected = Token.OPERATOR;
 				break;
 			case Token.OPERATOR:
+				bOperatorFound = true;
 				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
 				{
 					temp = scanner.currentToken;
@@ -588,19 +732,24 @@ public class Parser {
 			}
 		}
 		res = outputStack.pop();
+		
 		if (!outputStack.isEmpty())
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expression parse missmatch"
 					, scanner.sourceFileName);
 		}
-		if (!scanner.currentToken.tokenStr.equals(expectedTerminator))
+		if (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'" + expectedTerminator + "\' at end of expression"
 					, scanner.sourceFileName);
 		}
 		res.terminatingStr = expectedTerminator;
+		
+		if (bShowExpr && bOperatorFound)
+			Utility.printResult(this, res);
+		
 		return res;
 	}
 

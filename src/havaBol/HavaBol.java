@@ -26,25 +26,17 @@ public class HavaBol
     {
         // Create the SymbolTable
         SymbolTable symbolTable = new SymbolTable();
-        
         try
         {
-            // Print a column heading 
-            System.out.printf("%-11s %-12s %s\n"
-                    , "primClassif"
-                    , "subClassif"
-                    , "tokenStr");
+            
             
             // Used to abstract out the file reader
             FileReader fr = new FileReader(args[0]);
             BufferedReader br = new BufferedReader(fr);
-            
-            
             Scanner scan = new Scanner(args[0], br, symbolTable);
-            while (! scan.getNext().isEmpty())
-            {
-                    scan.currentToken.printToken();
-            }
+            StorageManager sm = new StorageManager();
+            Parser parser = new Parser(scan, sm);
+            parser.statements(true);
         }
         catch (Exception e)
         {
