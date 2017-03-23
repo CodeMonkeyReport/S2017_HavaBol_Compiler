@@ -231,20 +231,18 @@ public class Parser {
 		{
 			scanner.getNext();
 			
-			if(scanner.currentToken.primClassif != Token.OPERAND)
-				throw new ParserException(scanner.currentToken.iSourceLineNr
-						, "Expected Operand but got \'" + scanner.currentToken.tokenStr + "\' in print statement"
-						, scanner.sourceFileName);
-			else if(scanner.currentToken.subClassif == Token.STRING)
+			
+			if(scanner.currentToken.subClassif == Token.STRING)
 			{
 				System.out.print(scanner.currentToken.tokenStr);
+				scanner.getNext();
 			}
 			else{
 				ResultValue res = expression(",",")");
 				System.out.print(res.internalValue);
 			}
 			
-			scanner.getNext();
+			
 			
 			if(!scanner.currentToken.tokenStr.equals(","))
 			{
