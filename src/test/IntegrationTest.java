@@ -81,7 +81,7 @@ public class IntegrationTest {
 		String testInput = "Int i = 3;\n"
 						 + "if F:"
 						 + "  i = 12;\n"
-						 + "endif\n"
+						 + "endif;\n"
 						 + "Int j = 3 + i;";
 		
 		StringReader testReader = new StringReader(testInput);
@@ -112,7 +112,7 @@ public class IntegrationTest {
 		String testInput = "Int i = 3;\n"
 						 + "if T:"
 						 + "  i = 12;\n"
-						 + "endif\n"
+						 + "endif;\n"
 						 + "Int j = 3 + i;";
 		
 		StringReader testReader = new StringReader(testInput);
@@ -144,8 +144,8 @@ public class IntegrationTest {
 						 + "if T:"
 						 + "  if i == 3:\n"
 						 + "     i = 12;\n"
-						 + "  endif\n"
-						 + "endif\n"
+						 + "  endif;\n"
+						 + "endif;\n"
 						 + "Int j = 3 + i;\n";
 		
 		StringReader testReader = new StringReader(testInput);
@@ -177,8 +177,8 @@ public class IntegrationTest {
 						 + "if T:"
 						 + "  if F:\n"
 						 + "     i = 12;\n"
-						 + "  endif\n"
-						 + "endif\n"
+						 + "  endif;\n"
+						 + "endif;\n"
 						 + "Int j = 3 + i;\n";
 		
 		StringReader testReader = new StringReader(testInput);
@@ -211,7 +211,7 @@ public class IntegrationTest {
 						 + "  i = 2;\n"
 						 + "else:\n"
 						 + "  i = 3;\n"
-						 + "endif\n";
+						 + "endif;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -244,8 +244,8 @@ public class IntegrationTest {
 						 + "else:\n"
 						 + "  if T:"
 						 + "    i = 3;\n"
-						 + "  endif\n"
-						 + "endif\n";
+						 + "  endif;\n"
+						 + "endif;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -278,8 +278,8 @@ public class IntegrationTest {
 						 + "else:\n"
 						 + "  if F:"
 						 + "    i = 3;\n"
-						 + "  endif\n"
-						 + "endif\n";
+						 + "  endif;\n"
+						 + "endif;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -309,7 +309,7 @@ public class IntegrationTest {
 		String testInput = "Int i = 0;\n"
 				         + "while i < 5:\n"
 				         + "  i += 1;\n;"
-				         + "endwhile";
+				         + "endwhile;";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -339,7 +339,7 @@ public class IntegrationTest {
 		String testInput = "Int i = 0;\n"
 				         + "while i < 5:\n"
 				         + "  i += 2;\n;"
-				         + "endwhile";
+				         + "endwhile;";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -374,9 +374,9 @@ public class IntegrationTest {
 				         + "  while j < 5:\n"
 				         + "    j += 1;\n"
 				         + "    k += 2;\n;"
-				         + "  endwhile\n"
+				         + "  endwhile;\n"
 				         + "  i += 1;\n"
-				         + "endwhile\n";
+				         + "endwhile;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -412,15 +412,16 @@ public class IntegrationTest {
 				         + "    j += 1;\n"
 				         + "    if k < 25:\n"
 				         + "      k += 2;\n;"
-				         + "    endif"
-				         + "  endwhile\n"
+				         + "    endif;"
+				         + "  endwhile;\n"
 				         + "  i += 1;\n"
-				         + "endwhile\n";
+				         + "endwhile;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
 		StorageManager storageManager = new StorageManager();
+		
 		try {
 			Scanner testScanner = new Scanner("TEST", br, st);
 			Parser parser = new Parser(testScanner, storageManager);
@@ -439,12 +440,41 @@ public class IntegrationTest {
 	}
 	
 	@Test
-	public void largeScaleTest()
+	public void largeScaleTestOne()
 	{
 		FileReader testReader;
 		try {
 			// Set up the inital 'file' to be read
 			testReader = new FileReader("p3Input.txt");
+			BufferedReader br = new BufferedReader(testReader);
+			SymbolTable st = new SymbolTable();
+			StorageManager storageManager = new StorageManager();
+			try {
+				Scanner testScanner = new Scanner("TEST", br, st);
+				Parser parser = new Parser(testScanner, storageManager);
+				
+				// Use this area to run tests	
+				parser.statements(true);
+								
+				//***
+			} catch (Exception e) {
+				System.out.println(e.toString());
+				e.printStackTrace();
+				assertTrue(false);
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void largeScaleTestTwo()
+	{
+		FileReader testReader;
+		try {
+			// Set up the inital 'file' to be read
+			testReader = new FileReader("p3SimpleExpr.txt");
 			BufferedReader br = new BufferedReader(testReader);
 			SymbolTable st = new SymbolTable();
 			StorageManager storageManager = new StorageManager();

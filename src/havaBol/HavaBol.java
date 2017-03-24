@@ -28,11 +28,7 @@ public class HavaBol
         SymbolTable symbolTable = new SymbolTable();
         try
         {
-            // Print a column heading 
-            System.out.printf("%-11s %-12s %s\n"
-                    , "primClassif"
-                    , "subClassif"
-                    , "tokenStr");
+            
             
             // Used to abstract out the file reader
             FileReader fr = new FileReader(args[0]);
