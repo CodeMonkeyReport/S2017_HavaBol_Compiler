@@ -83,6 +83,12 @@ public class Parser {
 						scanner.getNext(); // move past the else statement
 						return res;
 					}
+					if (! scanner.nextToken.tokenStr.equals(";"))
+					{
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Missing simicolon after: \'" + temp.tokenStr + "\'"
+								, scanner.sourceFileName);
+					}
 					else if (temp.tokenStr.equals("endif"))
 					{						
 						res = new ResultValue(Type.BOOL); // Build a result object and return it
@@ -209,8 +215,17 @@ public class Parser {
 		}		
 		return res;
 	}
-	//expected upon function entry : print("\tradius=", radius, "twoPi=", twoPi, "circum=", circum);
-	//expected upon function exit : ;
+
+	/**
+	 * Handles the print builtin function
+	 * <p>
+	 * On entering the method the currentToken should be on 'print'
+	 * On exiting the method the currentToken should be on ';'
+	 * <p>
+	 * The output of this function will include the printing of a newline
+	 * @param bExecuting
+	 * @throws ParserException
+	 */
 	private void functionPrint(boolean bExecuting) throws ParserException {
 		
 		if(bExecuting == false)
@@ -219,39 +234,23 @@ public class Parser {
 			return;
 		}
 		
-		scanner.getNext();
+		scanner.getNext(); // skip over the 'print'
 		
 		if(!scanner.currentToken.tokenStr.equals("("))
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'(\' after print statement"
 					, scanner.sourceFileName);
 		
-				
-		while(1==1)
-		{
-			scanner.getNext();
-			
-			
-			if(scanner.currentToken.subClassif == Token.STRING)
-			{
-				System.out.print(scanner.currentToken.tokenStr);
-				scanner.getNext();
-			}
-			else{
-				ResultValue res = expression(",",")");
-				System.out.print(res.internalValue);
-			}
-			
-			
-			
-			if(!scanner.currentToken.tokenStr.equals(","))
-			{
-				break;
-			}
+		scanner.getNext(); // Move past the '('
 		
+		ArrayList<ResultValue> printResults;
+		printResults = argList(")");
+		
+		for (int i = 0; i < printResults.size(); i++)
+		{
+			System.out.print(printResults.get(i).internalValue);
 		}
 		System.out.println();
-		
 		return;
 	}
 
@@ -392,11 +391,9 @@ public class Parser {
 		ArrayList<ResultValue> resultArray = new ArrayList<ResultValue>();
 		
 		resultArray.add(expression(",", expectedTerminator));
-		while (!scanner.getNext().equals(""))
+		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.getNext().equals("") )
 		{
 			resultArray.add(expression(",", expectedTerminator));
-			if (scanner.currentToken.tokenStr.equals(expectedTerminator))
-				break;
 		}
 		return resultArray;
 	}
