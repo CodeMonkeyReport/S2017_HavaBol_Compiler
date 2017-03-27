@@ -12,5 +12,14 @@ public class ResultList extends ResultValue {
 	{
 		super(type);
 		this.iMaxSize = iMaxSize;
+		if (iMaxSize >= Type.ARRAY_UNBOUNDED)
+		{
+			
+		}
+		else
+		{
+			this.internalValueList = new ResultValue[this.iMaxSize];
+			this.iCurrentSize = 0;
+		}
 	}
 }

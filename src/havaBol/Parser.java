@@ -183,7 +183,7 @@ public class Parser {
 	 * Not yet implemented
 	 * @param bExecuting
 	 * @return
-	 * @throws ParserException 
+	 * @throws ParserException
 	 */
 	private ResultValue functionStmt(boolean bExecuting) throws ParserException 
 	{
@@ -251,6 +251,14 @@ public class Parser {
 			System.out.print(printResults.get(i).internalValue);
 		}
 		System.out.println();
+		
+		scanner.getNext(); // Move past the ')'
+		
+		if(!scanner.currentToken.tokenStr.equals(";"))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \';\' after \'print\'"
+					, scanner.sourceFileName);
+		
 		return;
 	}
 
@@ -354,7 +362,7 @@ public class Parser {
 	 * @return - The 
 	 * @throws ParserException
 	 */
-	private ResultValue ifStmt(boolean bExecuting) throws ParserException 
+	private ResultValue ifStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res = new ResultValue(Type.BOOL);
 		
@@ -411,7 +419,8 @@ public class Parser {
 	 * 
 	 */
 	public void declareStmt(boolean bExecuting) throws ParserException {
-		
+		ResultValue variableValue;
+		Token variableToken;
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
@@ -430,16 +439,102 @@ public class Parser {
 					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
 					, scanner.sourceFileName);
 		}
-
+		Token typeToken = scanner.currentToken;
+		scanner.getNext(); // Move past the type declaration, should now be on variable
+		
+		variableToken = scanner.currentToken;
+		
+		if (scanner.nextToken.tokenStr.equals("["))
+		{
+			// Array stuff
+			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+					, typeToken.tokenStr
+					, Type.ARRAY
+					, Type.VALUE
+					, Type.LOCAL);
+			
+			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
+			
+			variableValue = declareArray(typeToken, variableToken);
+		}
+		else
+		{
+			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+					, typeToken.tokenStr
+					, Type.PRIMITIVE
+					, Type.VALUE
+					, Type.LOCAL);
+			
+			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
+			
+			variableValue = declareScalar(typeToken, variableToken);
+		}
 		// TODO This line will need modification based on by reference parameter passing later
-		STIdentifier newIdentifier = new STIdentifier(scanner.nextToken.tokenStr, scanner.currentToken.tokenStr, 1, 1, 0);
+		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+	}
+
+	/**
+	 * Handles the declaration of scalar variables
+	 * <p>
+	 * On entering the method the current token should be on either a '=' or a ';'
+	 * On exiting the method the currentToken should be on ';'
+	 * <p>
+	 * 
+	 * @param typeToken 
+	 * @param variableToken
+	 * @return
+	 * @throws ParserException 
+	 */
+	private ResultValue declareScalar(Token typeToken, Token variableToken) throws ParserException 
+	{
+		ResultValue result = new ResultValue(typeToken.tokenStr);
 		
-		scanner.symbolTable.putSymbol(scanner.nextToken.tokenStr, newIdentifier); // add symbol to table
+		return result;
+	}
+
+	/**
+	 * Handles the declaration of arrays
+	 * <p>
+	 * On entering the method the currentToken should be on the variable we want to declare
+	 * On exiting the method the currentToken should be on ';' OR an assignment operator
+	 * <p>
+	 * @param typeToken 
+	 * @param variableToken 
+	 * @return
+	 * @throws ParserException 
+	 */
+	private ResultList declareArray(Token typeToken, Token variableToken) throws ParserException 
+	{
+		ResultList arrayValue;
+		ArrayList<ResultValue> initArgs;
+		scanner.getNext(); // Move past the identifier name
 		
-		ResultValue variableValue = new ResultValue(scanner.currentToken.tokenStr); // Create a new result value and set its type string
-		storageManager.putVariableValue(scanner.nextToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
-		
-		scanner.getNext();
+		if (scanner.nextToken.tokenStr.equals("unbounded"))
+		{
+			arrayValue = new ResultList(typeToken.tokenStr, Type.ARRAY_UNBOUNDED);
+		}
+		else if (scanner.nextToken.tokenStr.equals("]"))
+		{
+			// In this case there needs to be an init here.
+			scanner.getNext();
+			scanner.getNext(); // Move the currentToken onto the beginning of the first expression
+			
+			initArgs = argList(";");
+			for (int i = 0; i < initArgs.size(); i++)
+			{
+				
+			}
+			
+		}
+		else
+		{
+			scanner.getNext();
+			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]", "]"));
+			int arraySize = Integer.parseInt(arraySizeExpressionResult.internalValue);
+			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
+		}
+
+		return arrayValue;
 	}
 
 	/**
