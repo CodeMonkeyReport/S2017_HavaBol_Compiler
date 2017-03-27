@@ -518,6 +518,7 @@ public class Parser {
 			// In this case there needs to be an init here.
 			scanner.getNext();
 			scanner.getNext(); // Move the currentToken onto the beginning of the first expression
+			arrayValue = null;
 			
 			initArgs = argList(";");
 			for (int i = 0; i < initArgs.size(); i++)
