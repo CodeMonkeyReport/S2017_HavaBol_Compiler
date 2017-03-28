@@ -303,6 +303,39 @@ public class IntegrationTest {
 	}
 	
 	@Test
+	public void simpleArraysTestOne()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 0;\n"
+						 + "Int a[5];\n"
+				         + "while i < 5:\n"
+				         + "  a[i] = i*2;\n"
+				         + "  i += 1;\n;"
+				         + "endwhile;\n"
+				         + "Int x = a[4];\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("8", storageManager.getVariableValue("x").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
 	public void simpleWhileStatementTestOne()
 	{
 		// Set up the inital 'file' to be read
