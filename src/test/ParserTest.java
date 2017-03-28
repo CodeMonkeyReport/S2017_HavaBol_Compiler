@@ -794,13 +794,53 @@ public class ParserTest {
 			
 			assertNotNull(storageManager.getVariableValue("a"));
 			
+			ResultList resList = (ResultList)storageManager.getVariableValue("a");
+			assertEquals("5", resList.get(parser, 0).internalValue);
+			assertEquals("4", resList.get(parser, 1).internalValue);
+			assertEquals("6", resList.get(parser, 2).internalValue);
+			
+			
 			//***
 		} catch (Exception e) {
 			e.printStackTrace();
 			assertTrue("Unable to read input stream", false);
 		}
 	}
-	
+
+	@Test
+	public void canDeclareIntArrayWithScalarInitilization()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[3] = 5;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("a"));
+
+			ResultList resList = (ResultList)storageManager.getVariableValue("a");
+			assertEquals("5", resList.get(parser, 0).internalValue);
+			assertEquals("5", resList.get(parser, 1).internalValue);
+			assertEquals("5", resList.get(parser, 2).internalValue);
+
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+
 	@Test
 	public void canAddAcrossStringIntAndFloatTypes()
 	{

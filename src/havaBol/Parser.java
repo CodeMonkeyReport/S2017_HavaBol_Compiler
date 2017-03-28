@@ -515,15 +515,16 @@ public class Parser {
 		}
 		else if (scanner.nextToken.tokenStr.equals("]"))
 		{
-			// In this case there needs to be an init here.
+			// In this case there needs to be an init here
 			scanner.getNext();
 			scanner.getNext(); // Move the currentToken onto the beginning of the first expression
-			arrayValue = null;
+			scanner.getNext();
 			
 			initArgs = argList(";");
+			arrayValue = new ResultList(typeToken.tokenStr, initArgs.size());
 			for (int i = 0; i < initArgs.size(); i++)
 			{
-				
+				arrayValue.insert(this, i, initArgs.get(i));
 			}
 			
 		}
@@ -534,7 +535,6 @@ public class Parser {
 			int arraySize = Integer.parseInt(arraySizeExpressionResult.internalValue);
 			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
 		}
-
 		return arrayValue;
 	}
 
@@ -601,7 +601,7 @@ public class Parser {
 		}
 		
 		if (operatorToken.tokenStr.equals("="))
-		{													// Assignment is the simple case.
+		{													// Assignment is the simple case
 			Utility.assign(this, targetResult, subResult1);
 		}
 		else if (operatorToken.tokenStr.equals("#="))
