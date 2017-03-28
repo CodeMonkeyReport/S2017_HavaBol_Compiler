@@ -52,7 +52,7 @@ public class Parser {
 						res = ifStmt(bExecuting);
 						if (res.terminatingStr.equals("else"))
 						{
-							if (res.internalValue.equals("T")) // If we executed the if part
+							if (res.getInternalValue().equals("T")) // If we executed the if part
 								elseStmt(false);	// Don't execute else
 							else
 								elseStmt(bExecuting); // Or do
@@ -248,7 +248,7 @@ public class Parser {
 		
 		for (int i = 0; i < printResults.size(); i++)
 		{
-			System.out.print(printResults.get(i).internalValue);
+			System.out.print(printResults.get(i).getInternalValue());
 		}
 		System.out.println();
 		
@@ -332,14 +332,14 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":", ":");
+		res = expression(":");
 		
-		while (res.internalValue.equals("T"))
+		while (res.getInternalValue().equals("T"))
 		{
 			statements(true);
 			scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
 			scanner.getNext();
-			res = expression(":", ":");
+			res = expression(":");
 		}
 		res = statements(false);
 		
@@ -374,9 +374,9 @@ public class Parser {
 		}
 		
 		scanner.getNext();
-		res = expression(":", ":");
+		res = expression(":");
 		
-		if (res.internalValue.equals("T"))
+		if (res.getInternalValue().equals("T"))
 			res = statements(true);
 		else 
 			res = statements(false);
@@ -398,10 +398,10 @@ public class Parser {
 	{
 		ArrayList<ResultValue> resultArray = new ArrayList<ResultValue>();
 		
-		resultArray.add(expression(",", expectedTerminator));
+		resultArray.add(expression(expectedTerminator));
 		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.getNext().equals("") )
 		{
-			resultArray.add(expression(",", expectedTerminator));
+			resultArray.add(expression(expectedTerminator));
 		}
 		return resultArray;
 	}
@@ -531,9 +531,29 @@ public class Parser {
 		else
 		{
 			scanner.getNext();
-			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]", "]"));
-			int arraySize = Integer.parseInt(arraySizeExpressionResult.internalValue);
+			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]"));
+			int arraySize = Integer.parseInt(arraySizeExpressionResult.getInternalValue());
 			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
+			scanner.getNext();
+			if (scanner.currentToken.tokenStr.equals("=")) // If the next statement is an assignment
+			{
+				scanner.getNext();
+				initArgs = argList(";");
+				if (initArgs.size() > 1)
+				{
+					for (int i = 0; i < initArgs.size(); i++)
+					{
+						arrayValue.insert(this, i, initArgs.get(i));
+					}
+				}
+				else
+				{
+					for (int i = 0; i < arraySize; i++)
+					{
+						arrayValue.insert(this, i, initArgs.get(0));
+					}
+				}
+			}
 		}
 		return arrayValue;
 	}
@@ -591,7 +611,7 @@ public class Parser {
 		
 		scanner.getNext();
 		String expectedTerminator = ";";
-		subResult1 = expression(expectedTerminator, expectedTerminator);
+		subResult1 = expression(expectedTerminator);
 		
 		if (! subResult1.terminatingStr.equals(";"))
 		{
@@ -651,15 +671,6 @@ public class Parser {
 
 			Utility.assign(this, targetResult, subResult2);
 		}
-		
-		/*if(bShowAssign)
-		{
-			if(subResult2 == null)
-			{
-				subResult2 = subResult1;
-			}
-			Utility.printAssign(this, targetResult, subResult2);
-		}*/
 
 		return targetResult;
 	}
@@ -676,7 +687,7 @@ public class Parser {
 	 * @return
 	 * @throws Exception
 	 */
-	public ResultValue expression(String expectedTerminator, String secondaryTerminator) throws ParserException
+	public ResultValue expression(String expectedTerminator) throws ParserException
 	{
 		Stack<StackToken> operatorStack = new Stack<StackToken>();
 		Stack<ResultValue> outputStack = new Stack<ResultValue>();
@@ -689,7 +700,7 @@ public class Parser {
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		boolean bOperatorFound = false;
 		
-		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator)) // Until we reach a semicolon, colon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(",")) // Until we reach a semicolon, colon or end of file?
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -832,7 +843,7 @@ public class Parser {
 					, "Expression parse missmatch"
 					, scanner.sourceFileName);
 		}
-		if (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(secondaryTerminator))
+		if (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(","))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'" + expectedTerminator + "\' at end of expression"
@@ -846,7 +857,8 @@ public class Parser {
 		return res;
 	}
 
-	private ResultValue evaluateOperand(Token operandToken) throws ParserException {
+	private ResultValue evaluateOperand(Token operandToken) throws ParserException 
+	{
 		ResultValue res = null;
 		
 		if (operandToken.primClassif != Token.OPERAND)
@@ -864,6 +876,16 @@ public class Parser {
 				throw new ParserException(scanner.currentToken.iSourceLineNr
 						, "Unknown identifier \'" + operandToken.tokenStr + "\' found in expression"
 						, scanner.sourceFileName);
+			}
+			if (res instanceof ResultList) // If the element is an array
+			{
+				if (scanner.nextToken.tokenStr.equals("[")) // Check if we need to grab an index
+				{
+					scanner.getNext();
+					scanner.getNext(); // Move past the [ and onto the expression
+					int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
+					res = ((ResultList) res).get(this, index);
+				}
 			}
 			break;
 		case Token.INTEGER:

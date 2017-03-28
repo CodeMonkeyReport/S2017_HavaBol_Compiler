@@ -59,4 +59,17 @@ public class ResultList extends ResultValue {
 		
 		return internalValueList[index];
 	}
+	
+	public String getInternalValue()
+	{
+		int i;
+		StringBuilder sb = new StringBuilder();
+		for(i = 0; i < internalValueList.length -1; i++)
+		{
+			sb.append(internalValueList[i].internalValue);
+			sb.append(", ");
+		}
+		sb.append(internalValueList[i].internalValue);
+		return sb.toString();
+	}
 }
