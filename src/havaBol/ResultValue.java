@@ -16,4 +16,8 @@ public class ResultValue {
 	{
 		this.type = type;
 	}
+	public String getInternalValue()
+	{
+		return this.internalValue;
+	}
 }

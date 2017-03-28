@@ -24,7 +24,9 @@ public class StorageManager {
 	 */
 	public ResultValue getVariableValue(String varString)
 	{
-		return varTable.get(varString);
+		ResultValue res = varTable.get(varString);
+
+		return res;
 	}
 	
 	/**
