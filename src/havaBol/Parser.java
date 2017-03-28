@@ -588,7 +588,9 @@ public class Parser {
 		}
 		Token targetToken = scanner.currentToken; // Store the left hand side token
 		
+		ResultValue targetResult = evaluateOperand(targetToken);
 		scanner.getNext();
+		
 		if (scanner.currentToken.primClassif != Token.OPERATOR) // Next token should be an operator.
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -597,7 +599,6 @@ public class Parser {
 		}
 		Token operatorToken = scanner.currentToken; // Store the operation we are performing
 		
-		ResultValue targetResult = storageManager.getVariableValue(targetToken.tokenStr);
 		
 		if (targetResult == null)
 		{
@@ -874,7 +875,7 @@ public class Parser {
 			if (res == null)
 			{
 				throw new ParserException(scanner.currentToken.iSourceLineNr
-						, "Unknown identifier \'" + operandToken.tokenStr + "\' found in expression"
+						, "Undeclared identifier: \'" + operandToken.tokenStr + "\'"
 						, scanner.sourceFileName);
 			}
 			if (res instanceof ResultList) // If the element is an array
