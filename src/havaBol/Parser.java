@@ -534,6 +534,7 @@ public class Parser {
 			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]"));
 			int arraySize = Integer.parseInt(arraySizeExpressionResult.getInternalValue());
 			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
+			arrayValue.iCurrentSize = arraySize;
 			scanner.getNext();
 			if (scanner.currentToken.tokenStr.equals("=")) // If the next statement is an assignment
 			{
@@ -552,6 +553,13 @@ public class Parser {
 					{
 						arrayValue.insert(this, i, initArgs.get(0));
 					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < arraySize; i++)
+				{
+					arrayValue.insert(this, i, new ResultValue(typeToken.tokenStr));
 				}
 			}
 		}
