@@ -185,7 +185,7 @@ public class Parser {
 	 * @return
 	 * @throws ParserException
 	 */
-	private ResultValue functionStmt(boolean bExecuting) throws ParserException 
+	private ResultValue functionStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res = null;
 		Token functionToken;
@@ -199,13 +199,23 @@ public class Parser {
 			case "print":
 				functionPrint(bExecuting);
 				break;
+			case "LENGTH":
+				res = functionLength(bExecuting);
+				break;
+			case "SPACES":
+				// Function call
+				break;
+			case "ELEM":
+				// Function call
+				break;
+			case "MAXELEM":
+				// Function call
+				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
 						, "Unknown builtin function: \'" + functionToken.tokenStr + "\'"
 						, scanner.sourceFileName);	
 			}
-			//System.out.println("Function calls not yet implemented");
-			//scanner.skipTo(";");
 		}
 		else
 		{
@@ -217,6 +227,43 @@ public class Parser {
 	}
 
 	/**
+	 * Handles the string length builtin function
+	 * <p>
+	 * On entering the method the currentToken should be on 'LENGTH'
+	 * On leaving the method the currentToken should be on ';'
+	 * <p>
+	 * 
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
+	private ResultValue functionLength(boolean bExecuting) throws ParserException 
+	{
+		ResultValue res = null;
+		
+		if (bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return null;
+		}
+		scanner.getNext();
+		
+		if (! scanner.currentToken.tokenStr.equals("(")) // Missing lparen
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Error missing \'(\' after LENGTH function"
+					, scanner.sourceFileName);
+		}
+		scanner.getNext();
+		ResultValue stringParameter = expression(")");
+		
+		res = new ResultValue(Type.INT);
+		res.internalValue = Integer.toString(stringParameter.internalValue.length());
+		return res;
+	}
+	
+
+	/**
 	 * Handles the print builtin function
 	 * <p>
 	 * On entering the method the currentToken should be on 'print'
@@ -226,7 +273,8 @@ public class Parser {
 	 * @param bExecuting
 	 * @throws ParserException
 	 */
-	private void functionPrint(boolean bExecuting) throws ParserException {
+	private void functionPrint(boolean bExecuting) throws ParserException 
+	{
 		
 		if(bExecuting == false)
 		{
