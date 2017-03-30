@@ -46,12 +46,16 @@ public class SymbolTable {
 	    globalST.put("else", new STControl("else",Token.END));
 	    globalST.put("endfor", new STControl("endfor",Token.END));
 	    globalST.put("endwhile", new STControl("endwhile",Token.END));
+	    globalST.put("endtuple", new STControl("endwhile",Token.END));
 	    
 	    globalST.put("Int", new STControl("Int",Token.DECLARE));
 	    globalST.put("Float", new STControl("Float",Token.DECLARE));
 	    globalST.put("String", new STControl("String",Token.DECLARE));
 	    globalST.put("Bool", new STControl("Bool",Token.DECLARE));
 	    globalST.put("Date", new STControl("Date",Token.DECLARE));
+	    
+	    globalST.put("tuple", new STControl("tuple", Token.DEFINE));
+	    
 	    
 	    globalST.put("print", new STFunction("print",Token.VOID,Token.BUILTIN, VAR_ARGS));
 	    
