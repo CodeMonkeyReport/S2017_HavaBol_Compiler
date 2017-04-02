@@ -70,7 +70,6 @@ public class SymbolTable {
         globalST.put("in", new STEntry("for", Token.OPERATOR, 0));
         globalST.put("to", new STEntry("to", Token.OPERATOR, 0));
         globalST.put("from", new STEntry("from", Token.OPERATOR, 0));
-		globalST.put("#", new STEntry("#", Token.OPERATOR, 0));
 
 
 		globalST.put("T", new STEntry("T", Token.OPERAND, Token.BOOLEAN));
