@@ -946,10 +946,6 @@ public class Parser {
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
-//                if(scanner.nextToken.tokenStr.equals("in") || scanner.nextToken.tokenStr.equals("to") || scanner.nextToken.tokenStr.equals("by") || scanner.nextToken.tokenStr.equals("from"))
-//                {
-//                    expectedTerminator = scanner.nextToken.tokenStr;
-//                }
 				break;
 			case Token.OPERATOR:
 				bOperatorFound = true;
