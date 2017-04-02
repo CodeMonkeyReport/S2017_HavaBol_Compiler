@@ -362,7 +362,8 @@ public class Parser {
     public ResultValue forStmt(boolean bExecuting) throws ParserException
     {
         ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
-        Token forToken = scanner.currentToken;
+        Token forToken;
+        int max, incr;
 
         if (bExecuting == false)
         {
@@ -372,24 +373,62 @@ public class Parser {
         }
 
         scanner.getNext();
+        /*
+            First, check what the next keyword is after starting/control value is. Since control value can only by one
+            token, check the next token's string;
+         */
         switch (scanner.nextToken.tokenStr) {
+            /*
+                Counting for loop,
+                First initialize control value,
+                then evaluate the limit value(can be an expression),
+                then evaluate the increment value(can be expression),
+                finally use a for loop to iterate the correct number of times and process statements within the loop as
+                we go.
+             */
             case "=":
-                controlVal = evaluateOperand(scanner.currentToken);
+
+                controlVal = evaluateOperand(scanner.currentToken); //Initialize the control value
+
+                //Since for loop assignment does not use semicolon, a slightly modified version must be implemented here
+                scanner.getNext(); //skip '='
                 scanner.getNext();
-                scanner.getNext();
-                Utility.assign(this, controlVal, expression("to"));
+                Utility.assign(this, controlVal, expression("to")); //Set control value, accounting for expressions
+
+                //Evaluate and set limit value
                 scanner.getNext();
                 limitVal = expression("by");
+
+                //Evaluate and set increment value
                 scanner.getNext();
                 incrVal = expression(":");
-                forToken = scanner.currentToken;
-                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < Integer.parseInt(limitVal.getInternalValue()); i += Integer.parseInt(incrVal.getInternalValue())) {
+
+                //Class voted changing incr or limit will NOT affect # of iterations, so set them before evaluating statements
+                //within the for loop.
+                forToken = scanner.currentToken;    //set loopback
+                max = Integer.parseInt(limitVal.getInternalValue());
+                incr = Integer.parseInt(incrVal.getInternalValue());
+
+                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < max; i += incr) {
                     scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
-                    controlVal.internalValue = String.valueOf(i);
-                    res = statements(true);
+                    controlVal.internalValue = String.valueOf(i);   //Control value is updated on every iteration
+                    res = statements(true);             //Evaluate statements in for loop
                 }
                 break;
+            /*
+                Iterating through strings using a delimiter for loop, similar to counting for loop:
+                First initialize control value,
+                then evaluate the string to iterate through(can be an expression),
+                then evaluate the delimiter value(can be expression),
+                finally use a for loop.
+             */
             case "from":
+                /*
+                    As per specifications, the control value is implicitly declared if it has not been declared previously.
+                    However declareScalar only takes ';' as terminating character so this is a slight modification of it.
+                    First check if the control value exists, if it doesn't, create and put in storageManager; in either
+                    case, initialize it.
+                 */
                 if (scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr) == null) {
                     STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
                             , Type.STRING
@@ -403,11 +442,18 @@ public class Parser {
                     storageManager.putVariableValue(scanner.currentToken.tokenStr, controlVal);
                 }
                 controlVal = evaluateOperand(scanner.currentToken);
-                scanner.getNext();
+
+                //Evaluate and set iterable string
+                scanner.getNext();  //skip 'from'
                 scanner.getNext();
                 limitVal = expression("by");
+
+                //Evaluate and set delimiter string
                 scanner.getNext();
                 delimVal = expression(":");
+
+                //Since class voted changing delimiter or string does NOT impact # of iterations, first split the string,
+                //then iterate over each piece
                 forToken = scanner.currentToken;
                 String[] tokens = limitVal.getInternalValue().split(delimVal.getInternalValue());
                 for (String token : tokens) {
@@ -415,14 +461,21 @@ public class Parser {
                     controlVal.internalValue = token;
                     res = statements(true);
                 }
-                //System.out.println(scanner.currentToken.tokenStr);
                 break;
+            /*
+                Iterate over string or elements in array for loops. Again, similar to the other loops except, we need to
+                check if the thing we're iterating over is an array or string to set the control value and for loop correctly.
+             */
             case "in":
-                Token control = scanner.currentToken;
-                scanner.getNext();
+                Token control = scanner.currentToken;   //Hold the control value token so it can be set later
+
+                //Evaluate and set the thing we're iterating over
+                scanner.getNext();//skip 'in'
                 scanner.getNext();
                 limitVal = expression(":");
                 forToken = scanner.currentToken;
+
+                //Now set the control value, since we know the limitVal's type. If control value doesn't exist, create it; otherwise initialize control value
                 if (scanner.symbolTable.getSymbol(control.tokenStr) == null) {
                     STIdentifier newIdentifier = new STIdentifier(control.tokenStr
                             , limitVal.type
@@ -436,24 +489,36 @@ public class Parser {
                     storageManager.putVariableValue(control.tokenStr, controlVal);
                 }
                 controlVal = evaluateOperand(control);
+                //Check if the thing we're iterating over is an array first
                 if (limitVal instanceof ResultList) {
-                    int max = ((ResultList) limitVal).iMaxSize - 1;
+                    //As per the specs, changing # of array elements does not affect # of iterations, so set it before looping
+                    max = ((ResultList) limitVal).iMaxSize - 1;
                     for (int i = 0; i < max; i++) {
                         scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                        /*
+                            As a personal choice, I decided to skip over holes in the array. This can be changed so it creates an error
+                            in the future...
+                         */
                         if (((ResultList) limitVal).get(this, i) != null) {
                             Utility.assign(this, controlVal, ((ResultList) limitVal).get(this, i));
                             res = statements(true);
                         } else res = statements(false);
                     }
-                } else {
-                    int max = limitVal.getInternalValue().length();
+                }
+                //Class voted changing the string does not affect # of iterations, so set it before looping
+                else if(limitVal.type.equals(Type.STRING)) {
+                    max = limitVal.getInternalValue().length();
                     for (int i = 0; i < max; i++) {
                         scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
                         controlVal.internalValue = String.valueOf(limitVal.getInternalValue().charAt(i));
                         res = statements(true);
                     }
                 }
+                else throw new ParserException(scanner.currentToken.iSourceLineNr,
+                            "Unsupported object, cannot iterate over object \'" + scanner.currentToken.tokenStr + "\'",
+                            scanner.sourceFileName);
                 break;
+            //Since the control value cannot be an expression itself, throw an error if any unknown tokens appear within the for loop expression.
             default:
                 throw new ParserException(scanner.currentToken.iSourceLineNr,
                         "Expected \'in\', \'from\', or \'=\' after starting variable, found \'" + scanner.nextToken.tokenStr + "\'",

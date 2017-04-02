@@ -1,10 +1,9 @@
 Int i;
+Int n = 4;
+Int inc=1;
 Float data2 [10] = 91.0, 51.0, 1.0, 2.0;
-i = 1;
-data2[5] = 10;
-for elem in data2:
-    print ('elem=', elem);
-    data2[i] = i * 10;
+String s = "string";
+for i in s:
+    print ("i=", i);
+    n += 1;
 endfor;
-
-print("test");
