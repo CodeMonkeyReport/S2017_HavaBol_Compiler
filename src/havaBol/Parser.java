@@ -25,7 +25,7 @@ public class Parser {
 	 * <p>
 	 * 
 	 * @param bExecuting - Indicates if the method should execute the list of statements
-	 * @param expectedTerminator
+	 *
 	 * @throws Exception
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
@@ -109,6 +109,16 @@ public class Parser {
 						res.terminatingStr = "endwhile";
 						return res;
 					}
+                    else if (temp.tokenStr.equals("endfor"))
+                    {
+                        res = new ResultValue(Type.BOOL); // Build a result object and return it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "endfor";
+                        return res;
+                    }
 					break;
 				case Token.DEBUG:
 					// Handle debug statements here
@@ -349,14 +359,115 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	public ResultValue forStmt(boolean bExecuting) 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public ResultValue forStmt(boolean bExecuting) throws ParserException
+    {
+        ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
+        Token forToken = scanner.currentToken;
+
+        if (bExecuting == false)
+        {
+            scanner.skipTo(":");
+            res = statements(false);
+            return res;
+        }
+
+        scanner.getNext();
+        switch (scanner.nextToken.tokenStr) {
+            case "=":
+                controlVal = evaluateOperand(scanner.currentToken);
+                scanner.getNext();
+                scanner.getNext();
+                Utility.assign(this, controlVal, expression("to"));
+                scanner.getNext();
+                limitVal = expression("by");
+                scanner.getNext();
+                incrVal = expression(":");
+                forToken = scanner.currentToken;
+                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < Integer.parseInt(limitVal.getInternalValue()); i += Integer.parseInt(incrVal.getInternalValue())) {
+                    scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    controlVal.internalValue = String.valueOf(i);
+                    res = statements(true);
+                }
+                break;
+            case "from":
+                if (scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr) == null) {
+                    STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+                            , Type.STRING
+                            , Type.PRIMITIVE
+                            , Type.VALUE
+                            , Type.LOCAL);
+
+                    scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
+
+                    controlVal = new ResultValue(Type.STRING);
+                    storageManager.putVariableValue(scanner.currentToken.tokenStr, controlVal);
+                }
+                controlVal = evaluateOperand(scanner.currentToken);
+                scanner.getNext();
+                scanner.getNext();
+                limitVal = expression("by");
+                scanner.getNext();
+                delimVal = expression(":");
+                forToken = scanner.currentToken;
+                String[] tokens = limitVal.getInternalValue().split(delimVal.getInternalValue());
+                for (String token : tokens) {
+                    scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    controlVal.internalValue = token;
+                    res = statements(true);
+                }
+                //System.out.println(scanner.currentToken.tokenStr);
+                break;
+            case "in":
+                Token control = scanner.currentToken;
+                scanner.getNext();
+                scanner.getNext();
+                limitVal = expression(":");
+                forToken = scanner.currentToken;
+                if (scanner.symbolTable.getSymbol(control.tokenStr) == null) {
+                    STIdentifier newIdentifier = new STIdentifier(control.tokenStr
+                            , limitVal.type
+                            , Type.PRIMITIVE
+                            , Type.VALUE
+                            , Type.LOCAL);
+
+                    scanner.symbolTable.putSymbol(control.tokenStr, newIdentifier); // add symbol to table
+
+                    controlVal = new ResultValue(limitVal.type);
+                    storageManager.putVariableValue(control.tokenStr, controlVal);
+                }
+                controlVal = evaluateOperand(control);
+                if (limitVal instanceof ResultList) {
+                    int max = ((ResultList) limitVal).iMaxSize - 1;
+                    for (int i = 0; i < max; i++) {
+                        scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                        if (((ResultList) limitVal).get(this, i) != null) {
+                            Utility.assign(this, controlVal, ((ResultList) limitVal).get(this, i));
+                            res = statements(true);
+                        } else res = statements(false);
+                    }
+                } else {
+                    int max = limitVal.getInternalValue().length();
+                    for (int i = 0; i < max; i++) {
+                        scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                        controlVal.internalValue = String.valueOf(limitVal.getInternalValue().charAt(i));
+                        res = statements(true);
+                    }
+                }
+                break;
+            default:
+                throw new ParserException(scanner.currentToken.iSourceLineNr,
+                        "Expected \'in\', \'from\', or \'=\' after starting variable, found \'" + scanner.nextToken.tokenStr + "\'",
+                        scanner.sourceFileName);
+        }
 
 
-	/**
+
+        return res;
+    }
+
+
+
+    /**
 	 * handles the execution of while statements
 	 * <p>
 	 * On entering the method the currentToken should be on 'while'
@@ -770,6 +881,10 @@ public class Parser {
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
+//                if(scanner.nextToken.tokenStr.equals("in") || scanner.nextToken.tokenStr.equals("to") || scanner.nextToken.tokenStr.equals("by") || scanner.nextToken.tokenStr.equals("from"))
+//                {
+//                    expectedTerminator = scanner.nextToken.tokenStr;
+//                }
 				break;
 			case Token.OPERATOR:
 				bOperatorFound = true;
@@ -783,8 +898,10 @@ public class Parser {
 					throw new ParserException(scanner.currentToken.iSourceLineNr
 							, "Unexpected operator \'" + scanner.currentToken.tokenStr + "\' in expression"
 							, scanner.sourceFileName);
-				
+
+
 				sToken = new StackToken(scanner.currentToken);
+
 				if (operatorStack.isEmpty())
 				{
 					operatorStack.push(sToken);
