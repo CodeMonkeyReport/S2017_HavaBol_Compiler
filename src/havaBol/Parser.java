@@ -953,6 +953,11 @@ public class Parser {
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
 				break;
+			case Token.FUNCTION:
+				tempRes01 = functionStmt(true);
+				outputStack.push(tempRes01);
+				expected = Token.OPERATOR;
+				break;
 			case Token.OPERATOR:
 				bOperatorFound = true;
 				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
