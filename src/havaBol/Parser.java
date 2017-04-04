@@ -30,7 +30,6 @@ public class Parser {
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
-		boolean state;
 		ResultValue res = null;
 		// Get next token
 		while (! scanner.getNext().isEmpty() ) // While we have not reached the EOF
@@ -45,6 +44,10 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
+					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Expected \';\' after declaration statement"
+								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -163,7 +166,6 @@ public class Parser {
 	 * @return
 	 */
 	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
-		// TODO Auto-generated method stub
 		scanner.getNext();
 		
 		switch (scanner.currentToken.tokenStr)
@@ -175,7 +177,7 @@ public class Parser {
 				this.bShowAssign = true;
 				break;
 			case "Token" :
-				this.bShowToken = true;
+				this.bShowToken = true; // Not implemented? TODO
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -340,17 +342,17 @@ public class Parser {
 		{
 			scanner.skipTo(":");
 			res = statements(false);
-			
+
 			return res;
 		}
-		
+
 		res = statements(bExecuting);
 		
 		if (scanner.currentToken.tokenStr.equals("endif") == false)
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'endif\' after if statement"
 					, scanner.sourceFileName);
-		
+
 		return res;
 	}
 	
@@ -372,13 +374,13 @@ public class Parser {
             return res;
         }
         scanner.getNext();
-        
+
         // Adding support for declare statement in for statements
         if (scanner.currentToken.subClassif == Token.DECLARE)
         {
         	declareStmt(true);
         }
-        
+
         /*
             First, check what the next keyword is after starting/control value is. Since control value can only by one
             token, check the next token's string;
@@ -644,7 +646,7 @@ public class Parser {
 	 * 	This method should create a new entry into the symbol table and assign it the appropriate information.
 	 * 
 	 * <p>
-	 * On exiting the method the current token should be on ';'
+	 * On exiting the method the current token should be on ';' OR '=' if an initialization statement follows
 	 * @throws ParserException 
 	 * 
 	 */
@@ -915,7 +917,7 @@ public class Parser {
 	}
 
 	/**
-	 * TODO Evaluate an expression and return the result.
+	 * Evaluate an expression and return the result.
 	 * <p>
 	 * Expressions are in Infix notation so a stack will be used to parse.
 	 * A stack of ResultValue will be used for the output
@@ -1038,7 +1040,13 @@ public class Parser {
 							
 							outputStack.push(tempRes03); // Push result back onto stack
 						}
-					} // if bFound OR if we found a function call TODO
+					} // if bFound is false there is a missing left paren
+					if (bFound == false)
+					{
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Missing \'(\' in expression"
+								, scanner.sourceFileName);
+					}
 					break;
 				case "(":
 					sToken = new StackToken(scanner.currentToken);

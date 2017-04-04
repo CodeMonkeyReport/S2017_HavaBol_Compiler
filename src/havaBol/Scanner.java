@@ -250,9 +250,9 @@ public class Scanner {
 	/**
 	 * Helper method to the classify method used to set values for a numeric constant
 	 * <p>
-	 * TODO This function will need to be updated to use the SymbolTable for classifications
+	 * This function will need to be updated to use the SymbolTable for classifications
 	 * Currently classifications are not working, Identifier subClassif not working correctly.
-	 * classification of new functions and identifiers not working correctly. TODO
+	 * classification of new functions and identifiers not working correctly.
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 */
