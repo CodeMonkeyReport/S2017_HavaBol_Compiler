@@ -30,7 +30,6 @@ public class Parser {
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
-		boolean state;
 		ResultValue res = null;
 		// Get next token
 		while (! scanner.getNext().isEmpty() ) // While we have not reached the EOF
@@ -128,6 +127,11 @@ public class Parser {
 			case Token.FUNCTION:
 				functionStmt(bExecuting);
 				// Function call
+				break;
+			case Token.DEFINE:
+				 // TODO maybe some error checking needed?
+				defineStmt(bExecuting);
+				break;
 			case Token.SEPARATOR:
 				 // TODO maybe some error checking needed?
 				break;
@@ -238,15 +242,13 @@ public class Parser {
 		switch (statementToken.tokenStr)
 		{
 		case "deftuple": // defining a tuple
-			defineTuple()
+			//defineTuple()
 			break;
 		}
 		
 		
 		return null; // TODO avoid stupid IDE errors
 	}
-	
-
 	
 	/**
 	 * Handles the string length builtin function
@@ -371,7 +373,7 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	public ResultValue forStmt(boolean bExecuting) 
+	public ResultValue forStmt(boolean bExecuting)
 	{
 		// TODO Auto-generated method stub
 		return null;
@@ -389,7 +391,7 @@ public class Parser {
 	 * @return
 	 * @throws ParserException
 	 */
-	public ResultValue whileStmt(boolean bExecuting) throws ParserException 
+	public ResultValue whileStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res;
 		Token whileToken = scanner.currentToken;
@@ -1016,7 +1018,7 @@ public class Parser {
 			res = Utility.parseDate(this, operandToken);
 			break;
 		case Token.VOID:
-			res = null;
+			res = null; // Case for all tuple types
 			break;
 		default:
 			throw new ParserException(scanner.currentToken.iSourceLineNr

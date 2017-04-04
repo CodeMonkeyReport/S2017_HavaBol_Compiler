@@ -23,7 +23,7 @@ public class Scanner {
 
     /**
 	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
-	 * Local line number information will be initilized to 1
+	 * Local line number information will be initialized to 1
 	 * <p>
 	 *
 	 * @param path - Path to the HavaBol source code we are scanning in

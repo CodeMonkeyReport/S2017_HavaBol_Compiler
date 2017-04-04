@@ -334,7 +334,7 @@ public class IntegrationTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	@Test
 	public void simpleWhileStatementTestOne()
 	{
@@ -373,7 +373,7 @@ public class IntegrationTest {
 				         + "while i < 5:\n"
 				         + "  i += 2;\n;"
 				         + "endwhile;";
-		
+
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -460,6 +460,7 @@ public class IntegrationTest {
 			Parser parser = new Parser(testScanner, storageManager);
 			
 			// Use this area to run tests	
+			
 			parser.statements(true);
 			
 			assertEquals("26", storageManager.getVariableValue("k").internalValue);

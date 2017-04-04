@@ -5,16 +5,16 @@ public class ResultList extends ResultValue {
 	ResultValue internalValueList[]; // For array types we need a list of values
 	public int iMaxSize;
 	public int iCurrentSize;
-	public int iReferencedIndex = -1; 	// Will be used to talk about a specific index in the array
 								// -1 indicates that we are talking about the whole array
-	
+
 	public ResultList(String type, int iMaxSize)
 	{
 		super(type);
 		this.iMaxSize = iMaxSize;
 		if (iMaxSize >= Type.ARRAY_UNBOUNDED)
 		{
-			
+			this.internalValueList = new ResultValue[1];
+			this.iCurrentSize = 0;
 		}
 		else
 		{
@@ -22,7 +22,7 @@ public class ResultList extends ResultValue {
 			this.iCurrentSize = 0;
 		}
 	}
-	
+
 	/**
 	 * Puts a result value into the array and checks bounds for errors
 	 * @param index
@@ -38,7 +38,11 @@ public class ResultList extends ResultValue {
 		
 		if (this.iMaxSize == Type.ARRAY_UNBOUNDED && this.internalValueList.length < index) // Unbounded array needs to grow
 		{
-			ResultValue tempResultArray[] = new ResultValue[this.internalValueList.length*2];
+			int maxSize = this.internalValueList.length;
+			while (maxSize < index)
+				maxSize *= 2;
+			
+			ResultValue tempResultArray[] = new ResultValue[maxSize];
 			System.arraycopy(this.internalValueList, 0, tempResultArray, 0, this.internalValueList.length);
 			
 		}
@@ -67,7 +71,7 @@ public class ResultList extends ResultValue {
 		for(i = 0; i < internalValueList.length -1; i++)
 		{
 			sb.append(internalValueList[i].internalValue);
-			sb.append(", ");
+			sb.append(",");
 		}
 		sb.append(internalValueList[i].internalValue);
 		return sb.toString();
