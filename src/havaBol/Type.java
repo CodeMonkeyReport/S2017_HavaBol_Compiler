@@ -12,7 +12,7 @@ public class Type {
 	// Variable structure types
 	public static final int PRIMITIVE = 0;
 	public static final int ARRAY = 1;
-	public static final int STRUCT = 2; // May never be implemented
+	public static final int TUPLE = 2; // May never be implemented
 	
 	// Primitive variable value types
 	public static final String INT = "Int";

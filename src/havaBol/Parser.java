@@ -141,6 +141,11 @@ public class Parser {
 			case Token.FUNCTION:
 				functionStmt(bExecuting);
 				// Function call
+				break;
+			case Token.DEFINE:
+				 // TODO maybe some error checking needed?
+				defineStmt(bExecuting);
+				break;
 			case Token.SEPARATOR:
 				 // TODO maybe some error checking needed?
 				break;
@@ -238,6 +243,26 @@ public class Parser {
 		return res;
 	}
 
+	public ResultValue defineStmt(boolean bExecuting) throws ParserException
+	{
+		Token statementToken;
+		if (bExecuting == false)
+		{
+			scanner.skipTo(":");
+			return null;
+		}
+		statementToken = scanner.currentToken;
+		switch (statementToken.tokenStr)
+		{
+		case "deftuple": // defining a tuple
+			//defineTuple()
+			break;
+		}
+		
+		
+		return null; // TODO avoid stupid IDE errors
+	}
+	
 	/**
 	 * Handles the string length builtin function
 	 * <p>
@@ -366,7 +391,7 @@ public class Parser {
         ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
         Token forToken;
         int max, incr;
-
+      
         if (bExecuting == false)
         {
             scanner.skipTo(":");
@@ -551,7 +576,7 @@ public class Parser {
 	 * @return
 	 * @throws ParserException
 	 */
-	public ResultValue whileStmt(boolean bExecuting) throws ParserException 
+	public ResultValue whileStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res;
 		Token whileToken = scanner.currentToken;
@@ -650,13 +675,54 @@ public class Parser {
 	 * @throws ParserException 
 	 * 
 	 */
-	public void declareStmt(boolean bExecuting) throws ParserException {
-		ResultValue variableValue;
+	public void declareStmt(boolean bExecuting) throws ParserException 
+	{
+		STIdentifier variableIdentifier;
+		ResultValue variableValue = null;
 		Token variableToken;
+		Token typeToken;
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
 			return;
+		}
+		
+		typeToken = scanner.currentToken;
+		variableToken = scanner.nextToken;
+		
+		variableIdentifier = declareIdentifier(bExecuting);
+		
+		scanner.symbolTable.putSymbol(variableToken.tokenStr, variableIdentifier);
+		
+		if (variableIdentifier.structureType == Type.ARRAY)
+			variableValue = declareArray(typeToken, variableToken);
+		else if (variableIdentifier.structureType == Type.PRIMITIVE)
+			variableValue = declareScalar(typeToken, variableToken);
+		else if (variableIdentifier.structureType == Type.TUPLE)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Tuple types not yet implemented"
+					, scanner.sourceFileName);
+			
+		// TODO This line will need modification based on by reference parameter passing later
+		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+	}
+
+	/**
+	 * Handles the creation of the relevant STIdentifier when building a variable from a declaration.
+	 * <p>
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
+	public STIdentifier declareIdentifier(boolean bExecuting) throws ParserException
+	{
+		Token typeToken;
+		Token variableToken;
+		STIdentifier newIdentifier;
+		if (bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return null;
 		}
 		
 		if (scanner.nextToken.primClassif != Token.OPERAND && scanner.nextToken.subClassif != Token.IDENTIFIER) // If the next token is not an identifier
@@ -671,40 +737,32 @@ public class Parser {
 					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
 					, scanner.sourceFileName);
 		}
-		Token typeToken = scanner.currentToken;
+		typeToken = scanner.currentToken;
 		scanner.getNext(); // Move past the type declaration, should now be on variable
-		
 		variableToken = scanner.currentToken;
 		
 		if (scanner.nextToken.tokenStr.equals("["))
 		{
 			// Array stuff
-			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+			newIdentifier = new STIdentifier(variableToken.tokenStr
 					, typeToken.tokenStr
 					, Type.ARRAY
 					, Type.VALUE
 					, Type.LOCAL);
-			
-			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
-			
-			variableValue = declareArray(typeToken, variableToken);
 		}
 		else
 		{
-			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+			newIdentifier = new STIdentifier(variableToken.tokenStr
 					, typeToken.tokenStr
 					, Type.PRIMITIVE
 					, Type.VALUE
 					, Type.LOCAL);
 			
-			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
-			
-			variableValue = declareScalar(typeToken, variableToken);
 		}
-		// TODO This line will need modification based on by reference parameter passing later
-		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+		
+		return newIdentifier;
 	}
-
+	
 	/**
 	 * Handles the declaration of scalar variables
 	 * <p>
@@ -1158,7 +1216,7 @@ public class Parser {
 			res = Utility.parseDate(this, operandToken);
 			break;
 		case Token.VOID:
-			res = null;
+			res = null; // Case for all tuple types
 			break;
 		default:
 			throw new ParserException(scanner.currentToken.iSourceLineNr
