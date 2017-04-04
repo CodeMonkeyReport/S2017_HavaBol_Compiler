@@ -64,8 +64,8 @@ public class SymbolTable {
 	    globalST.put("and", new STEntry("and", Token.OPERATOR, 0));
 	    globalST.put("or", new STEntry("or", Token.OPERATOR, 0));
 	    globalST.put("not", new STEntry("not", Token.OPERATOR, 0));
-	    globalST.put("IN", new STEntry("in", Token.OPERATOR, 0));
-	    globalST.put("NOTIN", new STEntry("NOTIN", Token.OPERATOR, 0));
+	    globalST.put("in", new STEntry("in", Token.OPERATOR, 0));
+	    globalST.put("notin", new STEntry("notin", Token.OPERATOR, 0));
         globalST.put("by", new STEntry("by", Token.OPERATOR, 0));
         globalST.put("in", new STEntry("for", Token.OPERATOR, 0));
         globalST.put("to", new STEntry("to", Token.OPERATOR, 0));

@@ -473,6 +473,88 @@ public class IntegrationTest {
 	}
 	
 	@Test
+	public void simpleForLoopStatment()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = ""
+						 + "Int j;\n"
+						 + "Int i;\n"
+						 + "Int k = 0;\n"
+				         + "for i = 0 to 5 by 1:\n"
+				         + "  j = 0;\n"
+				         + "  while j < 5:\n"
+				         + "    j += 1;\n"
+				         + "    if k < 25:\n"
+				         + "      k += 2;\n;"
+				         + "    endif;"
+				         + "  endwhile;\n"
+				         + "  i += 1;\n"
+				         + "endfor;\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("26", storageManager.getVariableValue("k").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void simpleForLoopStatmentWithDeclare()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = ""
+						 + "Int j;\n"
+						 + "\n"
+						 + "Int k = 0;\n"
+				         + "for Int i = 0 to 5 by 1:\n"
+				         + "  j = 0;\n"
+				         + "  while j < 5:\n"
+				         + "    j += 1;\n"
+				         + "    if k < 25:\n"
+				         + "      k += 2;\n;"
+				         + "    endif;"
+				         + "  endwhile;\n"
+				         + "  i += 1;\n"
+				         + "endfor;\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("26", storageManager.getVariableValue("k").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
 	public void largeScaleTestOne()
 	{
 		FileReader testReader;
