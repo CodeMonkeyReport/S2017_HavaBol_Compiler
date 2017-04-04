@@ -371,8 +371,14 @@ public class Parser {
             res = statements(false);
             return res;
         }
-
         scanner.getNext();
+        
+        // Adding support for declare statement in for statements
+        if (scanner.currentToken.subClassif == Token.DECLARE)
+        {
+        	declareStmt(true);
+        }
+        
         /*
             First, check what the next keyword is after starting/control value is. Since control value can only by one
             token, check the next token's string;
@@ -444,7 +450,7 @@ public class Parser {
                 controlVal = evaluateOperand(scanner.currentToken);
 
                 //Evaluate and set iterable string
-                scanner.getNext();  //skip 'from'
+                scanner.getNext();  //skip 'to'
                 scanner.getNext();
                 limitVal = expression("by");
 
@@ -521,7 +527,7 @@ public class Parser {
             //Since the control value cannot be an expression itself, throw an error if any unknown tokens appear within the for loop expression.
             default:
                 throw new ParserException(scanner.currentToken.iSourceLineNr,
-                        "Expected \'in\', \'from\', or \'=\' after starting variable, found \'" + scanner.nextToken.tokenStr + "\'",
+                        "Expected \'in\', \'to\', or \'=\' after starting variable, found \'" + scanner.nextToken.tokenStr + "\'",
                         scanner.sourceFileName);
         }
 
