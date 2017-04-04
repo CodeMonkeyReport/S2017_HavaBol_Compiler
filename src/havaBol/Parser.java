@@ -25,7 +25,7 @@ public class Parser {
 	 * <p>
 	 * 
 	 * @param bExecuting - Indicates if the method should execute the list of statements
-	 * @param expectedTerminator
+	 *
 	 * @throws Exception
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
@@ -44,6 +44,10 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
+					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Expected \';\' after declaration statement"
+								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -108,6 +112,16 @@ public class Parser {
 						res.terminatingStr = "endwhile";
 						return res;
 					}
+                    else if (temp.tokenStr.equals("endfor"))
+                    {
+                        res = new ResultValue(Type.BOOL); // Build a result object and return it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "endfor";
+                        return res;
+                    }
 					break;
 				case Token.DEBUG:
 					// Handle debug statements here
@@ -157,7 +171,6 @@ public class Parser {
 	 * @return
 	 */
 	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
-		// TODO Auto-generated method stub
 		scanner.getNext();
 		
 		switch (scanner.currentToken.tokenStr)
@@ -169,7 +182,7 @@ public class Parser {
 				this.bShowAssign = true;
 				break;
 			case "Token" :
-				this.bShowToken = true;
+				this.bShowToken = true; // Not implemented? TODO
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -354,17 +367,17 @@ public class Parser {
 		{
 			scanner.skipTo(":");
 			res = statements(false);
-			
+
 			return res;
 		}
-		
+
 		res = statements(bExecuting);
 		
 		if (scanner.currentToken.tokenStr.equals("endif") == false)
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'endif\' after if statement"
 					, scanner.sourceFileName);
-		
+
 		return res;
 	}
 	
@@ -373,14 +386,186 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	public ResultValue forStmt(boolean bExecuting)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public ResultValue forStmt(boolean bExecuting) throws ParserException
+    {
+        ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
+        Token forToken;
+        int max, incr;
+      
+        if (bExecuting == false)
+        {
+            scanner.skipTo(":");
+            res = statements(false);
+            return res;
+        }
+        scanner.getNext();
+
+        // Adding support for declare statement in for statements
+        if (scanner.currentToken.subClassif == Token.DECLARE)
+        {
+        	declareStmt(true);
+        }
+
+        /*
+            First, check what the next keyword is after starting/control value is. Since control value can only by one
+            token, check the next token's string;
+         */
+        switch (scanner.nextToken.tokenStr) {
+            /*
+                Counting for loop,
+                First initialize control value,
+                then evaluate the limit value(can be an expression),
+                then evaluate the increment value(can be expression),
+                finally use a for loop to iterate the correct number of times and process statements within the loop as
+                we go.
+             */
+            case "=":
+
+                controlVal = evaluateOperand(scanner.currentToken); //Initialize the control value
+
+                //Since for loop assignment does not use semicolon, a slightly modified version must be implemented here
+                scanner.getNext(); //skip '='
+                scanner.getNext();
+                Utility.assign(this, controlVal, expression("to")); //Set control value, accounting for expressions
+
+                //Evaluate and set limit value
+                scanner.getNext();
+                limitVal = expression("by");
+
+                //Evaluate and set increment value
+                scanner.getNext();
+                incrVal = expression(":");
+
+                //Class voted changing incr or limit will NOT affect # of iterations, so set them before evaluating statements
+                //within the for loop.
+                forToken = scanner.currentToken;    //set loopback
+                max = Integer.parseInt(limitVal.getInternalValue());
+                incr = Integer.parseInt(incrVal.getInternalValue());
+
+                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < max; i += incr) {
+                    scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    controlVal.internalValue = String.valueOf(i);   //Control value is updated on every iteration
+                    res = statements(true);             //Evaluate statements in for loop
+                }
+                break;
+            /*
+                Iterating through strings using a delimiter for loop, similar to counting for loop:
+                First initialize control value,
+                then evaluate the string to iterate through(can be an expression),
+                then evaluate the delimiter value(can be expression),
+                finally use a for loop.
+             */
+            case "from":
+                /*
+                    As per specifications, the control value is implicitly declared if it has not been declared previously.
+                    However declareScalar only takes ';' as terminating character so this is a slight modification of it.
+                    First check if the control value exists, if it doesn't, create and put in storageManager; in either
+                    case, initialize it.
+                 */
+                if (scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr) == null) {
+                    STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+                            , Type.STRING
+                            , Type.PRIMITIVE
+                            , Type.VALUE
+                            , Type.LOCAL);
+
+                    scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
+
+                    controlVal = new ResultValue(Type.STRING);
+                    storageManager.putVariableValue(scanner.currentToken.tokenStr, controlVal);
+                }
+                controlVal = evaluateOperand(scanner.currentToken);
+
+                //Evaluate and set iterable string
+                scanner.getNext();  //skip 'to'
+                scanner.getNext();
+                limitVal = expression("by");
+
+                //Evaluate and set delimiter string
+                scanner.getNext();
+                delimVal = expression(":");
+
+                //Since class voted changing delimiter or string does NOT impact # of iterations, first split the string,
+                //then iterate over each piece
+                forToken = scanner.currentToken;
+                String[] tokens = limitVal.getInternalValue().split(delimVal.getInternalValue());
+                for (String token : tokens) {
+                    scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    controlVal.internalValue = token;
+                    res = statements(true);
+                }
+                break;
+            /*
+                Iterate over string or elements in array for loops. Again, similar to the other loops except, we need to
+                check if the thing we're iterating over is an array or string to set the control value and for loop correctly.
+             */
+            case "in":
+                Token control = scanner.currentToken;   //Hold the control value token so it can be set later
+
+                //Evaluate and set the thing we're iterating over
+                scanner.getNext();//skip 'in'
+                scanner.getNext();
+                limitVal = expression(":");
+                forToken = scanner.currentToken;
+
+                //Now set the control value, since we know the limitVal's type. If control value doesn't exist, create it; otherwise initialize control value
+                if (scanner.symbolTable.getSymbol(control.tokenStr) == null) {
+                    STIdentifier newIdentifier = new STIdentifier(control.tokenStr
+                            , limitVal.type
+                            , Type.PRIMITIVE
+                            , Type.VALUE
+                            , Type.LOCAL);
+
+                    scanner.symbolTable.putSymbol(control.tokenStr, newIdentifier); // add symbol to table
+
+                    controlVal = new ResultValue(limitVal.type);
+                    storageManager.putVariableValue(control.tokenStr, controlVal);
+                }
+                controlVal = evaluateOperand(control);
+                //Check if the thing we're iterating over is an array first
+                if (limitVal instanceof ResultList) {
+                    //As per the specs, changing # of array elements does not affect # of iterations, so set it before looping
+                    max = ((ResultList) limitVal).iMaxSize - 1;
+                    for (int i = 0; i < max; i++) {
+                        scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                        /*
+                            As a personal choice, I decided to skip over holes in the array. This can be changed so it creates an error
+                            in the future...
+                         */
+                        if (((ResultList) limitVal).get(this, i) != null) {
+                            Utility.assign(this, controlVal, ((ResultList) limitVal).get(this, i));
+                            res = statements(true);
+                        } else res = statements(false);
+                    }
+                }
+                //Class voted changing the string does not affect # of iterations, so set it before looping
+                else if(limitVal.type.equals(Type.STRING)) {
+                    max = limitVal.getInternalValue().length();
+                    for (int i = 0; i < max; i++) {
+                        scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                        controlVal.internalValue = String.valueOf(limitVal.getInternalValue().charAt(i));
+                        res = statements(true);
+                    }
+                }
+                else throw new ParserException(scanner.currentToken.iSourceLineNr,
+                            "Unsupported object, cannot iterate over object \'" + scanner.currentToken.tokenStr + "\'",
+                            scanner.sourceFileName);
+                break;
+            //Since the control value cannot be an expression itself, throw an error if any unknown tokens appear within the for loop expression.
+            default:
+                throw new ParserException(scanner.currentToken.iSourceLineNr,
+                        "Expected \'in\', \'to\', or \'=\' after starting variable, found \'" + scanner.nextToken.tokenStr + "\'",
+                        scanner.sourceFileName);
+        }
 
 
-	/**
+
+        return res;
+    }
+
+
+
+    /**
 	 * handles the execution of while statements
 	 * <p>
 	 * On entering the method the currentToken should be on 'while'
@@ -486,7 +671,7 @@ public class Parser {
 	 * 	This method should create a new entry into the symbol table and assign it the appropriate information.
 	 * 
 	 * <p>
-	 * On exiting the method the current token should be on ';'
+	 * On exiting the method the current token should be on ';' OR '=' if an initialization statement follows
 	 * @throws ParserException 
 	 * 
 	 */
@@ -790,7 +975,7 @@ public class Parser {
 	}
 
 	/**
-	 * TODO Evaluate an expression and return the result.
+	 * Evaluate an expression and return the result.
 	 * <p>
 	 * Expressions are in Infix notation so a stack will be used to parse.
 	 * A stack of ResultValue will be used for the output
@@ -828,6 +1013,11 @@ public class Parser {
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
 				break;
+			case Token.FUNCTION:
+				tempRes01 = functionStmt(true);
+				outputStack.push(tempRes01);
+				expected = Token.OPERATOR;
+				break;
 			case Token.OPERATOR:
 				bOperatorFound = true;
 				if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("-")) // If we are looking for an operand then this is u-
@@ -840,8 +1030,10 @@ public class Parser {
 					throw new ParserException(scanner.currentToken.iSourceLineNr
 							, "Unexpected operator \'" + scanner.currentToken.tokenStr + "\' in expression"
 							, scanner.sourceFileName);
-				
+
+
 				sToken = new StackToken(scanner.currentToken);
+
 				if (operatorStack.isEmpty())
 				{
 					operatorStack.push(sToken);
@@ -906,7 +1098,13 @@ public class Parser {
 							
 							outputStack.push(tempRes03); // Push result back onto stack
 						}
-					} // if bFound OR if we found a function call TODO
+					} // if bFound is false there is a missing left paren
+					if (bFound == false)
+					{
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Missing \'(\' in expression"
+								, scanner.sourceFileName);
+					}
 					break;
 				case "(":
 					sToken = new StackToken(scanner.currentToken);

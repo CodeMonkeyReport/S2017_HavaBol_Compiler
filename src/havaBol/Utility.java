@@ -908,8 +908,8 @@ public class Utility {
 			break;
 			
 			
-		case "in": // TODO NOT YET IMPLEMENTED
-		case "notin":
+		case "IN": // TODO NOT YET IMPLEMENTED
+		case "NOTIN":
 			throw new ParserException(parser.scanner.lineNumber
 					, "NOT YET IMPLEMENTED"
 					, parser.scanner.sourceFileName);
