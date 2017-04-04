@@ -44,10 +44,10 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
-					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
-						throw new ParserException(scanner.currentToken.iSourceLineNr
-								, "Expected \';\' after declaration statement"
-								, scanner.sourceFileName);
+//					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
+//						throw new ParserException(scanner.currentToken.iSourceLineNr
+//								, "Expected \';\' after declaration statement"
+//								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -425,14 +425,6 @@ public class Parser {
 		
 		arg = expression(")");
 		
-		if(arg.type != Type.STRING)
-		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Arguement not of type String"
-					, scanner.sourceFileName);
-		}
-		
-		scanner.getNext();
 		
 		//set res to False if string isn't empty
 		if(!arg.internalValue.isEmpty()){
@@ -500,7 +492,7 @@ public class Parser {
 		//current token should now be ;
 		scanner.getNext();
 		
-		res.internalValue = Integer.toString(arg.length());
+		res.internalValue = Integer.toString(arg.internalValue.length());
 		
 		return res;
 	}
