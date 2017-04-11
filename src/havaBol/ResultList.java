@@ -23,6 +23,7 @@ public class ResultList extends ResultValue {
 		else
 		{
 			this.internalValueList = new ResultValue[this.iMaxSize];
+			this.defaultValue = new ResultValue(type);
 			this.iCurrentSize = 0;
 		}
 	}
@@ -95,5 +96,27 @@ public class ResultList extends ResultValue {
 		}
 		sb.append(internalValueList[i].internalValue);
 		return sb.toString();
+	}
+	
+	public void set(Parser parser, ResultValue newValue) throws ParserException
+	{
+		if (newValue instanceof ResultList)
+		{
+			for (int i = 0; i < this.iCurrentSize; i++)
+			{
+				if ( ((ResultList) newValue).iCurrentSize <= i)
+					break;
+				Utility.assign(parser, this.internalValueList[i], ((ResultList) newValue).internalValueList[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < this.iCurrentSize; i++) // Replace all default values while leaving others
+			{
+				if (this.internalValueList[i].internalValue.equals(this.defaultValue.internalValue))
+					this.internalValueList[i].set(parser, newValue);
+			}
+			this.defaultValue.internalValue = newValue.internalValue;
+		}
 	}
 }

@@ -65,31 +65,36 @@ public class Utility {
 	public static void assign(Parser parser, ResultValue target, ResultValue value) throws ParserException 
 	{
 		ResultValue tempRes;
+		if (target instanceof ResultList && value instanceof ResultList) // array to array assignment
+		{
+			target.set(parser, value);
+			return;
+		}
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
-			target.internalValue = value.internalValue;
+			target.set(parser, value);
 			return;
 		}
 		switch (target.type)
 		{
 		case (Type.INT):
 			tempRes = coerceToInt(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.FLOAT):
 			tempRes = coerceToFloat(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.STRING):
-			target.internalValue = value.internalValue; // If its a string we don't care
+			target.set(parser, value); // If its a string we don't care
 			break;
 		case (Type.BOOL):
 			tempRes = coerceToBool(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.DATE):
 			tempRes = coerceToDate(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		default: // Not a known type
 			break;
@@ -882,6 +887,9 @@ public class Utility {
 		
 		switch (operator.tokenStr)
 		{
+		case "#":
+			res = Utility.concat(parser, operandOne, operandTwo);
+			break;
 		case "+":
 			res = Utility.add(parser, operandOne, operandTwo);
 			break;
