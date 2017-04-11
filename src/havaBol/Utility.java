@@ -102,6 +102,21 @@ public class Utility {
 	}
 
 	/**
+	 * Handles converting to string type.
+	 * <p>
+	 * All types are coercible into strings so this simply creates a new object and returns it.
+	 * @param parser
+	 * @param resultValue
+	 * @return
+	 */
+	private static ResultValue coerceToString(Parser parser, ResultValue resultValue)
+	{
+		ResultValue res = new ResultValue(Type.STRING);
+		res.internalValue = resultValue.internalValue;
+		return res;
+	}
+	
+	/**
 	 * NOT IMPLEMENTED
 	 * <p>
 	 * @param parser
@@ -1004,6 +1019,28 @@ public class Utility {
 				+ target.type + " has value " 
 				+ result.internalValue);
 	}
+
+	public static ResultValue CoerceToType(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
+	{
+		switch (typeStr)
+		{
+		case Type.BOOL:
+			return Utility.coerceToBool(parser, resultValue);
+		case Type.FLOAT:
+			return Utility.coerceToFloat(parser, resultValue);
+		case Type.INT:
+			return Utility.coerceToInt(parser, resultValue);
+		case Type.STRING:
+			return Utility.coerceToString(parser, resultValue);
+		case Type.DATE:
+			return Utility.coerceToDate(parser, resultValue);
+		default:
+			// TODO tuple stuff
+			return null;
+		}
+	}
+
+
 	
 	
 }

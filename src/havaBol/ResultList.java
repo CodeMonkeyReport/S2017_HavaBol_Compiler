@@ -5,15 +5,18 @@ public class ResultList extends ResultValue {
 	ResultValue internalValueList[]; // For array types we need a list of values
 	public int iMaxSize;
 	public int iCurrentSize;
+	public ResultValue defaultValue;
 								// -1 indicates that we are talking about the whole array
 
 	public ResultList(String type, int iMaxSize)
 	{
 		super(type);
 		this.iMaxSize = iMaxSize;
+		this.structure = Type.ARRAY;
 		if (iMaxSize >= Type.ARRAY_UNBOUNDED)
 		{
 			this.internalValueList = new ResultValue[1];
+			this.defaultValue = new ResultValue(type);
 			this.iCurrentSize = 0;
 		}
 		else
@@ -43,23 +46,28 @@ public class ResultList extends ResultValue {
 				maxSize *= 2;
 			
 			ResultValue tempResultArray[] = new ResultValue[maxSize];
-			System.arraycopy(this.internalValueList, 0, tempResultArray, 0, this.internalValueList.length);
+			for (int i = this.iCurrentSize; i < maxSize; i++)
+				tempResultArray[i] = this.defaultValue;
 			
+			System.arraycopy(this.internalValueList, 0, tempResultArray, 0, this.internalValueList.length);
+			this.internalValueList = tempResultArray;
+			this.iCurrentSize = index;
 		}
 		else
 		{
-			
+			this.iCurrentSize++;		
 		}
 		this.internalValueList[index] = value;
-		this.iCurrentSize++;
 	}
 	
 	public ResultValue get(Parser parser, int index) throws ParserException
 	{
-		if (this.iCurrentSize < index)
+		if (this.iMaxSize < index)
 			throw new ParserException(parser.scanner.currentToken.iSourceLineNr
 					, "Array index out of bounds: " + index
 					, parser.scanner.sourceFileName);
+		else if (this.iMaxSize == Type.ARRAY_UNBOUNDED && this.iCurrentSize < index)
+			this.insert(parser, index, defaultValue);
 		
 		return internalValueList[index];
 	}

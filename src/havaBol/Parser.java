@@ -990,55 +990,89 @@ public class Parser {
 	 * @return
 	 * @throws ParserException 
 	 */
-	private ResultList declareArray(Token typeToken, Token variableToken) throws ParserException 
+	private ResultList declareArray(Token typeToken, Token variableToken) throws ParserException
 	{
 		ResultList arrayValue;
 		ArrayList<ResultValue> initArgs;
 		scanner.getNext(); // Move past the identifier name
 		
-		if (scanner.nextToken.tokenStr.equals("unbounded"))
+		if (scanner.nextToken.tokenStr.equals("unbounded")) // CASE 1 Unbounded arrays may be initialized or maybe not
 		{
 			arrayValue = new ResultList(typeToken.tokenStr, Type.ARRAY_UNBOUNDED);
+			
+			// unbounded arrays need to skip the next few tokens and read the intArgs
+			if (! scanner.getNext().equals("]"))
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unexpected token in declaration \'" + scanner.nextToken.tokenStr + "\'"
+						, scanner.sourceFileName);
+			
+			scanner.getNext();
+			scanner.getNext();
+			
+			if (scanner.currentToken.tokenStr.equals("=")) // If the next statement is an assignment
+			{
+				scanner.getNext();
+				initArgs = argList(";");
+				if (initArgs.size() > 1) // Insert all the items into the array
+				{
+					for (int i = 0; i < initArgs.size(); i++)
+					{
+						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)));
+					}
+				}
+				else // Insert default value of the item
+				{
+					arrayValue.defaultValue = Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(0));
+				}
+			}
+			else if (! scanner.currentToken.tokenStr.equals(";"))
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Unexpected token in declaration \'" + scanner.currentToken.tokenStr + "\'"
+						, scanner.sourceFileName);
 		}
-		else if (scanner.nextToken.tokenStr.equals("]"))
+		else if (scanner.nextToken.tokenStr.equals("]")) // CASE 2 Array without subscript requires initial values
 		{
 			// In this case there needs to be an init here
 			scanner.getNext();
 			scanner.getNext(); // Move the currentToken onto the beginning of the first expression
+			if (scanner.currentToken.tokenStr.equals(";"))
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Expected argument list for initilization of " + typeToken.tokenStr + " array \'" + variableToken.tokenStr + "\'"
+						, scanner.sourceFileName);
+			
 			scanner.getNext();
 			
 			initArgs = argList(";");
 			arrayValue = new ResultList(typeToken.tokenStr, initArgs.size());
+			
 			for (int i = 0; i < initArgs.size(); i++)
 			{
-				arrayValue.insert(this, i, initArgs.get(i));
+				arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)) );
 			}
-			
 		}
-		else
+		else // CASE 3 There is an expression in between brackets
 		{
 			scanner.getNext();
 			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]"));
 			int arraySize = Integer.parseInt(arraySizeExpressionResult.getInternalValue());
 			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
-			arrayValue.iCurrentSize = arraySize;
 			scanner.getNext();
 			if (scanner.currentToken.tokenStr.equals("=")) // If the next statement is an assignment
 			{
 				scanner.getNext();
 				initArgs = argList(";");
-				if (initArgs.size() > 1)
+				if (initArgs.size() > 1) // Insert all the items into the array
 				{
 					for (int i = 0; i < initArgs.size(); i++)
 					{
-						arrayValue.insert(this, i, initArgs.get(i));
+						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)));
 					}
 				}
-				else
+				else // Insert copies of the item until the array is full
 				{
 					for (int i = 0; i < arraySize; i++)
 					{
-						arrayValue.insert(this, i, initArgs.get(0));
+						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(0)));
 					}
 				}
 			}
@@ -1050,6 +1084,8 @@ public class Parser {
 				}
 			}
 		}
+		
+		
 		return arrayValue;
 	}
 
