@@ -97,7 +97,7 @@ public class ResultList extends ResultValue {
 		sb.append(internalValueList[i].internalValue);
 		return sb.toString();
 	}
-	
+  
 	public void set(Parser parser, ResultValue newValue) throws ParserException
 	{
 		if (newValue instanceof ResultList)

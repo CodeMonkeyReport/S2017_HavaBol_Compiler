@@ -911,6 +911,9 @@ public class Utility {
 		case ">":
 			res = Utility.greaterThan(parser, operandOne, operandTwo);
 			break;
+		case "#":
+			res = Utility.concat(parser, operandOne, operandTwo);
+			break;
 		case "<=":
 			res = Utility.lessThanEqalTo(parser, operandOne, operandTwo);
 			break;
