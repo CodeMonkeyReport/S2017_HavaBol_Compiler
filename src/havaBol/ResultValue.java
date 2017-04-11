@@ -30,4 +30,8 @@ public class ResultValue implements Cloneable {
 		
 		return res;
 	}
+	public void set(Parser parser, ResultValue newValue) throws ParserException
+	{
+		this.internalValue = newValue.internalValue;
+	}
 }

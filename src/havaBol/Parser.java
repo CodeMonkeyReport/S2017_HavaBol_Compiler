@@ -216,6 +216,8 @@ public class Parser {
 			{
 			case "print":
 				functionPrint(bExecuting);
+				res = new ResultValue(Type.STRING);
+				res.internalValue = "";
 				break;
 			case "LENGTH":
 				res = functionLength(bExecuting);
@@ -587,7 +589,7 @@ public class Parser {
     public ResultValue forStmt(boolean bExecuting) throws ParserException
     {
         ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
-        Token forToken;
+        Token forToken, intToken;
         int max, incr;
       
         if (bExecuting == false)
@@ -603,7 +605,7 @@ public class Parser {
         {
         	declareStmt(true);
         }
-
+        
         /*
             First, check what the next keyword is after starting/control value is. Since control value can only by one
             token, check the next token's string;
@@ -620,7 +622,22 @@ public class Parser {
             case "=":
 
                 controlVal = evaluateOperand(scanner.currentToken); //Initialize the control value
+            	if (controlVal == null) // Value has not been declared so now we need to declare it
+            	{
+            		intToken = new Token();
+            		intToken.tokenStr = Type.INT;
+            		controlVal = declareScalar(intToken, scanner.currentToken); // Implicitly declare the currentToken as an int
+                    STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+                                , Type.INT
+                                , Type.PRIMITIVE
+                                , Type.VALUE
+                                , Type.LOCAL);
 
+                    scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
+            		
+            		storageManager.putVariableValue(scanner.currentToken.tokenStr, controlVal);
+            	}
+           
                 //Since for loop assignment does not use semicolon, a slightly modified version must be implemented here
                 scanner.getNext(); //skip '='
                 scanner.getNext();
@@ -630,9 +647,18 @@ public class Parser {
                 scanner.getNext();
                 limitVal = expression("by");
 
-                //Evaluate and set increment value
-                scanner.getNext();
-                incrVal = expression(":");
+                if (limitVal.terminatingStr.equals("by"))
+                {
+                	//Evaluate and set increment value
+                	scanner.getNext();
+                	incrVal = expression(":");
+                }
+                else
+                {
+                	// Set default incrValue to 1
+                	incrVal = new ResultValue(Type.INT);
+                	incrVal.internalValue = "1";
+                }
 
                 //Class voted changing incr or limit will NOT affect # of iterations, so set them before evaluating statements
                 //within the for loop.
@@ -723,8 +749,9 @@ public class Parser {
                 //Check if the thing we're iterating over is an array first
                 if (limitVal instanceof ResultList) {
                     //As per the specs, changing # of array elements does not affect # of iterations, so set it before looping
-                    max = ((ResultList) limitVal).iMaxSize - 1;
-                    for (int i = 0; i < max; i++) {
+                    max = ((ResultList) limitVal).iMaxSize;
+                    for (int i = 0; i < max; i++) 
+                    {
                         scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
                         /*
                             As a personal choice, I decided to skip over holes in the array. This can be changed so it creates an error
@@ -1083,6 +1110,7 @@ public class Parser {
 				for (int i = 0; i < arraySize; i++)
 				{
 					arrayValue.insert(this, i, new ResultValue(typeToken.tokenStr));
+					arrayValue.iCurrentSize = 0;
 				}
 			}
 		}
@@ -1234,7 +1262,10 @@ public class Parser {
 		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		boolean bOperatorFound = false;
 		
-		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(",")) // Until we reach a semicolon, colon or end of file?
+		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) 
+				&& !scanner.currentToken.tokenStr.equals(",")
+				&& !scanner.currentToken.tokenStr.equals(":")
+				&& !scanner.currentToken.tokenStr.equals(";"))  // Until we reach a semicolon, colon, comma or terminator
 		{
 			switch (scanner.currentToken.primClassif)
 			{
@@ -1243,7 +1274,7 @@ public class Parser {
 					throw new ParserException(scanner.currentToken.iSourceLineNr
 							, "Unexpected operand \'" + scanner.currentToken.tokenStr + "\' in expression"
 							, scanner.sourceFileName);
-							
+	
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
@@ -1261,11 +1292,16 @@ public class Parser {
 					temp.tokenStr = "u-";
 					sToken = new StackToken(temp);
 				}
+				else if (expected == Token.OPERAND && scanner.currentToken.tokenStr.equals("not"))
+				{
+					// Handle 'not' unary operator
+					temp = scanner.currentToken;
+					sToken = new StackToken(temp);
+				}
 				else if (expected != Token.OPERATOR) // Error Unexpected operator
 					throw new ParserException(scanner.currentToken.iSourceLineNr
 							, "Unexpected operator \'" + scanner.currentToken.tokenStr + "\' in expression"
 							, scanner.sourceFileName);
-
 
 				sToken = new StackToken(scanner.currentToken);
 
@@ -1281,8 +1317,9 @@ public class Parser {
 					}
 					else // Otherwise loop until it is not the case
 					{
-						while (!operatorStack.isEmpty() && sToken.iPrecedence <= (popped = operatorStack.pop()).iStackPrecedence)
+						while (!operatorStack.isEmpty() && sToken.iPrecedence <= operatorStack.peek().iStackPrecedence)
 						{
+							popped = operatorStack.pop();
 							if (popped.iOperandCnt == 1) // Unary operator is a unique case
 							{
 								tempRes01 = outputStack.pop(); // get a single operand
@@ -1299,6 +1336,7 @@ public class Parser {
 								outputStack.push(tempRes03); // Push result back onto stack
 							}
 						}
+						
 						operatorStack.push(sToken); // Then push the new operator on
 					}
 				}
@@ -1307,43 +1345,17 @@ public class Parser {
 			case Token.SEPARATOR:
 				switch (scanner.currentToken.tokenStr)
 				{
-				case ")":
-					bFound = false;
-					while (!operatorStack.isEmpty())
-					{
-						popped = operatorStack.pop();
-						if (popped.token.tokenStr.equals("(")) // If we found the lparn break
-						{
-							bFound = true;
-							break; 
-						}
-
-						if (popped.iOperandCnt == 1) // Unary operator is a unique case
-						{
-							tempRes01 = outputStack.pop(); // get a single operand
-							tempRes02 = Utility.evaluateUnaryOperator(this, tempRes01, popped.token);
-							outputStack.push(tempRes02); // Push result back onto stack
-						}
-						else
-						{
-							tempRes02 = outputStack.pop(); // Get two operands for our operator
-							tempRes01 = outputStack.pop();
-							
-							tempRes03 = Utility.evaluateBinaryOperator(this, tempRes01, tempRes02, popped.token);
-							
-							outputStack.push(tempRes03); // Push result back onto stack
-						}
-					} // if bFound is false there is a missing left paren
-					if (bFound == false)
-					{
-						throw new ParserException(scanner.currentToken.iSourceLineNr
-								, "Missing \'(\' in expression"
-								, scanner.sourceFileName);
-					}
-					break;
 				case "(":
-					sToken = new StackToken(scanner.currentToken);
-					operatorStack.push(sToken);
+					
+					if (expected != Token.OPERAND)
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Unexpected operand \'" + scanner.currentToken.tokenStr + "\' in expression"
+								, scanner.sourceFileName);
+					
+					scanner.getNext();
+					tempRes01 = expression(")"); // evaluate the expression up to the rparen
+					outputStack.push(tempRes01);
+					expected = Token.OPERATOR;
 					break;
 				default:
 					throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -1359,12 +1371,6 @@ public class Parser {
 		while (!operatorStack.isEmpty())
 		{
 			popped = operatorStack.pop();
-			if (popped.token.tokenStr.equals("(")) // If we found the lparn break
-			{
-				throw new ParserException(scanner.currentToken.iSourceLineNr
-						, "Unexpected separator \'" + popped.token.tokenStr + "\' in expression"
-						, scanner.sourceFileName);
-			}
 
 			if (popped.iOperandCnt == 1) // Unary operator is a unique case
 			{
@@ -1384,19 +1390,13 @@ public class Parser {
 		}
 		res = outputStack.pop();
 		
-		if (!outputStack.isEmpty())
+		if (! outputStack.isEmpty())
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expression parse missmatch"
 					, scanner.sourceFileName);
 		}
-		if (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(","))
-		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \'" + expectedTerminator + "\' at end of expression"
-					, scanner.sourceFileName);
-		}
-		res.terminatingStr = expectedTerminator;
+		res.terminatingStr = scanner.currentToken.tokenStr;
 		
 		if (bShowExpr && bOperatorFound)
 			Utility.printResult(this, res);
@@ -1404,7 +1404,7 @@ public class Parser {
 		return res;
 	}
 
-	private ResultValue evaluateOperand(Token operandToken) throws ParserException 
+	private ResultValue evaluateOperand(Token operandToken) throws ParserException
 	{
 		ResultValue res = null;
 		
@@ -1420,9 +1420,7 @@ public class Parser {
 			res = this.storageManager.getVariableValue(operandToken.tokenStr);
 			if (res == null)
 			{
-				throw new ParserException(scanner.currentToken.iSourceLineNr
-						, "Undeclared identifier: \'" + operandToken.tokenStr + "\'"
-						, scanner.sourceFileName);
+				return null;
 			}
 			if (res instanceof ResultList) // If the element is an array
 			{

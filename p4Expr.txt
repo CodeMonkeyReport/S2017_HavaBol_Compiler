@@ -34,4 +34,3 @@ String strB = "every";
 String strC;
 strC = strA # " " # strB # " mountain";
 print("strC is", strC);
-
