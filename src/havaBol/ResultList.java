@@ -96,4 +96,6 @@ public class ResultList extends ResultValue {
 		sb.append(internalValueList[i].internalValue);
 		return sb.toString();
 	}
+
+
 }

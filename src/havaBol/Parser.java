@@ -327,7 +327,7 @@ public class Parser {
 					, scanner.sourceFileName);
 		}
 		
-		res.internalValue = Integer.toString(arg.iCurrentSize + 1);
+		res.internalValue = Integer.toString(arg.iCurrentSize);
 		
 		return res;
 	}
@@ -929,12 +929,12 @@ public class Parser {
 					, "Declaration of non identifier: " + scanner.nextToken.tokenStr
 					, scanner.sourceFileName);
 		}
-		if (scanner.symbolTable.getSymbol(scanner.nextToken.tokenStr) != null) // If the next token string already exists in the symbol table
+		/*if (scanner.symbolTable.getSymbol(scanner.nextToken.tokenStr) != null) // If the next token string already exists in the symbol table
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
 					, scanner.sourceFileName);
-		}
+		}*/
 		typeToken = scanner.currentToken;
 		scanner.getNext(); // Move past the type declaration, should now be on variable
 		variableToken = scanner.currentToken;
