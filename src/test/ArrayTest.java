@@ -210,4 +210,96 @@ public class ArrayTest {
 			assertTrue(false);
 		}
 	}
+	
+	@Test
+	public void unboundedArrayDefaultValueIsSet()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = ""
+						 + "Int a[unbounded] = 0;\n"
+						 + "a[10] = 5;\n"
+						 + "Int b = a[0];\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("0", storageManager.getVariableValue("b").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void negativeIndexingSelectsCorrectly()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = ""
+						 + "Int a[] = 1, 3, 9, 27;\n"
+						 + "Int b = a[-1];\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("27", storageManager.getVariableValue("b").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void negativeIndexingSelectsCorrectlyOnUnboundedArrays()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = ""
+						 + "Int a[unbounded] = 0;\n"
+						 + "a[10] = 5;\n"
+						 + "Int b = a[-1];\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("5", storageManager.getVariableValue("b").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
 }

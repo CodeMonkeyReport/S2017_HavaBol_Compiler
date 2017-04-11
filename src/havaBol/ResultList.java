@@ -17,6 +17,7 @@ public class ResultList extends ResultValue {
 		{
 			this.internalValueList = new ResultValue[1];
 			this.defaultValue = new ResultValue(type);
+			this.internalValueList[0] = this.defaultValue.Clone();
 			this.iCurrentSize = 0;
 		}
 		else
@@ -34,7 +35,12 @@ public class ResultList extends ResultValue {
 	 */
 	public void insert(Parser parser, int index, ResultValue value) throws ParserException
 	{
-		if (index >= this.iMaxSize)
+		if (index < 0) // Translate negative indexing
+		{
+			index = this.iCurrentSize + index;
+		}
+		
+		if (index >= this.iMaxSize || index < 0)
 			throw new ParserException(parser.scanner.currentToken.iSourceLineNr
 					, "Array index out of bounds: " + index
 					, parser.scanner.sourceFileName);
@@ -47,11 +53,11 @@ public class ResultList extends ResultValue {
 			
 			ResultValue tempResultArray[] = new ResultValue[maxSize];
 			for (int i = this.iCurrentSize; i < maxSize; i++)
-				tempResultArray[i] = this.defaultValue;
+				tempResultArray[i] = this.defaultValue.Clone();
 			
 			System.arraycopy(this.internalValueList, 0, tempResultArray, 0, this.internalValueList.length);
 			this.internalValueList = tempResultArray;
-			this.iCurrentSize = index;
+			this.iCurrentSize = index+1;
 		}
 		else
 		{
@@ -62,12 +68,18 @@ public class ResultList extends ResultValue {
 	
 	public ResultValue get(Parser parser, int index) throws ParserException
 	{
-		if (this.iMaxSize < index)
+		if (index < 0) // Translate negative indexing
+		{
+			index = this.iCurrentSize + index;
+		}
+		
+		if (this.iMaxSize < index || index < 0)
 			throw new ParserException(parser.scanner.currentToken.iSourceLineNr
 					, "Array index out of bounds: " + index
 					, parser.scanner.sourceFileName);
+		
 		else if (this.iMaxSize == Type.ARRAY_UNBOUNDED && this.iCurrentSize < index)
-			this.insert(parser, index, defaultValue);
+			this.insert(parser, index, defaultValue.Clone());
 		
 		return internalValueList[index];
 	}

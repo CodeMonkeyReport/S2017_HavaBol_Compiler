@@ -170,7 +170,8 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
+	private ResultValue debugStmt(boolean bExecuting) throws ParserException 
+	{
 		scanner.getNext();
 		
 		switch (scanner.currentToken.tokenStr)
@@ -1023,6 +1024,7 @@ public class Parser {
 				else // Insert default value of the item
 				{
 					arrayValue.defaultValue = Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(0));
+					arrayValue.insert(this, 0, arrayValue.defaultValue);
 				}
 			}
 			else if (! scanner.currentToken.tokenStr.equals(";"))
@@ -1458,6 +1460,4 @@ public class Parser {
 		}
 		return res;
 	}
-	
-	
 }
