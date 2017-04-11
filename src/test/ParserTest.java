@@ -16,6 +16,7 @@ public class ParserTest {
 	{
 		// Set up the inital 'file' to be read
 		String testInput = "Int i;";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -60,6 +61,35 @@ public class ParserTest {
 			parser.assignmentStmt(true);
 			
 			assertEquals(storageManager.getVariableValue("i").internalValue, "5");
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canInitilizeValuesFromExpressions()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5*21;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			assertEquals("105", storageManager.getVariableValue("i").internalValue);
 			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
@@ -388,7 +418,6 @@ public class ParserTest {
 			assertTrue("Unable to read input stream", false);
 		}
 	}
-	
 	
 	@Test
 	public void canPerformArithmeticOnVariablesWithUnaryMinus()

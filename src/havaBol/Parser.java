@@ -30,7 +30,6 @@ public class Parser {
 	 */
 	public ResultValue statements(boolean bExecuting) throws ParserException
 	{
-		boolean state;
 		ResultValue res = null;
 		// Get next token
 		while (! scanner.getNext().isEmpty() ) // While we have not reached the EOF
@@ -45,6 +44,10 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
+					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Expected \';\' after declaration statement"
+								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -138,6 +141,11 @@ public class Parser {
 			case Token.FUNCTION:
 				functionStmt(bExecuting);
 				// Function call
+				break;
+			case Token.DEFINE:
+				 // TODO maybe some error checking needed?
+				defineStmt(bExecuting);
+				break;
 			case Token.SEPARATOR:
 				 // TODO maybe some error checking needed?
 				break;
@@ -163,7 +171,6 @@ public class Parser {
 	 * @return
 	 */
 	private ResultValue debugStmt(boolean bExecuting) throws ParserException {
-		// TODO Auto-generated method stub
 		scanner.getNext();
 		
 		switch (scanner.currentToken.tokenStr)
@@ -175,7 +182,7 @@ public class Parser {
 				this.bShowAssign = true;
 				break;
 			case "Token" :
-				this.bShowToken = true;
+				this.bShowToken = true; // Not implemented? TODO
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -236,6 +243,26 @@ public class Parser {
 		return res;
 	}
 
+	public ResultValue defineStmt(boolean bExecuting) throws ParserException
+	{
+		Token statementToken;
+		if (bExecuting == false)
+		{
+			scanner.skipTo(":");
+			return null;
+		}
+		statementToken = scanner.currentToken;
+		switch (statementToken.tokenStr)
+		{
+		case "deftuple": // defining a tuple
+			//defineTuple()
+			break;
+		}
+		
+		
+		return null; // TODO avoid stupid IDE errors
+	}
+	
 	/**
 	 * Handles the string length builtin function
 	 * <p>
@@ -340,17 +367,17 @@ public class Parser {
 		{
 			scanner.skipTo(":");
 			res = statements(false);
-			
+
 			return res;
 		}
-		
+
 		res = statements(bExecuting);
 		
 		if (scanner.currentToken.tokenStr.equals("endif") == false)
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Expected \'endif\' after if statement"
 					, scanner.sourceFileName);
-		
+
 		return res;
 	}
 	
@@ -364,7 +391,7 @@ public class Parser {
         ResultValue res = null,controlVal,limitVal,delimVal,incrVal;
         Token forToken;
         int max, incr;
-
+      
         if (bExecuting == false)
         {
             scanner.skipTo(":");
@@ -372,13 +399,13 @@ public class Parser {
             return res;
         }
         scanner.getNext();
-        
+
         // Adding support for declare statement in for statements
         if (scanner.currentToken.subClassif == Token.DECLARE)
         {
         	declareStmt(true);
         }
-        
+
         /*
             First, check what the next keyword is after starting/control value is. Since control value can only by one
             token, check the next token's string;
@@ -549,7 +576,7 @@ public class Parser {
 	 * @return
 	 * @throws ParserException
 	 */
-	public ResultValue whileStmt(boolean bExecuting) throws ParserException 
+	public ResultValue whileStmt(boolean bExecuting) throws ParserException
 	{
 		ResultValue res;
 		Token whileToken = scanner.currentToken;
@@ -644,17 +671,58 @@ public class Parser {
 	 * 	This method should create a new entry into the symbol table and assign it the appropriate information.
 	 * 
 	 * <p>
-	 * On exiting the method the current token should be on ';'
+	 * On exiting the method the current token should be on ';' OR '=' if an initialization statement follows
 	 * @throws ParserException 
 	 * 
 	 */
-	public void declareStmt(boolean bExecuting) throws ParserException {
-		ResultValue variableValue;
+	public void declareStmt(boolean bExecuting) throws ParserException 
+	{
+		STIdentifier variableIdentifier;
+		ResultValue variableValue = null;
 		Token variableToken;
+		Token typeToken;
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
 			return;
+		}
+		
+		typeToken = scanner.currentToken;
+		variableToken = scanner.nextToken;
+		
+		variableIdentifier = declareIdentifier(bExecuting);
+		
+		scanner.symbolTable.putSymbol(variableToken.tokenStr, variableIdentifier);
+		
+		if (variableIdentifier.structureType == Type.ARRAY)
+			variableValue = declareArray(typeToken, variableToken);
+		else if (variableIdentifier.structureType == Type.PRIMITIVE)
+			variableValue = declareScalar(typeToken, variableToken);
+		else if (variableIdentifier.structureType == Type.TUPLE)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Tuple types not yet implemented"
+					, scanner.sourceFileName);
+			
+		// TODO This line will need modification based on by reference parameter passing later
+		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+	}
+
+	/**
+	 * Handles the creation of the relevant STIdentifier when building a variable from a declaration.
+	 * <p>
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
+	public STIdentifier declareIdentifier(boolean bExecuting) throws ParserException
+	{
+		Token typeToken;
+		Token variableToken;
+		STIdentifier newIdentifier;
+		if (bExecuting == false)
+		{
+			scanner.skipTo(";");
+			return null;
 		}
 		
 		if (scanner.nextToken.primClassif != Token.OPERAND && scanner.nextToken.subClassif != Token.IDENTIFIER) // If the next token is not an identifier
@@ -669,40 +737,32 @@ public class Parser {
 					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
 					, scanner.sourceFileName);
 		}
-		Token typeToken = scanner.currentToken;
+		typeToken = scanner.currentToken;
 		scanner.getNext(); // Move past the type declaration, should now be on variable
-		
 		variableToken = scanner.currentToken;
 		
 		if (scanner.nextToken.tokenStr.equals("["))
 		{
 			// Array stuff
-			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+			newIdentifier = new STIdentifier(variableToken.tokenStr
 					, typeToken.tokenStr
 					, Type.ARRAY
 					, Type.VALUE
 					, Type.LOCAL);
-			
-			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
-			
-			variableValue = declareArray(typeToken, variableToken);
 		}
 		else
 		{
-			STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
+			newIdentifier = new STIdentifier(variableToken.tokenStr
 					, typeToken.tokenStr
 					, Type.PRIMITIVE
 					, Type.VALUE
 					, Type.LOCAL);
 			
-			scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
-			
-			variableValue = declareScalar(typeToken, variableToken);
 		}
-		// TODO This line will need modification based on by reference parameter passing later
-		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+		
+		return newIdentifier;
 	}
-
+	
 	/**
 	 * Handles the declaration of scalar variables
 	 * <p>
@@ -915,7 +975,7 @@ public class Parser {
 	}
 
 	/**
-	 * TODO Evaluate an expression and return the result.
+	 * Evaluate an expression and return the result.
 	 * <p>
 	 * Expressions are in Infix notation so a stack will be used to parse.
 	 * A stack of ResultValue will be used for the output
@@ -1038,7 +1098,13 @@ public class Parser {
 							
 							outputStack.push(tempRes03); // Push result back onto stack
 						}
-					} // if bFound OR if we found a function call TODO
+					} // if bFound is false there is a missing left paren
+					if (bFound == false)
+					{
+						throw new ParserException(scanner.currentToken.iSourceLineNr
+								, "Missing \'(\' in expression"
+								, scanner.sourceFileName);
+					}
 					break;
 				case "(":
 					sToken = new StackToken(scanner.currentToken);
@@ -1150,7 +1216,7 @@ public class Parser {
 			res = Utility.parseDate(this, operandToken);
 			break;
 		case Token.VOID:
-			res = null;
+			res = null; // Case for all tuple types
 			break;
 		default:
 			throw new ParserException(scanner.currentToken.iSourceLineNr

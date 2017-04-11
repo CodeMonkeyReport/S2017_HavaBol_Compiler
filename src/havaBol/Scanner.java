@@ -23,7 +23,7 @@ public class Scanner {
 
     /**
 	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
-	 * Local line number information will be initilized to 1
+	 * Local line number information will be initialized to 1
 	 * <p>
 	 *
 	 * @param path - Path to the HavaBol source code we are scanning in
@@ -250,9 +250,9 @@ public class Scanner {
 	/**
 	 * Helper method to the classify method used to set values for a numeric constant
 	 * <p>
-	 * TODO This function will need to be updated to use the SymbolTable for classifications
+	 * This function will need to be updated to use the SymbolTable for classifications
 	 * Currently classifications are not working, Identifier subClassif not working correctly.
-	 * classification of new functions and identifiers not working correctly. TODO
+	 * classification of new functions and identifiers not working correctly.
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 */

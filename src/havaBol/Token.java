@@ -29,6 +29,7 @@ public class Token
     public static final int END        = 11;// end statement (e.g., endif)
     public static final int DECLARE    = 12;// declare statement (e.g., Int)
     public static final int DEBUG	   = 13;
+    public static final int DEFINE 	   = 14;
     // Constants for FUNCTION's subClassif (definedby)
     public static final int BUILTIN    = 13;// builtin function (e.g., print)
     public static final int USER       = 14;// user defined

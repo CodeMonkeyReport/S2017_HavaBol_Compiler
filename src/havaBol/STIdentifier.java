@@ -1,6 +1,7 @@
 package havaBol;
 
-public class STIdentifier extends STEntry {
+public class STIdentifier extends STEntry 
+{
 	
 	/*declaration type
 	 *  1: Non primitive (struct)
@@ -11,6 +12,7 @@ public class STIdentifier extends STEntry {
 	 *  6: Date
 	 */
 	int valueType;
+	
 	String valueString;
 	
 	/* data structure
