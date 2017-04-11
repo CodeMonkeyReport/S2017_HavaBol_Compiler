@@ -44,10 +44,10 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
-					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
-						throw new ParserException(scanner.currentToken.iSourceLineNr
-								, "Expected \';\' after declaration statement"
-								, scanner.sourceFileName);
+//					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
+//						throw new ParserException(scanner.currentToken.iSourceLineNr
+//								, "Expected \';\' after declaration statement"
+//								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -220,13 +220,13 @@ public class Parser {
 				res = functionLength(bExecuting);
 				break;
 			case "SPACES":
-				// Function call
+				res = functionSpaces(bExecuting);
 				break;
 			case "ELEM":
-				// Function call
+				res = functionElem(bExecuting);
 				break;
 			case "MAXELEM":
-				// Function call
+				res = functionMaxElem(bExecuting);
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -240,6 +240,92 @@ public class Parser {
 					, "Builtin functions not yet implemented, can not execute function \'" + functionToken.tokenStr + "\'"
 					, scanner.sourceFileName);
 		}		
+		return res;
+	}
+	
+	/**
+	 * Handles the MAXELEM builtin function
+	 * <p>
+	 * On entering the method the currentToken should be on 'MAXELEM'
+	 * On leaving the method the currentToken should be on ';'
+	 * <p>
+	 * 
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
+	private ResultValue functionMaxElem(boolean bExecuting) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		if(bExecuting == false)
+		{
+			scanner.skipTo(";");
+		}
+		
+		scanner.getNext();
+		if (! scanner.currentToken.tokenStr.equals("(")) // Missing lparen
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Error missing \'(\' after LENGTH function"
+					, scanner.sourceFileName);
+		}
+		scanner.getNext();
+		
+		ResultList arg = (ResultList)expression(")");
+		
+		if(arg.structure != Type.ARRAY)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Arguement to ElEM Not An Array"
+					, scanner.sourceFileName);
+		}
+		
+		res.internalValue = Integer.toString(arg.iMaxSize);
+		
+		return res;
+	}
+	
+	/**
+	 * Handles the ELEM builtin function
+	 * <p>
+	 * On entering the method the currentToken should be on 'Elem'
+	 * On leaving the method the currentToken should be on ';'
+	 * <p>
+	 * 
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException
+	 */
+	private ResultValue functionElem(boolean bExecuting) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		if(bExecuting == false)
+		{
+			scanner.skipTo(";");
+		}
+		
+		scanner.getNext();
+		if (! scanner.currentToken.tokenStr.equals("(")) // Missing lparen
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Error missing \'(\' after LENGTH function"
+					, scanner.sourceFileName);
+		}
+		scanner.getNext();
+		
+		ResultList arg = (ResultList)expression(")");
+		
+		if(arg.structure != Type.ARRAY)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Arguement to ElEM Not An Array"
+					, scanner.sourceFileName);
+		}
+		
+		res.internalValue = Integer.toString(arg.iCurrentSize + 1);
+		
 		return res;
 	}
 
@@ -283,8 +369,8 @@ public class Parser {
 			scanner.skipTo(";");
 			return null;
 		}
-		scanner.getNext();
 		
+		scanner.getNext();
 		if (! scanner.currentToken.tokenStr.equals("(")) // Missing lparen
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -292,10 +378,65 @@ public class Parser {
 					, scanner.sourceFileName);
 		}
 		scanner.getNext();
+		
 		ResultValue stringParameter = expression(")");
 		
 		res = new ResultValue(Type.INT);
 		res.internalValue = Integer.toString(stringParameter.internalValue.length());
+		return res;
+	}
+	
+	
+	/*
+	 * Handles the string length builtin function
+	 * <p>
+	 * on entering the method the currentToken should be on 'SPACES'
+	 * on leaving the method the current token should be on ';'
+	 * <p>
+	 *
+	 * @param bExecuting
+	 * @return Boolean:
+	 * 			T - string is empty or only contains spaces
+	 * 			F - string is non-empty
+	 * @throws ParserException
+	 */
+	private ResultValue functionSpaces(boolean bExecuting) throws ParserException
+	{
+		ResultValue arg;
+		ResultValue res = new ResultValue(Type.BOOL);
+		res.internalValue = "T";
+		
+		
+		if(bExecuting == false)
+		{
+			scanner.skipTo(";");
+		}
+		
+		scanner.getNext();
+		
+		if(!scanner.currentToken.tokenStr.equals("("))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'(\' after SPACES"
+					, scanner.sourceFileName);
+		
+		scanner.getNext();
+		
+		arg = expression(")");
+		
+		
+		//set res to False if string isn't empty
+		if(!arg.internalValue.isEmpty()){
+			Character c;
+			for(int i=0; i<arg.internalValue.length(); i++)
+			{
+				c = arg.internalValue.charAt(i);
+				if(!c.equals(' '))
+				{
+					res.internalValue = "F";
+				}
+			}
+		}
+		
 		return res;
 	}
 	
@@ -323,7 +464,7 @@ public class Parser {
 		
 		if(!scanner.currentToken.tokenStr.equals("("))
 			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \'(\' after print statement"
+					, "Expected \'(\' after PRINT"
 					, scanner.sourceFileName);
 		
 		scanner.getNext(); // Move past the '('

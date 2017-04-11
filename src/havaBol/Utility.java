@@ -906,6 +906,9 @@ public class Utility {
 		case "or":
 			res = Utility.or(parser, operandOne, operandTwo);
 			break;
+		case "#":
+			res = Utility.concat(parser, operandOne, operandTwo);
+			break;
 			
 			
 		case "IN": // TODO NOT YET IMPLEMENTED
