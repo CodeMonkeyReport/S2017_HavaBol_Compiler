@@ -1,5 +1,7 @@
 package havaBol;
 
+import java.util.ArrayList;
+
 public class Utility {
 	
 	public static boolean isNumeric(Parser parser, ResultValue value) throws ParserException
@@ -65,31 +67,36 @@ public class Utility {
 	public static void assign(Parser parser, ResultValue target, ResultValue value) throws ParserException 
 	{
 		ResultValue tempRes;
+		if (target instanceof ResultList && value instanceof ResultList) // array to array assignment
+		{
+			target.set(parser, value);
+			return;
+		}
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
-			target.internalValue = value.internalValue;
+			target.set(parser, value);
 			return;
 		}
 		switch (target.type)
 		{
 		case (Type.INT):
 			tempRes = coerceToInt(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.FLOAT):
 			tempRes = coerceToFloat(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.STRING):
-			target.internalValue = value.internalValue; // If its a string we don't care
+			target.set(parser, value); // If its a string we don't care
 			break;
 		case (Type.BOOL):
 			tempRes = coerceToBool(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.DATE):
 			tempRes = coerceToDate(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		default: // Not a known type
 			break;
@@ -903,6 +910,9 @@ public class Utility {
 		case ">":
 			res = Utility.greaterThan(parser, operandOne, operandTwo);
 			break;
+		case "#":
+			res = Utility.concat(parser, operandOne, operandTwo);
+			break;
 		case "<=":
 			res = Utility.lessThanEqalTo(parser, operandOne, operandTwo);
 			break;
@@ -1038,6 +1048,25 @@ public class Utility {
 			// TODO tuple stuff
 			return null;
 		}
+	}
+	
+	public static String insertString(String oldString, int index, String insert)
+	{
+		int end;
+		if(index+insert.length() > oldString.length())
+			end = oldString.length();
+		else
+			end = index+insert.length();
+		
+		StringBuilder newString = new StringBuilder(oldString);
+		newString = newString.replace(index, end, insert);
+		
+		return newString.toString();
+	}
+	
+	public static String getStringIndex(String target, int index)
+	{
+		return Character.toString(target.charAt(index));
 	}
 
 

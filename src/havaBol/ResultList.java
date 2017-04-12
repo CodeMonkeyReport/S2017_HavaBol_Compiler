@@ -17,11 +17,13 @@ public class ResultList extends ResultValue {
 		{
 			this.internalValueList = new ResultValue[1];
 			this.defaultValue = new ResultValue(type);
+			this.internalValueList[0] = this.defaultValue.Clone();
 			this.iCurrentSize = 0;
 		}
 		else
 		{
 			this.internalValueList = new ResultValue[this.iMaxSize];
+			this.defaultValue = new ResultValue(type);
 			this.iCurrentSize = 0;
 		}
 	}
@@ -34,7 +36,12 @@ public class ResultList extends ResultValue {
 	 */
 	public void insert(Parser parser, int index, ResultValue value) throws ParserException
 	{
-		if (index >= this.iMaxSize)
+		if (index < 0) // Translate negative indexing
+		{
+			index = this.iCurrentSize + index;
+		}
+		
+		if (index >= this.iMaxSize || index < 0)
 			throw new ParserException(parser.scanner.currentToken.iSourceLineNr
 					, "Array index out of bounds: " + index
 					, parser.scanner.sourceFileName);
@@ -47,11 +54,11 @@ public class ResultList extends ResultValue {
 			
 			ResultValue tempResultArray[] = new ResultValue[maxSize];
 			for (int i = this.iCurrentSize; i < maxSize; i++)
-				tempResultArray[i] = this.defaultValue;
+				tempResultArray[i] = this.defaultValue.Clone();
 			
 			System.arraycopy(this.internalValueList, 0, tempResultArray, 0, this.internalValueList.length);
 			this.internalValueList = tempResultArray;
-			this.iCurrentSize = index;
+			this.iCurrentSize = index+1;
 		}
 		else
 		{
@@ -62,12 +69,18 @@ public class ResultList extends ResultValue {
 	
 	public ResultValue get(Parser parser, int index) throws ParserException
 	{
-		if (this.iMaxSize < index)
+		if (index < 0) // Translate negative indexing
+		{
+			index = this.iCurrentSize + index;
+		}
+		
+		if (this.iMaxSize < index || index < 0)
 			throw new ParserException(parser.scanner.currentToken.iSourceLineNr
 					, "Array index out of bounds: " + index
 					, parser.scanner.sourceFileName);
+		
 		else if (this.iMaxSize == Type.ARRAY_UNBOUNDED && this.iCurrentSize < index)
-			this.insert(parser, index, defaultValue);
+			this.insert(parser, index, defaultValue.Clone());
 		
 		return internalValueList[index];
 	}
@@ -83,5 +96,38 @@ public class ResultList extends ResultValue {
 		}
 		sb.append(internalValueList[i].internalValue);
 		return sb.toString();
+	}
+  
+	public void set(Parser parser, ResultValue newValue) throws ParserException
+	{
+		int size = 0;
+		if (this.iMaxSize == Type.ARRAY_UNBOUNDED)
+			size = this.iCurrentSize;
+		else
+			size = this.iMaxSize;
+		
+		if (newValue instanceof ResultList)
+		{
+			for (int i = 0; i < size; i++)
+			{
+				if ( ((ResultList) newValue).iCurrentSize <= i)
+					break;
+				Utility.assign(parser, this.internalValueList[i], ((ResultList) newValue).internalValueList[i]);
+			}
+			if (this.iMaxSize < ((ResultList) newValue).iCurrentSize)
+				this.iCurrentSize = this.iMaxSize;
+			else
+				this.iCurrentSize = ((ResultList) newValue).iCurrentSize;
+		}
+		else
+		{
+			for (int i = 0; i < size; i++) // Replace all default values while leaving others
+			{
+				if (this.internalValueList[i].internalValue.equals(this.defaultValue.internalValue))
+					this.internalValueList[i].set(parser, newValue);
+			}
+			this.defaultValue.internalValue = newValue.internalValue;
+			this.iCurrentSize = size;
+		}
 	}
 }
