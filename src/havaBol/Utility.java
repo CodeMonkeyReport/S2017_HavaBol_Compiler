@@ -1,5 +1,7 @@
 package havaBol;
 
+import java.util.ArrayList;
+
 public class Utility {
 	
 	public static boolean isNumeric(Parser parser, ResultValue value) throws ParserException
@@ -1046,6 +1048,25 @@ public class Utility {
 			// TODO tuple stuff
 			return null;
 		}
+	}
+	
+	public static String insertString(String oldString, int index, String insert)
+	{
+		int end;
+		if(index+insert.length() > oldString.length())
+			end = oldString.length();
+		else
+			end = index+insert.length();
+		
+		StringBuilder newString = new StringBuilder(oldString);
+		newString = newString.replace(index, end, insert);
+		
+		return newString.toString();
+	}
+	
+	public static String getStringIndex(String target, int index)
+	{
+		return Character.toString(target.charAt(index));
 	}
 
 

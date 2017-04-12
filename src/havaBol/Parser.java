@@ -355,6 +355,27 @@ public class Parser {
 		
 		return null; // TODO avoid stupid IDE errors
 	}
+	/**
+	 * assume current token is on [
+	 * @return
+	 */
+	private ResultValue stringIndex(ResultValue target) throws ParserException
+	{
+		scanner.getNext();//get rid of [
+		
+		ResultValue index = expression("]");
+		if(index.type != Type.INT)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Index to String must be an Int "
+					, scanner.sourceFileName);
+		}
+		
+		ResultValue stringIndex = new ResultValue(Type.STRING);
+		stringIndex.internalValue = Utility.getStringIndex(target.internalValue, Integer.parseInt(index.internalValue));
+		
+		return stringIndex;
+	}
 	
 	/**
 	 * Handles the string length builtin function
@@ -1156,7 +1177,8 @@ public class Parser {
 		
 		if (targetResult.type.equals(Type.STRING) && scanner.currentToken.tokenStr.equals("["))
 		{
-			ResultValue result = stringI
+			targetResult = stringIndexAssignment(targetResult);
+			
 		}
 		
 		if (scanner.currentToken.primClassif != Token.OPERATOR) // Next token should be an operator.
@@ -1242,6 +1264,30 @@ public class Parser {
 		}
 
 		return targetResult;
+	}
+	
+	private ResultValue stringIndexAssignment(ResultValue target) throws ParserException
+	{
+		scanner.getNext();//get rid of [
+		
+		ResultValue index = expression("]");
+		if(index.type != Type.INT)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "String index must be of type int"
+					, scanner.sourceFileName);
+		}
+		
+		scanner.getNext();//get rid of =
+		
+		ResultValue insert = expression(";");
+		
+		ResultValue newTarget = new ResultValue(Type.STRING);
+		newTarget.internalValue = Utility.insertString(target.internalValue, Integer.parseInt(index.internalValue), insert.internalValue);
+		
+		Utility.assign(this, target, newTarget);
+		
+		return newTarget;
 	}
 
 	/**
