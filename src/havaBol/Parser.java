@@ -197,6 +197,8 @@ public class Parser {
 	}
 
 
+	
+	
 	/**
 	 * Not yet implemented
 	 * @param bExecuting
@@ -749,7 +751,7 @@ public class Parser {
                 //Check if the thing we're iterating over is an array first
                 if (limitVal instanceof ResultList) {
                     //As per the specs, changing # of array elements does not affect # of iterations, so set it before looping
-                    max = ((ResultList) limitVal).iMaxSize;
+                    max = ((ResultList) limitVal).iCurrentSize;
                     for (int i = 0; i < max; i++) 
                     {
                         scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
@@ -1151,6 +1153,11 @@ public class Parser {
 		
 		ResultValue targetResult = evaluateOperand(targetToken);
 		scanner.getNext();
+		
+		if (targetResult.type.equals(Type.STRING) && scanner.currentToken.tokenStr.equals("["))
+		{
+			ResultValue result = stringI
+		}
 		
 		if (scanner.currentToken.primClassif != Token.OPERATOR) // Next token should be an operator.
 		{

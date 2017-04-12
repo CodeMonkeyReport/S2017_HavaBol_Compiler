@@ -100,23 +100,34 @@ public class ResultList extends ResultValue {
   
 	public void set(Parser parser, ResultValue newValue) throws ParserException
 	{
+		int size = 0;
+		if (this.iMaxSize == Type.ARRAY_UNBOUNDED)
+			size = this.iCurrentSize;
+		else
+			size = this.iMaxSize;
+		
 		if (newValue instanceof ResultList)
 		{
-			for (int i = 0; i < this.iCurrentSize; i++)
+			for (int i = 0; i < size; i++)
 			{
 				if ( ((ResultList) newValue).iCurrentSize <= i)
 					break;
 				Utility.assign(parser, this.internalValueList[i], ((ResultList) newValue).internalValueList[i]);
 			}
+			if (this.iMaxSize < ((ResultList) newValue).iCurrentSize)
+				this.iCurrentSize = this.iMaxSize;
+			else
+				this.iCurrentSize = ((ResultList) newValue).iCurrentSize;
 		}
 		else
 		{
-			for (int i = 0; i < this.iCurrentSize; i++) // Replace all default values while leaving others
+			for (int i = 0; i < size; i++) // Replace all default values while leaving others
 			{
 				if (this.internalValueList[i].internalValue.equals(this.defaultValue.internalValue))
 					this.internalValueList[i].set(parser, newValue);
 			}
 			this.defaultValue.internalValue = newValue.internalValue;
+			this.iCurrentSize = size;
 		}
 	}
 }

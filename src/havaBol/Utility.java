@@ -887,9 +887,6 @@ public class Utility {
 		
 		switch (operator.tokenStr)
 		{
-		case "#":
-			res = Utility.concat(parser, operandOne, operandTwo);
-			break;
 		case "+":
 			res = Utility.add(parser, operandOne, operandTwo);
 			break;
