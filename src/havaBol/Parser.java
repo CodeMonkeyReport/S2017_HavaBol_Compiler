@@ -1328,6 +1328,12 @@ public class Parser {
 							, scanner.sourceFileName);
 	
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
+				
+				if (tempRes01.type.equals(Type.STRING) && scanner.nextToken.tokenStr.equals("["))
+				{
+					scanner.getNext();
+					tempRes01 = stringIndex(tempRes01);
+				}
 				outputStack.push(tempRes01);
 				expected = Token.OPERATOR;
 				break;
@@ -1483,11 +1489,6 @@ public class Parser {
 					int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
 					res = ((ResultList) res).get(this, index);
 				}
-			}
-			if (res.type.equals(Type.STRING) && scanner.nextToken.tokenStr.equals("["))
-			{
-				scanner.getNext();
-				res = stringIndex(res);
 			}
 			break;
 		case Token.INTEGER:
