@@ -1177,8 +1177,7 @@ public class Parser {
 		
 		if (targetResult.type.equals(Type.STRING) && scanner.currentToken.tokenStr.equals("["))
 		{
-			targetResult = stringIndexAssignment(targetResult);
-			
+			return stringIndexAssignment(targetResult);
 		}
 		
 		if (scanner.currentToken.primClassif != Token.OPERATOR) // Next token should be an operator.
@@ -1271,13 +1270,14 @@ public class Parser {
 		scanner.getNext();//get rid of [
 		
 		ResultValue index = expression("]");
-		if(index.type != Type.INT)
+		if(!index.type.equals(Type.INT))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "String index must be of type int"
+					, "String index must be of type int, found " + index.type
 					, scanner.sourceFileName);
 		}
 		
+		scanner.getNext();//get rid of ]
 		scanner.getNext();//get rid of =
 		
 		ResultValue insert = expression(";");
