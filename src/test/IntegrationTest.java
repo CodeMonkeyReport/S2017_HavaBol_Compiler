@@ -65,11 +65,13 @@ public class IntegrationTest {
 		Scanner testScanner = new Scanner("TEST", br, st);
 		Parser parser = new Parser(testScanner, storageManager);
 		
-		// Use this area to run tests	
-		parser.statements(true);
-		
-		//***
-		assertTrue("Expected Undeclared identifier error", false);
+			parser.statements(true);
+			
+			// Use this area to run tests	
+			
+			//***
+			assertTrue("Expected Undeclared identifier error", false);
+
 	}
 
 

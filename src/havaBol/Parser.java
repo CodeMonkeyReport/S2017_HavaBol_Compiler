@@ -364,7 +364,7 @@ public class Parser {
 		scanner.getNext();//get rid of [
 		
 		ResultValue index = expression("]");
-		if(index.type != Type.INT)
+		if(! index.type.equals(Type.INT))
 		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr
 					, "Index to String must be an Int "
@@ -1175,6 +1175,13 @@ public class Parser {
 		ResultValue targetResult = evaluateOperand(targetToken);
 		scanner.getNext();
 		
+		if (targetResult == null)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Undeclared identifier: \'" + targetToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		}
+		
 		if (targetResult.type.equals(Type.STRING) && scanner.currentToken.tokenStr.equals("["))
 		{
 			return stringIndexAssignment(targetResult);
@@ -1187,14 +1194,6 @@ public class Parser {
 					, scanner.sourceFileName);
 		}
 		Token operatorToken = scanner.currentToken; // Store the operation we are performing
-		
-		
-		if (targetResult == null)
-		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Undeclared identifier: \'" + targetToken.tokenStr + "\'"
-					, scanner.sourceFileName);
-		}
 		
 		ResultValue subResult1;
 		ResultValue subResult2;
@@ -1484,6 +1483,11 @@ public class Parser {
 					int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
 					res = ((ResultList) res).get(this, index);
 				}
+			}
+			if (res.type.equals(Type.STRING) && scanner.nextToken.tokenStr.equals("["))
+			{
+				scanner.getNext();
+				res = stringIndex(res);
 			}
 			break;
 		case Token.INTEGER:
