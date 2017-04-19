@@ -127,6 +127,10 @@ public class Parser {
 					// Handle debug statements here
 					res = debugStmt(bExecuting);
 					break;
+				case Token.DEFINE:
+					 // TODO maybe some error checking needed?
+					defineStmt(bExecuting);
+					break;
 				default:
 					break;
 				}
@@ -141,10 +145,6 @@ public class Parser {
 			case Token.FUNCTION:
 				functionStmt(bExecuting);
 				// Function call
-				break;
-			case Token.DEFINE:
-				 // TODO maybe some error checking needed?
-				defineStmt(bExecuting);
 				break;
 			case Token.SEPARATOR:
 				 // TODO maybe some error checking needed?
@@ -339,29 +339,115 @@ public class Parser {
 	public ResultValue defineStmt(boolean bExecuting) throws ParserException
 	{
 		Token statementToken;
-		if (bExecuting == false)
-		{
-			scanner.skipTo(":");
-			return null;
-		}
+
 		statementToken = scanner.currentToken;
 		switch (statementToken.tokenStr)
 		{
-		case "deftuple": // defining a tuple
-			//defineTuple()
+		case "tuple": // defining a tuple
+			defineTuple(bExecuting);
 			break;
 		}
 		
 		
 		return null; // TODO avoid stupid IDE errors
 	}
+	
+	/**
+	 * This method handles the declaration of a new tuple.
+	 * <p>
+	 * On entering the method the currentToken should be on 'tuple'
+	 * On exiting the method the currentToken should be on 'endtuple'
+	 * <p>
+	 * 
+	 * @param bExecuting
+	 * @throws ParserException 
+	 */
+	private void defineTuple(boolean bExecuting) throws ParserException 
+	{
+		if (bExecuting == false) // Maybe put this inside lower level methods
+		{
+			scanner.skipTo("endtuple");
+			return; // Skip to the control end somehow?
+		}
+		scanner.getNext(); // Skip 'tuple' token, current token should now be on the new tuple name
+		
+		if (scanner.currentToken.subClassif != Token.IDENTIFIER)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected identifier for tuple definition, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		
+		Token tupleNameToken = scanner.currentToken;
+		// Create a new identifier
+		STTuple tupleIdentifier = new STTuple(tupleNameToken.tokenStr, Token.CONTROL, Token.DECLARE, 0);
+		
+		scanner.getNext(); // Current token should now be on ':'
+		
+		if (! scanner.currentToken.tokenStr.equals(":"))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \':\' after tuple definition, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		
+		scanner.getNext(); // Token should now be on a type control token
+		
+		// Read each Declare stmt before endtuple and add to symbol
+		while (scanner.currentToken.subClassif != Token.END)
+		{
+			STEntry member;
+			// expect to see a type and identifier followed by semicolon
+			if (scanner.currentToken.primClassif != Token.CONTROL && scanner.currentToken.subClassif != Token.DECLARE)
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Expected member declaration in tuple definition found \'" + scanner.currentToken.tokenStr + "\'"
+						, scanner.sourceFileName);
+			
+			if (Utility.isPrimitiveType(scanner.currentToken))
+				member = declareIdentifier(bExecuting);
+			else
+			{
+				STTuple tupleClone = ((STTuple)scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr)).Clone();
+				member = tupleClone;
+				scanner.getNext();
+				member.symbol = scanner.currentToken.tokenStr;
+			}
+			
+			scanner.getNext();
+			
+			if (scanner.currentToken.tokenStr.equals(";")) // It was just a plain variable
+			{
+				scanner.getNext(); // Skip the ';' and move on
+			}
+			else if (scanner.currentToken.tokenStr.equals("[")) // is an array, declare takes care of array type for us
+			{
+				ResultValue declaredSize;
+				scanner.getNext(); // Skip '['
+				
+				if (scanner.currentToken.tokenStr.equals("unbounded"))
+				{
+					member.declaredSize = Type.ARRAY_UNBOUNDED;
+				}
+				else
+				{
+					declaredSize = expression("]"); // Read the expression declaring the size of the array
+					scanner.getNext(); 	// Skip the ']'
+					scanner.getNext();	// Skip the ';'
+					
+					declaredSize = Utility.coerceToInt(this, declaredSize);
+					member.declaredSize = Integer.parseInt(declaredSize.internalValue);
+					member.structureType = Type.ARRAY;
+				}
+			}	
+			tupleIdentifier.addMember(member);
+		}
+		// Add the symbol to the table
+		scanner.symbolTable.putSymbol(tupleIdentifier.symbol, tupleIdentifier);
+	}
+
 	/**
 	 * assume current token is on [
 	 * @return
 	 */
 	private ResultValue stringIndex(ResultValue target) throws ParserException
 	{
-		scanner.getNext();//get rid of [
+		scanner.getNext();// Set rid of '['
 		
 		ResultValue index = expression("]");
 		if(! index.type.equals(Type.INT))
@@ -652,7 +738,7 @@ public class Parser {
             		controlVal = declareScalar(intToken, scanner.currentToken); // Implicitly declare the currentToken as an int
                     STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
                                 , Type.INT
-                                , Type.PRIMITIVE
+                                , Type.SCALAR
                                 , Type.VALUE
                                 , Type.LOCAL);
 
@@ -712,7 +798,7 @@ public class Parser {
                 if (scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr) == null) {
                     STIdentifier newIdentifier = new STIdentifier(scanner.currentToken.tokenStr
                             , Type.STRING
-                            , Type.PRIMITIVE
+                            , Type.SCALAR
                             , Type.VALUE
                             , Type.LOCAL);
 
@@ -759,7 +845,7 @@ public class Parser {
                 if (scanner.symbolTable.getSymbol(control.tokenStr) == null) {
                     STIdentifier newIdentifier = new STIdentifier(control.tokenStr
                             , limitVal.type
-                            , Type.PRIMITIVE
+                            , Type.SCALAR
                             , Type.VALUE
                             , Type.LOCAL);
 
@@ -925,10 +1011,12 @@ public class Parser {
 	 */
 	public void declareStmt(boolean bExecuting) throws ParserException 
 	{
-		STIdentifier variableIdentifier;
-		ResultValue variableValue = null;
-		Token variableToken;
 		Token typeToken;
+		STEntry typeEntry;
+		Token variableToken;
+		STEntry variableIdentifier;
+		ResultValue variableValue = null;
+		
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
@@ -937,22 +1025,83 @@ public class Parser {
 		
 		typeToken = scanner.currentToken;
 		variableToken = scanner.nextToken;
-		
+				
 		variableIdentifier = declareIdentifier(bExecuting);
 		
 		scanner.symbolTable.putSymbol(variableToken.tokenStr, variableIdentifier);
 		
+		/*                        Handle array or scalar types                            */
+		// v v v --------------------------------------------------------------------- v v v
 		if (variableIdentifier.structureType == Type.ARRAY)
 			variableValue = declareArray(typeToken, variableToken);
-		else if (variableIdentifier.structureType == Type.PRIMITIVE)
+		else if (variableIdentifier.structureType == Type.SCALAR)
 			variableValue = declareScalar(typeToken, variableToken);
-		else if (variableIdentifier.structureType == Type.TUPLE)
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Tuple types not yet implemented"
-					, scanner.sourceFileName);
-			
-		// TODO This line will need modification based on by reference parameter passing later
+		// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
+		
+		
 		storageManager.putVariableValue(variableToken.tokenStr, variableValue); // Insert the new empty variable into the storage table.
+	}
+
+	/**
+	 * Create a tuple and return it
+	 * @param typeToken
+	 * @param variableToken
+	 * @return
+	 */
+	private ResultTuple declareTuple(Token typeToken, STTuple tupleDefinition) {
+		
+		STTuple typeEntry = (STTuple)scanner.symbolTable.getSymbol(typeToken.tokenStr);
+		ResultTuple result = new ResultTuple(typeToken.tokenStr);
+		
+		for (String identifierString : typeEntry.memberHash.keySet() )
+		{
+			STEntry member = typeEntry.memberHash.get(identifierString);
+
+			/*                                Primitive type                                  */
+			// v v v --------------------------------------------------------------------- v v v
+			if (member instanceof STIdentifier)	// Cast to identifier and insert
+			{
+				STIdentifier identifierMember = (STIdentifier)member;
+				
+				if (identifierMember.structureType == Type.ARRAY) // Array inside of tuple
+				{
+					result.addMember(identifierString, new ResultList(new ResultValue(identifierMember.type), identifierMember.declaredSize));
+				}
+				else 											  // Scalar
+				{
+					result.addMember(identifierString, new ResultValue(  identifierMember.type ) );
+					
+				}
+			}
+			// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
+
+			
+			/*                              Nested tuples                                     */
+			// v v v --------------------------------------------------------------------- v v v
+			else if (member instanceof STTuple) // Declare another tuple inside of this one
+			{
+				// Get the type, make tokens, pass them recursivly?
+				Token recursiveTypeToken = new Token();
+				Token recursiveVariableToken = new Token();
+				
+				recursiveTypeToken.tokenStr = ((STTuple)member).type;
+				recursiveVariableToken.tokenStr = identifierString;
+				
+				if (member.structureType == Type.ARRAY)
+				{
+					ResultTuple newTuple = declareTuple(recursiveTypeToken, (STTuple)member);
+					result.addMember(identifierString, new ResultList(newTuple, member.declaredSize));
+				}
+				else
+				{
+					result.addMember(identifierString, declareTuple(recursiveTypeToken, (STTuple)member));
+				}
+			}
+			// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
+			
+		}
+		
+		return result;
 	}
 
 	/**
@@ -962,11 +1111,14 @@ public class Parser {
 	 * @return
 	 * @throws ParserException
 	 */
-	public STIdentifier declareIdentifier(boolean bExecuting) throws ParserException
+	public STEntry declareIdentifier(boolean bExecuting) throws ParserException
 	{
 		Token typeToken;
 		Token variableToken;
 		STIdentifier newIdentifier;
+		STTuple newTuple;
+		int type = Type.SCALAR;
+		
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
@@ -979,36 +1131,55 @@ public class Parser {
 					, "Declaration of non identifier: " + scanner.nextToken.tokenStr
 					, scanner.sourceFileName);
 		}
-		/*if (scanner.symbolTable.getSymbol(scanner.nextToken.tokenStr) != null) // If the next token string already exists in the symbol table
-		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Symbol " + scanner.nextToken.tokenStr + " Already declared"
-					, scanner.sourceFileName);
-		}*/
-		typeToken = scanner.currentToken;
-		scanner.getNext(); // Move past the type declaration, should now be on variable
-		variableToken = scanner.currentToken;
+
 		
-		if (scanner.nextToken.tokenStr.equals("["))
+		typeToken = scanner.currentToken;
+		variableToken = scanner.nextToken;
+		
+		scanner.getNext(); // Move past the type declaration, should now be on variable
+		if (Utility.isPrimitiveType(typeToken))
 		{
-			// Array stuff
-			newIdentifier = new STIdentifier(variableToken.tokenStr
-					, typeToken.tokenStr
-					, Type.ARRAY
-					, Type.VALUE
-					, Type.LOCAL);
+			
+			if (scanner.nextToken.tokenStr.equals("["))
+			{
+				// Array stuff
+				newIdentifier = new STIdentifier(variableToken.tokenStr
+						, typeToken.tokenStr
+						, Type.ARRAY
+						, Type.VALUE
+						, Type.LOCAL);
+				newIdentifier.type = typeToken.tokenStr;
+			}
+			else
+			{
+				newIdentifier = new STIdentifier(variableToken.tokenStr
+						, typeToken.tokenStr
+						, Type.SCALAR
+						, Type.VALUE
+						, Type.LOCAL);
+				newIdentifier.type = typeToken.tokenStr;
+			}
+			
+			return newIdentifier;
 		}
 		else
 		{
-			newIdentifier = new STIdentifier(variableToken.tokenStr
-					, typeToken.tokenStr
-					, Type.PRIMITIVE
-					, Type.VALUE
-					, Type.LOCAL);
+			newTuple = ((STTuple) scanner.symbolTable.getSymbol(typeToken.tokenStr)).Clone();
+			newTuple.symbol = variableToken.tokenStr;
+			newTuple.primClassif = Token.OPERAND;
+			newTuple.subClassif = Token.IDENTIFIER;
 			
+			if (scanner.nextToken.tokenStr.equals("["))
+			{
+				newTuple.structureType = Type.ARRAY;
+			}
+			else
+			{
+				newTuple.structureType = Type.SCALAR;
+			}
+			return newTuple;
 		}
 		
-		return newIdentifier;
 	}
 	
 	/**
@@ -1025,7 +1196,13 @@ public class Parser {
 	 */
 	private ResultValue declareScalar(Token typeToken, Token variableToken) throws ParserException 
 	{
-		ResultValue result = new ResultValue(typeToken.tokenStr);
+		ResultValue result;
+		STEntry typeEntry = scanner.symbolTable.getSymbol(typeToken.tokenStr);
+
+		if (typeEntry instanceof STTuple)
+			result = declareTuple(typeToken, (STTuple)typeEntry);
+		else
+			result = new ResultValue(typeToken.tokenStr);
 		
 		return result;
 	}
@@ -1043,13 +1220,25 @@ public class Parser {
 	 */
 	private ResultList declareArray(Token typeToken, Token variableToken) throws ParserException
 	{
-		ResultList arrayValue;
+		ResultList arrayValue = null;
+		ResultValue defaultValue;
+		STEntry typeEntry;
 		ArrayList<ResultValue> initArgs;
 		scanner.getNext(); // Move past the identifier name
 		
+		/*   Find the correct form for the default value of this array     */
+		// v v v --------------------------------------------------------------------- v v v
+		typeEntry = scanner.symbolTable.getSymbol(typeToken.tokenStr);
+		if (typeEntry instanceof STTuple)
+			defaultValue = declareTuple(typeToken, (STTuple)typeEntry);
+		else
+			defaultValue = new ResultValue(typeToken.tokenStr);
+		// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
+
+		
 		if (scanner.nextToken.tokenStr.equals("unbounded")) // CASE 1 Unbounded arrays may be initialized or maybe not
 		{
-			arrayValue = new ResultList(typeToken.tokenStr, Type.ARRAY_UNBOUNDED);
+			arrayValue = new ResultList(defaultValue, Type.ARRAY_UNBOUNDED);
 			
 			// unbounded arrays need to skip the next few tokens and read the intArgs
 			if (! scanner.getNext().equals("]"))
@@ -1068,12 +1257,12 @@ public class Parser {
 				{
 					for (int i = 0; i < initArgs.size(); i++)
 					{
-						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)));
+						arrayValue.insert(this, i, Utility.coerceToType(this, typeToken.tokenStr, initArgs.get(i)));
 					}
 				}
 				else // Insert default value of the item
 				{
-					arrayValue.defaultValue = Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(0));
+					arrayValue.defaultValue = Utility.coerceToType(this, typeToken.tokenStr, initArgs.get(0));
 					arrayValue.insert(this, 0, arrayValue.defaultValue);
 				}
 			}
@@ -1095,11 +1284,11 @@ public class Parser {
 			scanner.getNext();
 			
 			initArgs = argList(";");
-			arrayValue = new ResultList(typeToken.tokenStr, initArgs.size());
+			arrayValue = new ResultList(defaultValue, initArgs.size());
 			
 			for (int i = 0; i < initArgs.size(); i++)
 			{
-				arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)) );
+				arrayValue.insert(this, i, Utility.coerceToType(this, typeToken.tokenStr, initArgs.get(i)) );
 			}
 		}
 		else // CASE 3 There is an expression in between brackets
@@ -1107,8 +1296,8 @@ public class Parser {
 			scanner.getNext();
 			ResultValue arraySizeExpressionResult = Utility.coerceToInt(this, expression("]"));
 			int arraySize = Integer.parseInt(arraySizeExpressionResult.getInternalValue());
-			arrayValue = new ResultList(typeToken.tokenStr, arraySize);
 			scanner.getNext();
+			arrayValue = new ResultList(defaultValue, arraySize);
 			if (scanner.currentToken.tokenStr.equals("=")) // If the next statement is an assignment
 			{
 				scanner.getNext();
@@ -1117,23 +1306,12 @@ public class Parser {
 				{
 					for (int i = 0; i < initArgs.size(); i++)
 					{
-						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(i)));
+						arrayValue.insert(this, i, Utility.coerceToType(this, typeToken.tokenStr, initArgs.get(i)));
 					}
 				}
 				else // Insert copies of the item until the array is full
 				{
-					for (int i = 0; i < arraySize; i++)
-					{
-						arrayValue.insert(this, i, Utility.CoerceToType(this, typeToken.tokenStr, initArgs.get(0)));
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < arraySize; i++)
-				{
-					arrayValue.insert(this, i, new ResultValue(typeToken.tokenStr));
-					arrayValue.iCurrentSize = 0;
+					arrayValue = new ResultList(Utility.coerceToType(this, typeToken.tokenStr, initArgs.get(0)), arraySize);
 				}
 			}
 		}
@@ -1462,6 +1640,16 @@ public class Parser {
 		return res;
 	}
 
+	/**
+	 * Handles the evaluation of a single operand.
+	 * <p>
+	 * An operand can be an identifier or a constant.
+	 * <p>
+	 * This method also handles evaluation of arrays and tuple types
+	 * @param operandToken
+	 * @return
+	 * @throws ParserException
+	 */
 	private ResultValue evaluateOperand(Token operandToken) throws ParserException
 	{
 		ResultValue res = null;
@@ -1480,14 +1668,37 @@ public class Parser {
 			{
 				return null;
 			}
-			if (res instanceof ResultList) // If the element is an array
+			while ( res instanceof ResultTuple || res instanceof ResultList )
 			{
-				if (scanner.nextToken.tokenStr.equals("[")) // Check if we need to grab an index
+				if (res instanceof ResultTuple)
 				{
-					scanner.getNext();
-					scanner.getNext(); // Move past the [ and onto the expression
-					int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
-					res = ((ResultList) res).get(this, index);
+					ResultTuple resTuple = (ResultTuple)res;
+					if (scanner.nextToken.tokenStr.equals(".")) // Check if we need to grab a member
+					{
+						scanner.getNext();
+						scanner.getNext(); // Move past the . and onto the member token
+						
+						res = resTuple.getMember(scanner.currentToken.tokenStr);
+						
+						if (res == null)
+							throw new ParserException(scanner.currentToken.iSourceLineNr
+									, resTuple.type + " tuple \'" + operandToken.tokenStr + "\' has no member named \'" + scanner.currentToken.tokenStr + "\'"
+									, scanner.sourceFileName);
+					}
+					else 
+						break;
+				}
+				else if (res instanceof ResultList) // If the element is an array
+				{
+					if (scanner.nextToken.tokenStr.equals("[")) // Check if we need to grab an index
+					{
+						scanner.getNext();
+						scanner.getNext(); // Move past the [ and onto the expression
+						int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
+						res = ((ResultList) res).get(this, index);
+					}
+					else
+						break;
 				}
 			}
 			break;

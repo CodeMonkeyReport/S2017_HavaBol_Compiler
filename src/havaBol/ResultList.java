@@ -1,6 +1,7 @@
 package havaBol;
 
-public class ResultList extends ResultValue {
+public class ResultList extends ResultValue 
+{
 
 	ResultValue internalValueList[]; // For array types we need a list of values
 	public int iMaxSize;
@@ -8,23 +9,28 @@ public class ResultList extends ResultValue {
 	public ResultValue defaultValue;
 								// -1 indicates that we are talking about the whole array
 
-	public ResultList(String type, int iMaxSize)
+	public ResultList(ResultValue defaultValue, int iMaxSize)
 	{
-		super(type);
+		super(defaultValue.type);
 		this.iMaxSize = iMaxSize;
 		this.structure = Type.ARRAY;
+		this.defaultValue = defaultValue;
+		
 		if (iMaxSize >= Type.ARRAY_UNBOUNDED)
 		{
 			this.internalValueList = new ResultValue[1];
-			this.defaultValue = new ResultValue(type);
 			this.internalValueList[0] = this.defaultValue.Clone();
 			this.iCurrentSize = 0;
 		}
 		else
 		{
 			this.internalValueList = new ResultValue[this.iMaxSize];
-			this.defaultValue = new ResultValue(type);
 			this.iCurrentSize = 0;
+			
+			for (int i = 0; i < this.iMaxSize; i++) // Fill with empty values
+			{
+				this.internalValueList[i] = this.defaultValue.Clone();
+			}
 		}
 	}
 

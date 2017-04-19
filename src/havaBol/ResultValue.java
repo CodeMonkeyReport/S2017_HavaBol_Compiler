@@ -5,7 +5,7 @@ public class ResultValue implements Cloneable {
 	public String internalValue = "";
 	public String type = "";
 	
-	public int structure = Type.PRIMITIVE; // Default to primitive type
+	public int structure = Type.SCALAR; // Default to primitive type
 	public String terminatingStr = "";
 	
 	public ResultValue()

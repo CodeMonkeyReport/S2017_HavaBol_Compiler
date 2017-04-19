@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Scanner {
 
-	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,^\n";
+	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,.^\n";
 
 	public Token currentToken;
 	public Token nextToken;
@@ -149,8 +149,10 @@ public class Scanner {
 		}
 		tokenStart = linePosition;
 		// Find the next delimiter
-		while (!delimiters.contains(Character.toString(currentLine[linePosition]))) {
-			linePosition++;
+		while (!delimiters.contains(Character.toString(currentLine[linePosition]))) 
+		{
+			this.linePosition++;
+			
 			if(this.linePosition == currentLine.length)
 			    break;
 		}
@@ -182,7 +184,6 @@ public class Scanner {
 		this.nextToken.iColPos = tokenStart;
 
 
-
 		if (Character.isAlphabetic(currentLine[tokenStart]))
 		{
 			// identifier
@@ -206,12 +207,23 @@ public class Scanner {
 	/**
 	 * Helper method to the classify method used to set values for a numeric constant
 	 * <p>
-	 *
 	 * @param tokenStart - Beginning index of the token
 	 * @param tokenEnd - Ending index of the token
 	 * @throws NumberFormatException
 	 */
-	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException {
+	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException
+	{
+		if (this.currentLine[tokenEnd] == '.') // Handle a . inside numeric
+		{
+			tokenEnd++;
+			while (!delimiters.contains(Character.toString(currentLine[tokenEnd])))
+			{
+				tokenEnd++;
+				if (tokenEnd == currentLine.length)
+				    break;
+			}
+			this.linePosition = tokenEnd;
+		}
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 
 		// For floating point values
@@ -259,9 +271,11 @@ public class Scanner {
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 
 		STEntry found;
+		STTuple foundTuple;
 		STControl foundControl;
 		STFunction foundFunction;
 		STIdentifier foundIdentifier;
+		
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		found = symbolTable.getSymbol(token);
 		if (found != null)
@@ -286,6 +300,13 @@ public class Scanner {
 				foundIdentifier = (STIdentifier) found;
 				this.nextToken.primClassif = foundIdentifier.primClassif;
 				this.nextToken.subClassif = Token.IDENTIFIER;
+				this.nextToken.tokenStr = token;
+			}
+			if (found instanceof STTuple)
+			{
+				foundTuple = (STTuple) found;
+				this.nextToken.primClassif = foundTuple.primClassif;
+				this.nextToken.subClassif = foundTuple.subClassif;
 				this.nextToken.tokenStr = token;
 			}
 			else
@@ -373,6 +394,7 @@ public class Scanner {
 			case '[':
 			case ']':
 			case ',':
+			case '.':
 				// All above symbols are separators
 				this.nextToken.primClassif = Token.SEPARATOR;
 				this.nextToken.subClassif = 0;
