@@ -72,6 +72,11 @@ public class Utility {
 			target.set(parser, value);
 			return;
 		}
+		if (target instanceof ResultTuple && value instanceof ResultTuple)
+		{
+			target.set(parser, value);
+			return;
+		}
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
 			target.set(parser, value);
@@ -1029,8 +1034,8 @@ public class Utility {
 				+ target.type + " has value " 
 				+ result.internalValue);
 	}
-
-	public static ResultValue CoerceToType(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
+	
+	public static ResultValue coerceToType(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
 	{
 		switch (typeStr)
 		{
@@ -1045,11 +1050,23 @@ public class Utility {
 		case Type.DATE:
 			return Utility.coerceToDate(parser, resultValue);
 		default:
-			// TODO tuple stuff
-			return null;
+			return Utility.copyTuple(parser, typeStr, resultValue);
 		}
 	}
 	
+	private static ResultValue copyTuple(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
+	{
+		
+		if (!resultValue.type.equals(typeStr))
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not convert from \'" + resultValue.type + "\'" + " to \'" + typeStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		
+		return resultValue.Clone();
+	}
+
 	public static String insertString(String oldString, int index, String insert)
 	{
 		int end;
@@ -1067,6 +1084,24 @@ public class Utility {
 	public static String getStringIndex(String target, int index)
 	{
 		return Character.toString(target.charAt(index));
+	}
+
+	public static boolean isPrimitiveType(Token typeToken) {
+		switch (typeToken.tokenStr)
+		{
+		case Type.BOOL:
+			return true;
+		case Type.FLOAT:
+			return true;
+		case Type.INT:
+			return true;
+		case Type.STRING:
+			return true;
+		case Type.DATE:
+			return true;
+		default:
+			return false;
+		}
 	}
 
 

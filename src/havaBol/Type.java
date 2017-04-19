@@ -10,7 +10,7 @@ package havaBol;
 public class Type {
 
 	// Variable structure types
-	public static final int PRIMITIVE = 0;
+	public static final int SCALAR = 0;
 	public static final int ARRAY = 1;
 	public static final int TUPLE = 2; // May never be implemented
 	
