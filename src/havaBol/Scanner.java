@@ -70,12 +70,6 @@ public class Scanner {
 
 	public void jumpToPosition(int lineNumber, int linePosition) throws ParserException
 	{
-		if (lineNumber > this.lineNumber)
-		{
-			throw new ParserException(this.currentToken.iSourceLineNr
-					, "Jumping forward detected"
-					, this.sourceFileName);
-		}
 		// Read the line
 		String line;
 		this.lineNumber = lineNumber-1;

@@ -7,17 +7,46 @@ public class Parser {
 
 	Scanner scanner;
 	StorageManager storageManager;
+	ArrayList<ActivationRecord> callStack = new ArrayList<ActivationRecord>();
+	int environmentVector;
 	
 	public static boolean bShowToken = false;
 	boolean bShowExpr = false;
 	public boolean bShowAssign = false;
-
+	
 	public Parser(Scanner scanner, StorageManager storageManager)
 	{
 		this.scanner = scanner;
 		this.storageManager = storageManager;
+		this.environmentVector = 0;
+		ActivationRecord globalRecord = new ActivationRecord(scanner.symbolTable, storageManager);
+		callStack.add(this.environmentVector, globalRecord);
 	}
 
+	/**
+	 * Add an activation record to the stack and update current records
+	 * @param record
+	 */
+	public void pushActivationRecord(ActivationRecord record)
+	{
+		this.environmentVector++;
+		this.callStack.add(this.environmentVector, record);
+		this.storageManager = record.storageManager;
+		this.scanner.symbolTable = record.symbolTable;
+	}
+	
+	/**
+	 * Remove an activation record from the stack and update current records
+	 * @return
+	 */
+	public void popActivationRecord()
+	{
+		this.environmentVector--;
+		ActivationRecord record = this.callStack.get(this.environmentVector);
+		this.storageManager = record.storageManager;
+		this.scanner.symbolTable = record.symbolTable;
+	}
+	
 	/**
 	 * 	This method executes a list of statements until an expected terminating string
 	 * <p>
@@ -44,10 +73,6 @@ public class Parser {
 					declareStmt(bExecuting);
 					if (scanner.nextToken.primClassif == Token.OPERATOR)
 						assignmentStmt(bExecuting);
-//					if (! scanner.currentToken.tokenStr.equals(";")) // Expect to see a ';' after assign/declare
-//						throw new ParserException(scanner.currentToken.iSourceLineNr
-//								, "Expected \';\' after declaration statement"
-//								, scanner.sourceFileName);
 					break;
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if"))
@@ -60,7 +85,11 @@ public class Parser {
 							else
 								elseStmt(bExecuting); // Or do
 						}
-						else if (! res.terminatingStr.equals("endif"))
+						else if (res.terminatingStr.equals("return"))
+						{
+							return res; // If we hit a return statement inside of a function we want to return all the way out
+						}
+						else if (!res.terminatingStr.equals("endif")) // TODO could also be a return statment that got us here
 						{
 							throw new ParserException(scanner.currentToken.iSourceLineNr
 									, "Expected \'endif\' after \'if\' statement"
@@ -86,7 +115,20 @@ public class Parser {
 						scanner.getNext(); // move past the else statement
 						return res;
 					}
-					if (! scanner.nextToken.tokenStr.equals(";"))
+					else if (temp.tokenStr.equals("return"))
+					{
+						if (bExecuting)
+						{
+							res = expression(";");
+							res.terminatingStr = "return";
+							return res;
+						}
+						else 
+						{
+							scanner.skipTo(";");
+						}
+					}
+					else if (! scanner.nextToken.tokenStr.equals(";"))
 					{
 						throw new ParserException(scanner.currentToken.iSourceLineNr
 								, "Missing simicolon after: \'" + temp.tokenStr + "\'"
@@ -121,6 +163,10 @@ public class Parser {
                             res.internalValue = "F";
                         res.terminatingStr = "endfor";
                         return res;
+                    }
+                    else if (temp.tokenStr.equals("endfunc"))
+                    {
+                        return null;
                     }
 					break;
 				case Token.DEBUG:
@@ -170,7 +216,7 @@ public class Parser {
 	 * @param bExecuting
 	 * @return
 	 */
-	private ResultValue debugStmt(boolean bExecuting) throws ParserException 
+	private ResultValue debugStmt(boolean bExecuting) throws ParserException
 	{
 		scanner.getNext();
 		
@@ -243,11 +289,111 @@ public class Parser {
 		}
 		else
 		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Builtin functions not yet implemented, can not execute function \'" + functionToken.tokenStr + "\'"
-					, scanner.sourceFileName);
+			res = evaluateFunction(bExecuting);
 		}		
 		return res;
+	}
+	
+	/**
+	 * This function hadles the calling of a user defined function TODO not yet implemented
+	 * <p>
+	 * On entering the method the currentToken should be on the function's identifier token.
+	 * On exiting the method the currentToken should be on the token following ')' i.e one token after the end of the parameter list.
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException 
+	 */
+	private ResultValue evaluateFunction(boolean bExecuting) throws ParserException
+	{	
+		if (bExecuting == false)
+		{
+			if (scanner.nextToken.tokenStr.equals("("))
+			{
+				argList(")");
+				return null;
+			}
+			else
+			{
+				scanner.getNext();
+				return null;
+			}
+		}
+		
+		STFunction functionSymbol;
+		Token functionToken;
+		ResultValue res;
+		
+		// Get the functions Token and STEntry
+		functionToken = scanner.currentToken;
+		functionSymbol = (STFunction) this.scanner.symbolTable.getSymbol(functionToken.tokenStr);
+		
+		scanner.getNext(); // Move past function and on to the '(' TODO FUNCTION POINTERS WILL NEED TO BE IMPLEMENTED HERE
+		
+		res = functionCall(functionToken, functionSymbol);
+		
+		return res;
+	}
+
+	/**
+	 * Handle function execution
+	 * <p>
+	 * On entering the method the currentToken should be on '('
+	 * One leaving the method the currentToken should be on ')'
+	 * @param functionToken
+	 * @param functionSymbol
+	 * @return
+	 * @throws ParserException 
+	 */
+	private ResultValue functionCall(Token functionToken, STFunction functionSymbol) throws ParserException
+	{
+		
+		ResultValue res;
+		ArrayList<ResultValue> parameterList = new ArrayList<ResultValue>();
+		Token returnPositionToken;
+		// Create new activation record & push it
+		
+		SymbolTable newTable = this.scanner.symbolTable.Clone(); // We need a copy of the symbol table
+		StorageManager newStorageManager = new StorageManager(); // Storage manager is brand new
+		ActivationRecord record = new ActivationRecord(newTable, newStorageManager);
+		
+		this.pushActivationRecord(record);
+		scanner.getNext();
+		
+		parameterList = argList(")");
+		// Save off position
+		returnPositionToken = scanner.currentToken;
+		
+		if (parameterList.size() != functionSymbol.parmList.size())
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Function \'" + functionToken.tokenStr + "\' has " + functionSymbol.parmList.size() + " parameters, found " + functionSymbol.parmList.size()
+					, scanner.sourceFileName);
+		
+		int i = 0;
+		// read all parameters and add them to storage manager
+		for (STEntry parameterEntry : functionSymbol.parmList)
+		{
+			parameterEntry.environmentVector = this.environmentVector;
+			this.scanner.symbolTable.putSymbol(parameterEntry.symbol, parameterEntry);
+			this.storageManager.putVariableValue(parameterEntry.symbol, parameterList.get(i));
+			i++;
+		}
+		
+		// Skip to function call, should now be on the ':' following function definition
+		scanner.jumpToPosition(functionSymbol.positionToken.iSourceLineNr, functionSymbol.positionToken.iColPos);
+		
+		// run statements until 'endfunc' OR we get a return
+		res = statements(true);
+		
+		// Jump back to previous position, now on ')'
+		scanner.jumpToPosition(returnPositionToken.iSourceLineNr, returnPositionToken.iColPos);
+		
+		// pop off the activation record
+		this.popActivationRecord();
+		
+		// return result if there was a return statement
+		if (res.terminatingStr.equals("return"))
+			return res;
+		return null;
 	}
 	
 	/**
@@ -346,12 +492,102 @@ public class Parser {
 		case "tuple": // defining a tuple
 			defineTuple(bExecuting);
 			break;
+		case "func":
+			defineFunction(bExecuting);
+			break;
 		}
 		
-		
-		return null; // TODO avoid stupid IDE errors
+		return null; // Avoid stupid IDE errors
 	}
 	
+	/**
+	 * This method handles the declaration of a new function. TODO working on this
+	 * <p>
+	 * On entering the method the currentToken should be on 'func'
+	 * On exiting the method the currentToken should be on 'endfunc'
+	 * <p>
+	 * @param bExecuting
+	 * @throws ParserException 
+	 */
+	private void defineFunction(boolean bExecuting) throws ParserException 
+	{
+		Token returnTypeToken;
+		Token functionNameToken;
+		ArrayList<STEntry> paramList = new ArrayList<STEntry>();
+		STFunction functionSymbol;
+		int paramCount = 0;
+		if (bExecuting == false) // Maybe put this inside lower level methods
+		{
+			scanner.skipTo(":");
+			statements(false);
+			return; // Skip to the control end somehow?
+		}
+		scanner.getNext(); // Skip 'func' token, current token should now be on the new function return type
+		
+		if (scanner.currentToken.primClassif != Token.CONTROL || scanner.currentToken.subClassif != Token.DECLARE)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected return type in function definition, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		returnTypeToken = scanner.currentToken;
+		
+		scanner.getNext(); // Move past return type and onto the function name
+		
+		if (scanner.currentToken.primClassif != Token.OPERAND || scanner.currentToken.subClassif != Token.IDENTIFIER)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected identifier for function definition, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		functionNameToken = scanner.currentToken;
+		
+		scanner.getNext(); // Move past function name and onto the parameter list
+		
+		if (! scanner.currentToken.tokenStr.equals("("))
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected '(' before parameter list, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		
+		if (scanner.nextToken.tokenStr.equals(")")) // CASE 1: No parameters
+		{
+			scanner.getNext();
+			scanner.getNext(); // Move to the ':'
+			if (! scanner.currentToken.tokenStr.equals(":"))
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Expected ':' at end of function definition \'" + scanner.currentToken.tokenStr + "\'"
+						, scanner.sourceFileName);
+		}
+		else 										// CASE 2: parameters
+		{
+			
+			this.environmentVector++; // Increase environment vector
+			while(! scanner.currentToken.tokenStr.equals(")") ) // Skip ',' and exit if its a ')'
+			{
+				scanner.getNext(); // Skip ','
+				// Read in a single identifier
+				paramList.add(declareIdentifier(bExecuting));
+				
+				scanner.getNext(); // Skip the identifier
+			}
+			this.environmentVector--; // reduce the environment vector again to reset the state
+			
+			scanner.getNext(); // move onto the ':'
+			if (! scanner.currentToken.tokenStr.equals(":"))
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Expected ':' at end of function definition \'" + scanner.currentToken.tokenStr + "\'"
+						, scanner.sourceFileName);
+		}
+		
+		functionSymbol = new STFunction(functionNameToken.tokenStr
+				, returnTypeToken.tokenStr
+				, Token.USER
+				, this.environmentVector
+				, paramList
+				, scanner.currentToken
+				, paramCount );
+		
+		statements(false); // Skip over everything else
+		scanner.getNext(); // Skip 'endfunc'
+		this.scanner.symbolTable.putSymbol(functionSymbol.symbol, functionSymbol);
+	}
+
 	/**
 	 * This method handles the declaration of a new tuple.
 	 * <p>
@@ -378,7 +614,7 @@ public class Parser {
 		
 		Token tupleNameToken = scanner.currentToken;
 		// Create a new identifier
-		STTuple tupleIdentifier = new STTuple(tupleNameToken.tokenStr, Token.CONTROL, Token.DECLARE, 0);
+		STTuple tupleIdentifier = new STTuple(tupleNameToken.tokenStr, Token.CONTROL, Token.DECLARE, 0, this.environmentVector);
 		
 		scanner.getNext(); // Current token should now be on ':'
 		
@@ -740,7 +976,8 @@ public class Parser {
                                 , Type.INT
                                 , Type.SCALAR
                                 , Type.VALUE
-                                , Type.LOCAL);
+                                , Type.LOCAL
+                                , this.environmentVector);
 
                     scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
             		
@@ -800,7 +1037,8 @@ public class Parser {
                             , Type.STRING
                             , Type.SCALAR
                             , Type.VALUE
-                            , Type.LOCAL);
+                            , Type.LOCAL
+                            , this.environmentVector);
 
                     scanner.symbolTable.putSymbol(scanner.currentToken.tokenStr, newIdentifier); // add symbol to table
 
@@ -847,7 +1085,8 @@ public class Parser {
                             , limitVal.type
                             , Type.SCALAR
                             , Type.VALUE
-                            , Type.LOCAL);
+                            , Type.LOCAL
+                            , this.environmentVector);
 
                     scanner.symbolTable.putSymbol(control.tokenStr, newIdentifier); // add symbol to table
 
@@ -1132,7 +1371,6 @@ public class Parser {
 					, scanner.sourceFileName);
 		}
 
-		
 		typeToken = scanner.currentToken;
 		variableToken = scanner.nextToken;
 		
@@ -1147,7 +1385,8 @@ public class Parser {
 						, typeToken.tokenStr
 						, Type.ARRAY
 						, Type.VALUE
-						, Type.LOCAL);
+						, Type.LOCAL
+						, this.environmentVector);
 				newIdentifier.type = typeToken.tokenStr;
 			}
 			else
@@ -1156,7 +1395,8 @@ public class Parser {
 						, typeToken.tokenStr
 						, Type.SCALAR
 						, Type.VALUE
-						, Type.LOCAL);
+						, Type.LOCAL
+						, this.environmentVector);
 				newIdentifier.type = typeToken.tokenStr;
 			}
 			
@@ -1507,6 +1747,11 @@ public class Parser {
 	
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				
+				if (tempRes01 == null)
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, "Unknown operand \'" + scanner.currentToken.tokenStr + "\' in expression"
+							, scanner.sourceFileName);
+				
 				if (tempRes01.type.equals(Type.STRING) && scanner.nextToken.tokenStr.equals("["))
 				{
 					scanner.getNext();
@@ -1663,11 +1908,12 @@ public class Parser {
 		switch (operandToken.subClassif)
 		{
 		case Token.IDENTIFIER:
-			res = this.storageManager.getVariableValue(operandToken.tokenStr);
-			if (res == null)
-			{
+			STEntry resultEntry = this.scanner.symbolTable.getSymbol(operandToken.tokenStr);
+			if (resultEntry == null)
 				return null;
-			}
+			
+			res = this.callStack.get(resultEntry.environmentVector).storageManager.getVariableValue(operandToken.tokenStr);
+			
 			while ( res instanceof ResultTuple || res instanceof ResultList )
 			{
 				if (res instanceof ResultTuple)
