@@ -11,7 +11,8 @@ import java.util.HashMap;
  * @author ckw273
  *
  */
-public class StorageManager {
+public class StorageManager implements Cloneable
+{
 
 	HashMap <String, ResultValue> varTable = new HashMap<String, ResultValue>();
 	
@@ -24,7 +25,9 @@ public class StorageManager {
 	 */
 	public ResultValue getVariableValue(String varString)
 	{
-		return varTable.get(varString);
+		ResultValue res = varTable.get(varString);
+
+		return res;
 	}
 	
 	/**
@@ -37,5 +40,12 @@ public class StorageManager {
 	public void putVariableValue(String varString, ResultValue value)
 	{
 		varTable.put(varString, value);
+	}
+
+	public StorageManager Clone()
+	{
+		StorageManager newStorageManager = new StorageManager();
+		newStorageManager.varTable = (HashMap<String, ResultValue>) this.varTable.clone();
+		return newStorageManager;
 	}
 }

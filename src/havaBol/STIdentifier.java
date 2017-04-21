@@ -1,7 +1,7 @@
 package havaBol;
 
-public class STIdentifier extends STEntry {
-	
+public class STIdentifier extends STEntry 
+{
 	/*declaration type
 	 *  1: Non primitive (struct)
 	 * 	2: int
@@ -10,15 +10,10 @@ public class STIdentifier extends STEntry {
 	 *  5: Bool
 	 *  6: Date
 	 */
-	int valueType;
+	String type;
+	
 	String valueString;
 	
-	/* data structure
-	 *  1: primitive
-	 *  2: fixed array
-	 *  3: unbounded array
-	 */
-	int structureType;
 	
 	/* parameter type
 	 * 	1: not a parm
@@ -29,20 +24,14 @@ public class STIdentifier extends STEntry {
 	
 	//non-local base address ref
 	int nonLocal;
-	
-	public ResultValue value;
-	
-	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal )
-	{
 		
-		super(symbol, Token.OPERAND, 0);
+	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal, int environmentVector)
+	{
+		super(symbol, Token.OPERAND, Token.IDENTIFIER, environmentVector);
 
 		this.valueString = valueString;
 		this.structureType = structureType;
 		this.referenceType = referenceType;
 		this.nonLocal = nonlocal;
 	}
-	
-	
-	
 }

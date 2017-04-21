@@ -1,5 +1,7 @@
 package havaBol;
 
+import java.util.ArrayList;
+
 public class Utility {
 	
 	public static boolean isNumeric(Parser parser, ResultValue value) throws ParserException
@@ -65,31 +67,41 @@ public class Utility {
 	public static void assign(Parser parser, ResultValue target, ResultValue value) throws ParserException 
 	{
 		ResultValue tempRes;
+		if (target instanceof ResultList && value instanceof ResultList) // array to array assignment
+		{
+			target.set(parser, value);
+			return;
+		}
+		if (target instanceof ResultTuple && value instanceof ResultTuple)
+		{
+			target.set(parser, value);
+			return;
+		}
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
-			target.internalValue = value.internalValue;
+			target.set(parser, value);
 			return;
 		}
 		switch (target.type)
 		{
 		case (Type.INT):
 			tempRes = coerceToInt(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.FLOAT):
 			tempRes = coerceToFloat(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.STRING):
-			target.internalValue = value.internalValue; // If its a string we don't care
+			target.set(parser, value); // If its a string we don't care
 			break;
 		case (Type.BOOL):
 			tempRes = coerceToBool(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		case (Type.DATE):
 			tempRes = coerceToDate(parser, value);
-			target.internalValue = tempRes.internalValue;
+			target.set(parser, tempRes);
 			break;
 		default: // Not a known type
 			break;
@@ -101,6 +113,21 @@ public class Utility {
 		}
 	}
 
+	/**
+	 * Handles converting to string type.
+	 * <p>
+	 * All types are coercible into strings so this simply creates a new object and returns it.
+	 * @param parser
+	 * @param resultValue
+	 * @return
+	 */
+	private static ResultValue coerceToString(Parser parser, ResultValue resultValue)
+	{
+		ResultValue res = new ResultValue(Type.STRING);
+		res.internalValue = resultValue.internalValue;
+		return res;
+	}
+	
 	/**
 	 * NOT IMPLEMENTED
 	 * <p>
@@ -888,6 +915,9 @@ public class Utility {
 		case ">":
 			res = Utility.greaterThan(parser, operandOne, operandTwo);
 			break;
+		case "#":
+			res = Utility.concat(parser, operandOne, operandTwo);
+			break;
 		case "<=":
 			res = Utility.lessThanEqalTo(parser, operandOne, operandTwo);
 			break;
@@ -908,8 +938,8 @@ public class Utility {
 			break;
 			
 			
-		case "in": // TODO NOT YET IMPLEMENTED
-		case "notin":
+		case "IN": // TODO NOT YET IMPLEMENTED
+		case "NOTIN":
 			throw new ParserException(parser.scanner.lineNumber
 					, "NOT YET IMPLEMENTED"
 					, parser.scanner.sourceFileName);
@@ -1004,6 +1034,77 @@ public class Utility {
 				+ target.type + " has value " 
 				+ result.internalValue);
 	}
+	
+	public static ResultValue coerceToType(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
+	{
+		switch (typeStr)
+		{
+		case Type.BOOL:
+			return Utility.coerceToBool(parser, resultValue);
+		case Type.FLOAT:
+			return Utility.coerceToFloat(parser, resultValue);
+		case Type.INT:
+			return Utility.coerceToInt(parser, resultValue);
+		case Type.STRING:
+			return Utility.coerceToString(parser, resultValue);
+		case Type.DATE:
+			return Utility.coerceToDate(parser, resultValue);
+		default:
+			return Utility.copyTuple(parser, typeStr, resultValue);
+		}
+	}
+	
+	private static ResultValue copyTuple(Parser parser, String typeStr, ResultValue resultValue) throws ParserException 
+	{
+		
+		if (!resultValue.type.equals(typeStr))
+		{
+			throw new ParserException(parser.scanner.lineNumber
+					, "Can not convert from \'" + resultValue.type + "\'" + " to \'" + typeStr + "\'"
+					, parser.scanner.sourceFileName);
+		}
+		
+		return resultValue.Clone();
+	}
+
+	public static String insertString(String oldString, int index, String insert)
+	{
+		int end;
+		if(index+insert.length() > oldString.length())
+			end = oldString.length();
+		else
+			end = index+insert.length();
+		
+		StringBuilder newString = new StringBuilder(oldString);
+		newString = newString.replace(index, end, insert);
+		
+		return newString.toString();
+	}
+	
+	public static String getStringIndex(String target, int index)
+	{
+		return Character.toString(target.charAt(index));
+	}
+
+	public static boolean isPrimitiveType(Token typeToken) {
+		switch (typeToken.tokenStr)
+		{
+		case Type.BOOL:
+			return true;
+		case Type.FLOAT:
+			return true;
+		case Type.INT:
+			return true;
+		case Type.STRING:
+			return true;
+		case Type.DATE:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+
 	
 	
 }

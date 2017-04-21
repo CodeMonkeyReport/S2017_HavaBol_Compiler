@@ -10,10 +10,9 @@ package havaBol;
 public class Type {
 
 	// Variable structure types
-	public static final int PRIMITIVE = 0;
-	public static final int ARRAY_FIXED = 1;
-	public static final int ARRAY_UNBOUNDED = 2;
-	public static final int STRUCT = 3; // May never be implemented
+	public static final int SCALAR = 0;
+	public static final int ARRAY = 1;
+	public static final int TUPLE = 2; // May never be implemented
 	
 	// Primitive variable value types
 	public static final String INT = "Int";
@@ -21,9 +20,16 @@ public class Type {
 	public static final String STRING = "String";
 	public static final String BOOL = "Bool";
 	public static final String DATE = "Date";
+	public static final String VOID = "Void";
 	
 	// Variable reference type
 	public static final int VALUE = 1;
 	public static final int REFERENCE = 2;
 	
+	public static final int LOCAL = 0;
+	public static final int NON_LOCAL = 1;
+	
+	// Array types 
+	public static final int ARRAY_UNBOUNDED = Integer.MAX_VALUE;
+	public static final int ARRAY_BOUNDED = -1;
 }

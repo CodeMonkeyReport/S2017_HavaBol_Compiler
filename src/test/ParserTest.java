@@ -16,6 +16,7 @@ public class ParserTest {
 	{
 		// Set up the inital 'file' to be read
 		String testInput = "Int i;";
+		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
 		SymbolTable st = new SymbolTable();
@@ -68,6 +69,35 @@ public class ParserTest {
 	}
 	
 	@Test
+	public void canInitilizeValuesFromExpressions()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int i = 5*21;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable and assign to it
+			parser.declareStmt(true);
+
+			parser.assignmentStmt(true);
+			
+			assertEquals("105", storageManager.getVariableValue("i").internalValue);
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
 	public void canReadSimpleExpressions()
 	{
 		// Set up the inital 'file' to be read
@@ -86,7 +116,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("5", res.internalValue);
 			
@@ -115,7 +145,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("8", res.internalValue);
 			
@@ -145,7 +175,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("15", res.internalValue);
 			
@@ -174,7 +204,7 @@ public class ParserTest {
 			
 			// current token is now on 5, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("2", res.internalValue);
 			
@@ -203,7 +233,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("5", res.internalValue);
 			
@@ -232,7 +262,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("70", res.internalValue);
 			
@@ -261,7 +291,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("-6", res.internalValue);
 			
@@ -290,7 +320,7 @@ public class ParserTest {
 			
 			// current token is now on 10, read the expression
 			String terminatingString = ";";
-			ResultValue res = parser.expression(terminatingString, terminatingString);
+			ResultValue res = parser.expression(terminatingString);
 			
 			assertEquals("79", res.internalValue);
 			
@@ -388,7 +418,6 @@ public class ParserTest {
 			assertTrue("Unable to read input stream", false);
 		}
 	}
-	
 	
 	@Test
 	public void canPerformArithmeticOnVariablesWithUnaryMinus()
@@ -718,7 +747,7 @@ public class ParserTest {
 	}
 	
 	@Test
-	public void canDeclareIntArray()
+	public void canDeclareIntArrayWithConstant()
 	{
 		// Set up the inital 'file' to be read
 		String testInput = "Int a[5];";
@@ -740,6 +769,211 @@ public class ParserTest {
 			
 			//***
 		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canDeclareIntArrayWithUnbound()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[unbounded];";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("a"));
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canDeclareIntArrayWithInitilization()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[] = 5, 4, 6;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("a"));
+			
+			ResultList resList = (ResultList)storageManager.getVariableValue("a");
+			assertEquals("5", resList.get(parser, 0).internalValue);
+			assertEquals("4", resList.get(parser, 1).internalValue);
+			assertEquals("6", resList.get(parser, 2).internalValue);
+			
+			
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+
+	@Test
+	public void canDeclareIntArrayWithScalarInitilization()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[3] = 5;";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("a"));
+
+			ResultList resList = (ResultList)storageManager.getVariableValue("a");
+			assertEquals("5", resList.get(parser, 0).internalValue);
+			assertEquals("5", resList.get(parser, 1).internalValue);
+			assertEquals("5", resList.get(parser, 2).internalValue);
+
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canTakeArraySubAsSource()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[3] = 5;\n"
+						 + "Int x = a[1];\n";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			testScanner.getNext();
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("x"));
+
+			ResultValue res = storageManager.getVariableValue("x");
+
+			assertEquals("5", res.getInternalValue());
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+
+	@Test
+	public void canTakeArraySubAsSourceInComplexExpression()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[3] = 5;\n"
+						 + "Int x = a[1] * 5 - (12 - a[2]);\n";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			testScanner.getNext();
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("x"));
+
+			ResultValue res = storageManager.getVariableValue("x");
+
+			assertEquals("18", res.getInternalValue());
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue("Unable to read input stream", false);
+		}
+	}
+	
+	@Test
+	public void canTakeArraySubAsDestinationInAssignment()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int a[3] = 5;\n"
+						 + "a[0] = a[1] * 5 - (12 - a[2]);\n"
+						 + "Int x = a[0];\n";
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			testScanner.getNext(); // Read a single token
+			
+			// current token is now on Int, declare the variable
+			parser.declareStmt(true);
+			testScanner.getNext();
+			parser.assignmentStmt(true);
+			testScanner.getNext();
+			
+			parser.declareStmt(true);
+			parser.assignmentStmt(true);
+			
+			assertNotNull(storageManager.getVariableValue("x"));
+
+			ResultValue res = storageManager.getVariableValue("x");
+
+			assertEquals("18", res.getInternalValue());
+			//***
+		} catch (Exception e) {
+			e.printStackTrace();
 			assertTrue("Unable to read input stream", false);
 		}
 	}
