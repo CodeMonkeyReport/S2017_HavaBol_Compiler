@@ -276,8 +276,6 @@ public class Parser {
 			case "ELEM":
 				res = functionElem(bExecuting);
 				break;
-			case "MAXLENGTH":
-				res = functionMaxLength(bExecuting);
 			case "MAXELEM":
 				res = functionMaxElem(bExecuting);
 				break;
@@ -790,60 +788,6 @@ public class Parser {
 		return res;
 	}
 	
-	/*
-	 * Handles the string maxLength builtin function
-	 * <p>
-	 * on entering the method the currentToken should be on 'SPACES'
-	 * on leaving the method the current token should be on ';'
-	 * <p>
-	 *
-	 * @param bExecuting
-	 * @return INT - The declared length of the string
-	 * @throws ParserException
-	 */
-	private ResultValue functionMaxLength(boolean bExecuting) throws ParserException
-	{
-		ResultValue arg;
-		ResultValue res = new ResultValue(Type.INT);
-		
-		
-		if(bExecuting == false)
-		{
-			scanner.skipTo(";");
-		}
-		
-		scanner.getNext();
-		
-		if(!scanner.currentToken.tokenStr.equals("("))
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \'(\' after SPACES"
-					, scanner.sourceFileName);
-		
-		scanner.getNext();
-		
-		arg = expression(")");
-		
-		if(arg.type != Type.STRING)
-		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Arguement not of type String"
-					, scanner.sourceFileName);
-		}
-		
-		
-		scanner.getNext();
-		if(!scanner.currentToken.tokenStr.equals(";"))
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Expected \')\' after SPACES argument"
-					, scanner.sourceFileName);
-		
-		//current token should now be ;
-		scanner.getNext();
-		
-		res.internalValue = Integer.toString(arg.internalValue.length());
-		
-		return res;
-	}
 
 	/**
 	 * Handles the print builtin function
