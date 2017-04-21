@@ -8,9 +8,9 @@ public class STTuple extends STEntry implements Cloneable
 
 	HashMap <String, STEntry> memberHash = new HashMap<String, STEntry>();
 	String type;
-	public STTuple(String symbol, int primClassif, int subClassif, int structureType) 
+	public STTuple(String symbol, int primClassif, int subClassif, int structureType, int environmentVector) 
 	{
-		super(symbol, primClassif, subClassif);
+		super(symbol, primClassif, subClassif, environmentVector);
 		this.structureType = structureType;
 		this.type = symbol;
 	}
@@ -31,7 +31,7 @@ public class STTuple extends STEntry implements Cloneable
 	}
 
 	public STTuple Clone() {
-		STTuple newTuple = new STTuple(this.type, this.primClassif, this.subClassif, this.structureType);
+		STTuple newTuple = new STTuple(this.type, this.primClassif, this.subClassif, this.structureType, this.environmentVector);
 		newTuple.memberHash = (HashMap<String, STEntry>) this.memberHash.clone();
 		newTuple.declaredSize = this.declaredSize;
 		newTuple.symbol = this.symbol;

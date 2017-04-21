@@ -20,6 +20,7 @@ public class Type {
 	public static final String STRING = "String";
 	public static final String BOOL = "Bool";
 	public static final String DATE = "Date";
+	public static final String VOID = "Void";
 	
 	// Variable reference type
 	public static final int VALUE = 1;

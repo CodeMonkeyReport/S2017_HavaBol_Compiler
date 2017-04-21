@@ -25,9 +25,9 @@ public class STIdentifier extends STEntry
 	//non-local base address ref
 	int nonLocal;
 		
-	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal )
+	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal, int environmentVector)
 	{
-		super(symbol, Token.OPERAND, Token.IDENTIFIER);
+		super(symbol, Token.OPERAND, Token.IDENTIFIER, environmentVector);
 
 		this.valueString = valueString;
 		this.structureType = structureType;
