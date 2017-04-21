@@ -89,7 +89,7 @@ public class Parser {
 						{
 							return res; // If we hit a return statement inside of a function we want to return all the way out
 						}
-						else if (!res.terminatingStr.equals("endif")) // TODO could also be a return statment that got us here
+						else if (!res.terminatingStr.equals("endif"))
 						{
 							throw new ParserException(scanner.currentToken.iSourceLineNr
 									, "Expected \'endif\' after \'if\' statement"
@@ -295,7 +295,7 @@ public class Parser {
 	}
 	
 	/**
-	 * This function hadles the calling of a user defined function TODO not yet implemented
+	 * This function hadles the calling of a user defined function
 	 * <p>
 	 * On entering the method the currentToken should be on the function's identifier token.
 	 * On exiting the method the currentToken should be on the token following ')' i.e one token after the end of the parameter list.
@@ -391,7 +391,9 @@ public class Parser {
 		this.popActivationRecord();
 		
 		// return result if there was a return statement
-		if (res.terminatingStr.equals("return"))
+		if (res == null)
+			return null;
+		else if (res.terminatingStr.equals("return"))
 			return res;
 		return null;
 	}
@@ -501,7 +503,7 @@ public class Parser {
 	}
 	
 	/**
-	 * This method handles the declaration of a new function. TODO working on this
+	 * This method handles the declaration of a new function.
 	 * <p>
 	 * On entering the method the currentToken should be on 'func'
 	 * On exiting the method the currentToken should be on 'endfunc'
@@ -584,8 +586,8 @@ public class Parser {
 				, paramCount );
 		
 		statements(false); // Skip over everything else
-		scanner.getNext(); // Skip 'endfunc'
 		this.scanner.symbolTable.putSymbol(functionSymbol.symbol, functionSymbol);
+		scanner.getNext(); // Skip 'endfunc'
 	}
 
 	/**
@@ -1251,7 +1253,6 @@ public class Parser {
 	public void declareStmt(boolean bExecuting) throws ParserException 
 	{
 		Token typeToken;
-		STEntry typeEntry;
 		Token variableToken;
 		STEntry variableIdentifier;
 		ResultValue variableValue = null;
@@ -1356,7 +1357,6 @@ public class Parser {
 		Token variableToken;
 		STIdentifier newIdentifier;
 		STTuple newTuple;
-		int type = Type.SCALAR;
 		
 		if (bExecuting == false)
 		{
@@ -1729,7 +1729,6 @@ public class Parser {
 		StackToken popped, sToken;
 		
 		int expected = Token.OPERAND; // The type of term we are expecting next
-		boolean bFound = false; // Used to see if we found a lparen when evaluating a rparen.
 		boolean bOperatorFound = false;
 		
 		while(!scanner.currentToken.tokenStr.equals(expectedTerminator) 
