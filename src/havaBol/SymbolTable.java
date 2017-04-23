@@ -41,6 +41,7 @@ public class SymbolTable implements Cloneable
 	    globalST.put("for", new STControl("for",Token.FLOW, 0));
 	    globalST.put("while", new STControl("while",Token.FLOW, 0));
 	    globalST.put("return", new STControl("return",Token.FLOW, 0));
+	    globalST.put("Ref", new STControl("Ref",Token.FLOW, 0));
 
 	    
 	    globalST.put("endif", new STControl("endif",Token.END, 0));
@@ -85,8 +86,6 @@ public class SymbolTable implements Cloneable
 
 		globalST.put("T", new STEntry("T", Token.OPERAND, Token.BOOLEAN, 0));
 	    globalST.put("F", new STEntry("F", Token.OPERAND, Token.BOOLEAN, 0));
-
-
 
 	}
 

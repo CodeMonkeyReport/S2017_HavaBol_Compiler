@@ -102,6 +102,10 @@ public class Parser {
 					}
 					if (temp.tokenStr.equals("for"))
 						res = forStmt(bExecuting);
+					if (temp.tokenStr.equals("Ref")) // Reference assignment
+					{
+						referenceAssignment(bExecuting);
+					}
 					break;
 				case Token.END:
 					if (temp.tokenStr.equals("else"))
@@ -307,31 +311,31 @@ public class Parser {
 	{	
 		if (bExecuting == false)
 		{
-			if (scanner.nextToken.tokenStr.equals("("))
-			{
-				argList(")");
-				return null;
-			}
-			else
-			{
-				scanner.getNext();
-				return null;
-			}
+			scanner.skipTo(";");
+			return null;
 		}
-		
+		STEntry functionEntry;
 		STFunction functionSymbol;
+		STReference functionReference;
 		Token functionToken;
 		ResultValue res;
 		
 		// Get the functions Token and STEntry
 		functionToken = scanner.currentToken;
-		functionSymbol = (STFunction) this.scanner.symbolTable.getSymbol(functionToken.tokenStr);
+		functionEntry = this.scanner.symbolTable.getSymbol(functionToken.tokenStr);
 		
-		scanner.getNext(); // Move past function and on to the '(' TODO FUNCTION POINTERS WILL NEED TO BE IMPLEMENTED HERE
+		if (functionEntry instanceof STReference) // Dereference the item if its a reference
+			functionEntry = ((STReference) functionEntry).referencedSymbol;
+
+		if (functionEntry == null)
+			return null;
 		
-		res = functionCall(functionToken, functionSymbol);
+		scanner.getNext(); // Move past function and on to the '('
 		
-		return res;
+		if (functionEntry instanceof STFunction) // if its a function call it
+			return functionCall(functionToken, (STFunction)functionEntry);
+		
+		return null;
 	}
 
 	/**
@@ -356,12 +360,13 @@ public class Parser {
 		StorageManager newStorageManager = new StorageManager(); // Storage manager is brand new
 		ActivationRecord record = new ActivationRecord(newTable, newStorageManager);
 		
-		this.pushActivationRecord(record);
 		scanner.getNext();
 		
 		parameterList = argList(")");
 		// Save off position
 		returnPositionToken = scanner.currentToken;
+		
+		this.pushActivationRecord(record); // Push the activation record after evaluating parameters
 		
 		if (parameterList.size() != functionSymbol.parmList.size())
 			throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -511,12 +516,13 @@ public class Parser {
 	 * @param bExecuting
 	 * @throws ParserException 
 	 */
-	private void defineFunction(boolean bExecuting) throws ParserException 
+	private void defineFunction(boolean bExecuting) throws ParserException
 	{
 		Token returnTypeToken;
 		Token functionNameToken;
 		ArrayList<STEntry> paramList = new ArrayList<STEntry>();
 		STFunction functionSymbol;
+		STReference functionReference;
 		int paramCount = 0;
 		if (bExecuting == false) // Maybe put this inside lower level methods
 		{
@@ -525,6 +531,20 @@ public class Parser {
 			return; // Skip to the control end somehow?
 		}
 		scanner.getNext(); // Skip 'func' token, current token should now be on the new function return type
+		
+		if (scanner.currentToken.tokenStr.equals("Ref"))
+		{
+			scanner.getNext(); // Move past Ref
+			functionNameToken = scanner.currentToken;
+			functionReference = new STReference(functionNameToken.tokenStr
+					, Token.FUNCTION
+					, Token.USER
+					, this.environmentVector);
+			functionReference.type = "func";
+			scanner.getNext(); // move past identifier token
+			this.scanner.symbolTable.putSymbol(functionReference.symbol, functionReference);
+			return;
+		}
 		
 		if (scanner.currentToken.primClassif != Token.CONTROL || scanner.currentToken.subClassif != Token.DECLARE)
 			throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -567,6 +587,11 @@ public class Parser {
 				paramList.add(declareIdentifier(bExecuting));
 				
 				scanner.getNext(); // Skip the identifier
+				if (scanner.currentToken.tokenStr.equals("[")) // if it's an array move past the '[' and ']'
+				{
+					scanner.getNext();
+					scanner.getNext();					
+				}
 			}
 			this.environmentVector--; // reduce the environment vector again to reset the state
 			
@@ -631,6 +656,32 @@ public class Parser {
 		while (scanner.currentToken.subClassif != Token.END)
 		{
 			STEntry member;
+			if (scanner.nextToken.tokenStr.equals("Ref")) // Could be a reference type TODO working here
+			{
+				Token typeToken = scanner.currentToken;
+				scanner.getNext();
+				scanner.getNext(); // Move to the member name
+				
+				Token memberToken = scanner.currentToken;
+				STReference memberReference;
+				memberToken = scanner.currentToken;
+				if (typeToken.tokenStr.equals("func"))
+				{
+					memberToken.primClassif = Token.FUNCTION;
+					memberToken.subClassif = Token.USER;
+				}
+				
+				memberReference = new STReference(memberToken.tokenStr
+						, memberToken.primClassif
+						, memberToken.subClassif
+						, this.environmentVector);
+				
+				memberReference.type = typeToken.tokenStr;
+				scanner.getNext(); // move past identifier token
+				tupleIdentifier.addMember(memberReference);
+				scanner.getNext();
+				continue;
+			}
 			// expect to see a type and identifier followed by semicolon
 			if (scanner.currentToken.primClassif != Token.CONTROL && scanner.currentToken.subClassif != Token.DECLARE)
 				throw new ParserException(scanner.currentToken.iSourceLineNr
@@ -1014,7 +1065,8 @@ public class Parser {
                 max = Integer.parseInt(limitVal.getInternalValue());
                 incr = Integer.parseInt(incrVal.getInternalValue());
 
-                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < max; i += incr) {
+                for (int i = Integer.parseInt(controlVal.getInternalValue()); i < max; i += incr) 
+                {
                     scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
                     controlVal.internalValue = String.valueOf(i);   //Control value is updated on every iteration
                     res = statements(true);             //Evaluate statements in for loop
@@ -1230,10 +1282,28 @@ public class Parser {
 	{
 		ArrayList<ResultValue> resultArray = new ArrayList<ResultValue>();
 		
-		resultArray.add(expression(expectedTerminator));
+		if (scanner.currentToken.tokenStr.equals("Ref"))
+		{
+			scanner.getNext();
+			resultArray.add(evaluateOperand(scanner.currentToken));
+			scanner.getNext();
+		}
+		else
+		{
+			resultArray.add(expression(expectedTerminator));				
+		}
 		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.getNext().equals("") )
 		{
-			resultArray.add(expression(expectedTerminator));
+			if (scanner.currentToken.tokenStr.equals("Ref"))
+			{
+				scanner.getNext();
+				resultArray.add(evaluateOperand(scanner.currentToken));
+				scanner.getNext();
+			}
+			else
+			{
+				resultArray.add(expression(expectedTerminator));				
+			}
 		}
 		return resultArray;
 	}
@@ -1250,7 +1320,7 @@ public class Parser {
 	 * @throws ParserException 
 	 * 
 	 */
-	public void declareStmt(boolean bExecuting) throws ParserException 
+	public void declareStmt(boolean bExecuting) throws ParserException
 	{
 		Token typeToken;
 		Token variableToken;
@@ -1267,6 +1337,11 @@ public class Parser {
 		variableToken = scanner.nextToken;
 				
 		variableIdentifier = declareIdentifier(bExecuting);
+		
+		if (variableToken.tokenStr.equals("Ref")) // This is a reference
+		{
+			variableToken = scanner.currentToken; // update current token
+		}
 		
 		scanner.symbolTable.putSymbol(variableToken.tokenStr, variableIdentifier);
 		
@@ -1339,6 +1414,16 @@ public class Parser {
 			}
 			// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
 			
+			/*                             Reference type                                     */
+			// v v v --------------------------------------------------------------------- v v v
+			else if (member instanceof STReference) // Declare a reference as part of this tuple
+			{
+				// Get the type, make tokens, pass them
+				ResultReference ref = new ResultReference(((STReference) member).type);
+				ref.referencedEntry = new STReference(member.symbol, member.primClassif, member.subClassif, this.environmentVector);
+				result.addMember(identifierString, ref);
+			}
+			// ^ ^ ^ --------------------------------------------------------------------- ^ ^ ^
 		}
 		
 		return result;
@@ -1357,11 +1442,28 @@ public class Parser {
 		Token variableToken;
 		STIdentifier newIdentifier;
 		STTuple newTuple;
+		STReference newReference;
 		
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
 			return null;
+		}
+		
+		typeToken = scanner.currentToken;
+		variableToken = scanner.nextToken;
+
+		if (variableToken.tokenStr.equals("Ref"))
+		{
+			scanner.getNext(); // Move past Ref
+			variableToken = scanner.nextToken;
+			newReference = new STReference(variableToken.tokenStr
+					, variableToken.primClassif
+					, variableToken.subClassif
+					, this.environmentVector);
+			newReference.type = typeToken.tokenStr;
+			scanner.getNext(); // move past identifier token
+			return newReference;
 		}
 		
 		if (scanner.nextToken.primClassif != Token.OPERAND && scanner.nextToken.subClassif != Token.IDENTIFIER) // If the next token is not an identifier
@@ -1370,11 +1472,10 @@ public class Parser {
 					, "Declaration of non identifier: " + scanner.nextToken.tokenStr
 					, scanner.sourceFileName);
 		}
-
-		typeToken = scanner.currentToken;
-		variableToken = scanner.nextToken;
 		
 		scanner.getNext(); // Move past the type declaration, should now be on variable
+		
+		
 		if (Utility.isPrimitiveType(typeToken))
 		{
 			
@@ -1399,7 +1500,7 @@ public class Parser {
 						, this.environmentVector);
 				newIdentifier.type = typeToken.tokenStr;
 			}
-			
+			newIdentifier.environmentVector = this.environmentVector;
 			return newIdentifier;
 		}
 		else
@@ -1408,6 +1509,7 @@ public class Parser {
 			newTuple.symbol = variableToken.tokenStr;
 			newTuple.primClassif = Token.OPERAND;
 			newTuple.subClassif = Token.IDENTIFIER;
+			newTuple.environmentVector = this.environmentVector;
 			
 			if (scanner.nextToken.tokenStr.equals("["))
 			{
@@ -1575,7 +1677,7 @@ public class Parser {
 	 */
 	public ResultValue assignmentStmt(boolean bExecuting) throws ParserException
 	{
-		
+		ResultValue res;
 		if (bExecuting == false)
 		{
 			scanner.skipTo(";");
@@ -1595,9 +1697,17 @@ public class Parser {
 		
 		if (targetResult == null)
 		{
-			throw new ParserException(scanner.currentToken.iSourceLineNr
-					, "Undeclared identifier: \'" + targetToken.tokenStr + "\'"
-					, scanner.sourceFileName);
+			if (scanner.symbolTable.getSymbol(targetToken.tokenStr) != null)
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Assigning to empty reference \'" 
+								+ targetToken.tokenStr 
+								+ "\' "
+								+ "reference assignment requires \'Ref\' keyword before token"
+						, scanner.sourceFileName);
+			else
+				throw new ParserException(scanner.currentToken.iSourceLineNr
+						, "Undeclared identifier: \'" + targetToken.tokenStr + "\'"
+						, scanner.sourceFileName);
 		}
 		
 		if (targetResult.type.equals(Type.STRING) && scanner.currentToken.tokenStr.equals("["))
@@ -1682,6 +1792,80 @@ public class Parser {
 		return targetResult;
 	}
 	
+	/**
+	 * This method handles reference assignments
+	 * <p>
+	 * On entering the method the currentToken should be on 'Ref'
+	 * On leaving the method the currentToken should be on ';'
+	 * <p>
+	 * The only expected form for this type of assignment is 'Ref' 'symbol' '=' 'symbol'
+	 * @param bExecuting
+	 * @return
+	 * @throws ParserException 
+	 */
+	private void referenceAssignment(boolean bExecuting) throws ParserException 
+	{
+		STReference targetReference;
+		STEntry targetEntry;
+		STEntry valueEntry;
+		if (!bExecuting)
+		{
+			scanner.skipTo(";");
+			return;
+		}
+		scanner.getNext();
+		targetEntry = scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr);
+		
+		if (targetEntry instanceof STTuple)
+		{
+			STTuple resTuple = (STTuple)targetEntry;
+			if (scanner.nextToken.tokenStr.equals(".")) // Check if we need to grab a member
+			{
+				scanner.getNext();
+				scanner.getNext(); // Move past the . and onto the member token
+				
+				targetEntry = resTuple.getMember(scanner.currentToken.tokenStr);
+				
+				if (targetEntry == null)
+					throw new ParserException(scanner.currentToken.iSourceLineNr
+							, resTuple.type + " tuple \'" + resTuple.symbol + "\' has no member named \'" + scanner.currentToken.tokenStr + "\'"
+							, scanner.sourceFileName);
+				
+				ResultReference targetReferenceMember = (ResultReference)((ResultTuple)this.callStack
+															.get(resTuple.environmentVector)
+															.storageManager
+															.getVariableValue(resTuple.symbol))
+															.getMember(targetEntry.symbol); // EWW!!
+				targetEntry = targetReferenceMember.referencedEntry;
+			}
+		}
+		
+		if (! (targetEntry instanceof STReference)) // Make sure its a reference type
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Can not assign reference value to non reference symbol \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		}
+		targetReference = (STReference)targetEntry;
+		
+		scanner.getNext(); // Move past target token
+		
+		if (!scanner.currentToken.tokenStr.equals("=")) // expect to see an '=' here
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Expected \'=\' in variable reference assignment, found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		
+		scanner.getNext(); // Move past the '='
+		
+		valueEntry = scanner.symbolTable.getSymbol(scanner.currentToken.tokenStr);
+		if (valueEntry == null)
+			throw new ParserException(scanner.currentToken.iSourceLineNr
+					, "Symbol not found \'" + scanner.currentToken.tokenStr + "\'"
+					, scanner.sourceFileName);
+		
+		targetReference.referencedSymbol = valueEntry; // Hook up the reference // TODO problems with function calls overwriting the reference?
+	}
+
 	private ResultValue stringIndexAssignment(ResultValue target) throws ParserException
 	{
 		scanner.getNext();//get rid of [
@@ -1746,6 +1930,8 @@ public class Parser {
 	
 				tempRes01 = this.evaluateOperand(scanner.currentToken);
 				
+				
+				
 				if (tempRes01 == null)
 					throw new ParserException(scanner.currentToken.iSourceLineNr
 							, "Unknown operand \'" + scanner.currentToken.tokenStr + "\' in expression"
@@ -1756,12 +1942,12 @@ public class Parser {
 					scanner.getNext();
 					tempRes01 = stringIndex(tempRes01);
 				}
-				outputStack.push(tempRes01);
+				outputStack.push(tempRes01.Clone());
 				expected = Token.OPERATOR;
 				break;
 			case Token.FUNCTION:
 				tempRes01 = functionStmt(true);
-				outputStack.push(tempRes01);
+				outputStack.push(tempRes01.Clone());
 				expected = Token.OPERATOR;
 				break;
 			case Token.OPERATOR:
@@ -1911,7 +2097,17 @@ public class Parser {
 			if (resultEntry == null)
 				return null;
 			
-			res = this.callStack.get(resultEntry.environmentVector).storageManager.getVariableValue(operandToken.tokenStr);
+			if (resultEntry instanceof STReference) // Dereference the item if its a reference
+				resultEntry = ((STReference) resultEntry).referencedSymbol;
+
+			if (resultEntry == null)
+				return null;
+			
+			if (resultEntry instanceof STFunction) // if its a function call it
+				return functionCall(operandToken, (STFunction)resultEntry);
+			
+			// Fetch from storage manager
+			res = this.callStack.get(resultEntry.environmentVector).storageManager.getVariableValue(resultEntry.symbol);
 			
 			while ( res instanceof ResultTuple || res instanceof ResultList )
 			{
@@ -1929,6 +2125,19 @@ public class Parser {
 							throw new ParserException(scanner.currentToken.iSourceLineNr
 									, resTuple.type + " tuple \'" + operandToken.tokenStr + "\' has no member named \'" + scanner.currentToken.tokenStr + "\'"
 									, scanner.sourceFileName);
+						
+						if (res instanceof ResultReference)
+						{
+							ResultValue tempRes = this.callStack.get(((ResultReference) res)
+									.referencedEntry.environmentVector)
+									.storageManager.getVariableValue(((ResultReference) res)
+											.referencedEntry.referencedSymbol
+											.symbol);
+							if (tempRes == null)
+								return res.Clone();
+							else 
+								res = tempRes;
+						}
 					}
 					else 
 						break;
