@@ -1,6 +1,6 @@
 package havaBol;
 
-public class ResultList extends ResultValue 
+public class ResultList extends ResultValue implements Cloneable
 {
 
 	ResultValue internalValueList[]; // For array types we need a list of values
@@ -135,5 +135,17 @@ public class ResultList extends ResultValue
 			this.defaultValue.internalValue = newValue.internalValue;
 			this.iCurrentSize = size;
 		}
+	}
+	
+	public ResultValue Clone()
+	{
+		ResultList res = new ResultList(this.defaultValue.Clone(), this.iMaxSize);
+		res.iCurrentSize = this.iCurrentSize;
+		res.internalValueList = this.internalValueList.clone();
+		res.internalValue = this.internalValue;
+		res.structure = this.structure;
+		res.terminatingStr = this.terminatingStr;
+		
+		return res;
 	}
 }

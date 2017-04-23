@@ -1,0 +1,17 @@
+print("p5Reference.txt");
+
+Int Ref b;
+Int a;
+
+a = 12;
+
+Ref b = a;
+
+print(b);
+print(a);
+
+b = 15;
+
+print(b);
+print(a);
+

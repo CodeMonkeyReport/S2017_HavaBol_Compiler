@@ -1,0 +1,115 @@
+
+tuple Student:
+	Float gpa;
+	String name;
+	String major;
+endtuple;
+
+// Function definitions *************************************************
+
+func Student newStudent(Float gpa, String name, String major):
+	Student student;
+	student.gpa = gpa;
+	student.name = name;
+	student.major = major;
+	return student;
+endfunc;
+
+func Void printStudent(Student student):
+	print(student.gpa, " ", student.name, " ", student.major);
+endfunc;
+
+func Void printBetterStudent(Student studentOne, Student studentTwo):
+	if studentOne.gpa > studentTwo.gpa:
+		printStudent(studentOne);
+	else:
+		printStudent(studentTwo);
+	endif;
+endfunc;
+
+func Void printBestStudent(Student studentM[]):
+	Int iBestIndex = 0;
+	for Int i = 0 to ELEM(studentM) by 1:
+		if studentM[i].gpa > studentM[iBestIndex].gpa:
+			iBestIndex = i;
+		endif;
+	endfor;
+	printStudent(studentM[iBestIndex]);
+endfunc;
+
+func Int referenceExample(Int a, Int b, Int c):
+	a = b + c;
+	return a;
+endfunc;
+
+// Function definitions *************************************************
+		
+print("p5Function.txt");
+print("******** Tuple testing ********");
+Student myStudent = newStudent(4.0, 'Bob Ross', 'ART');
+
+Student anotherStudent = newStudent(3.5, 'Steve Jobs', 'CS');
+
+Student thirdStudent = newStudent(3.2, 'What A Scrub', 'BS');
+
+Student student4 = newStudent(4.0, 'The Best Around', 'ALL');
+
+Student studentCopy = student4;
+Student studentSoftCopy;
+
+studentSoftCopy.gpa = student4.gpa;
+studentSoftCopy.name = student4.name;
+studentSoftCopy.major = student4.major;
+
+printStudent(myStudent);
+
+print("These should be the same");
+printStudent(student4);
+printStudent(studentCopy);
+
+printBetterStudent(myStudent, anotherStudent);
+
+myStudent.gpa = 2.0;
+
+print("Changed Bob's GPA to 2.0");
+
+printStudent(myStudent);
+
+printBetterStudent(myStudent, anotherStudent);
+
+print("******** Array testing ********");
+
+Student studentsArray[] = anotherStudent, myStudent, student4, thirdStudent;
+
+printBestStudent(studentsArray);
+
+studentsArray[2].gpa = 1.0;
+
+print("Changed the best student");
+
+printBestStudent(studentsArray);
+
+print("Did changing student4 change the copy?");
+printStudent(studentCopy);
+printStudent(studentSoftCopy);
+
+print("We changed the element in the array, so the original should be different");
+
+printStudent(student4); // Assignment into array saves off the reference, so the original is changed.
+
+print("******** Sideffects ********");
+
+Int i;
+Int a = 2;
+Int b = 4;
+Int c = 6;
+
+i = a + referenceExample(a, b, c);
+
+print("What is the result after this strange function?");
+print("a is: ", a, " i is: ", i);
+
+i = a + referenceExample(Ref a, b, c);
+
+print("How about now?");
+print("a is: ", a, " i is: ", i);

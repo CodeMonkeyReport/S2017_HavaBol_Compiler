@@ -77,6 +77,20 @@ public class Utility {
 			target.set(parser, value);
 			return;
 		}
+		if (target instanceof ResultReference)
+		{
+			target = parser.callStack.get(((ResultReference) target).referencedEntry.environmentVector)
+							.storageManager.getVariableValue(((ResultReference) target).referencedEntry.referencedSymbol.symbol);
+			if (target == null)
+				return;
+		}
+		if (value instanceof ResultReference)
+		{
+			value = parser.callStack.get(((ResultReference) value).referencedEntry.environmentVector)
+							.storageManager.getVariableValue(((ResultReference) value).referencedEntry.referencedSymbol.symbol);
+			if (value == null)
+				return;
+		}
 		if (target.type.equals(value.type)) // If the types are the same assignment is simple
 		{
 			target.set(parser, value);

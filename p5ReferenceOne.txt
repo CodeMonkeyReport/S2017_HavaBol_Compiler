@@ -1,0 +1,20 @@
+print("p5ReferenceOne.txt");
+
+Int Ref b;
+Int a;
+
+a = 12;
+
+
+print("******** Reference types ********");
+Ref b = a;
+print("b and a now refer to the same thing");
+print("b is: ", b);
+print("a is: ", a);
+
+b = 15;
+
+print("Changed b, now a should be 15");
+print("b is: ", b);
+print("a is: ", a);
+
