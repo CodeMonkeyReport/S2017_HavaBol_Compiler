@@ -1,0 +1,67 @@
+
+tuple Student:
+	Float gpa;
+	String name;
+	String major;
+endtuple;
+
+tuple Node:
+	Student student;
+	Node Ref next;
+endtuple;
+
+// Function definitions *************************************************
+
+func Student newStudent(Float gpa, String name, String major):
+	Student student;
+	student.gpa = gpa;
+	student.name = name;
+	student.major = major;
+	return student;
+endfunc;
+
+func Void printStudent(Student student):
+	print(student.gpa, " ", student.name, " ", student.major);
+endfunc;
+
+func Void printBetterStudent(Student studentOne, Student studentTwo):
+	if studentOne.gpa > studentTwo.gpa:
+		printStudent(studentOne);
+	else:
+		printStudent(studentTwo);
+	endif;
+endfunc;
+
+func Void printBestStudent(Student studentM[]):
+	Int iBestIndex = 0;
+	for Int i = 0 to ELEM(studentM) by 1:
+		if studentM[i].gpa > studentM[iBestIndex].gpa:
+			iBestIndex = i;
+		endif;
+	endfor;
+	printStudent(studentM[iBestIndex]);
+endfunc;
+
+func Int referenceExample(Int a, Int b, Int c):
+	a = b + c;
+	return a;
+endfunc;
+
+// Function definitions *************************************************
+
+func Ref myFuncReference;
+
+Ref myFuncReference = printStudent;
+
+print("p5ReferenceTwo.txt");
+
+Student anotherStudent = newStudent(3.5, 'Steve Jobs', 'CS');
+
+Student thirdStudent = newStudent(3.2, 'What A Scrub', 'BS');
+
+Student student4 = newStudent(4.0, 'The Best Around', 'ALL');
+
+print("******** Printing from a function pointer ********");
+
+myFuncReference(anotherStudent);
+
