@@ -92,7 +92,7 @@ public class ReferenceTest
 			SymbolTable st = new SymbolTable();
 			StorageManager storageManager = new StorageManager();
 			try {
-				Scanner testScanner = new Scanner("TEST", br, st);
+				Scanner testScanner = new Scanner("p5ReferenceThree.txt", br, st);
 				Parser parser = new Parser(testScanner, storageManager);
 				
 				// Use this area to run tests	
@@ -109,4 +109,33 @@ public class ReferenceTest
 			assertTrue(false);
 		}
 	}
+	
+//	@Test
+//	public void largeScaleReferenceTestFour()
+//	{
+//		FileReader testReader;
+//		try {
+//			// Set up the inital 'file' to be read
+//			testReader = new FileReader("p5ReferenceFour.txt");
+//			BufferedReader br = new BufferedReader(testReader);
+//			SymbolTable st = new SymbolTable();
+//			StorageManager storageManager = new StorageManager();
+//			try {
+//				Scanner testScanner = new Scanner("p5ReferenceFour.txt", br, st);
+//				Parser parser = new Parser(testScanner, storageManager);
+//				
+//				// Use this area to run tests	
+//				parser.statements(true);
+//				
+//				//***
+//			} catch (Exception e) {
+//				System.out.println(e.toString());
+//				e.printStackTrace();
+//				assertTrue(false);
+//			}
+//		} catch (FileNotFoundException e1) {
+//			e1.printStackTrace();
+//			assertTrue(false);
+//		}
+//	}
 }

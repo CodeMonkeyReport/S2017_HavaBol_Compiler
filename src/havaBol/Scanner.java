@@ -11,7 +11,7 @@ public class Scanner {
 
 	public Token currentToken;
 	public Token nextToken;
-	//private BufferedReader file;
+	// private BufferedReader file;
 	private List<String> file;
 	public SymbolTable symbolTable;
 
@@ -20,23 +20,24 @@ public class Scanner {
 	public int lineNumber;
 	public String sourceFileName;
 
-
-    /**
-	 * Constructor for the havaBol.Scanner object for use in reading HavaBol source code.
-	 * Local line number information will be initialized to 1
+	/**
+	 * Constructor for the havaBol.Scanner object for use in reading HavaBol
+	 * source code. Local line number information will be initialized to 1
 	 * <p>
 	 *
-	 * @param path - Path to the HavaBol source code we are scanning in
-	 * @param symbolTable - SymbolTable object used to store symbols and keywords
-	 * @throws IOException - If the file is not found or is not in a readable format throw an IOException
+	 * @param path
+	 *            - Path to the HavaBol source code we are scanning in
+	 * @param symbolTable
+	 *            - SymbolTable object used to store symbols and keywords
+	 * @throws IOException
+	 *             - If the file is not found or is not in a readable format
+	 *             throw an IOException
 	 */
-	public Scanner(String path, BufferedReader reader, SymbolTable symbolTable) throws Exception 
-	{
-		//FileReader reader = new FileReader(path);
+	public Scanner(String path, BufferedReader reader, SymbolTable symbolTable) throws Exception {
+		// FileReader reader = new FileReader(path);
 		String tmpLine = reader.readLine();
 		this.file = new ArrayList<String>();
-		while (tmpLine != null)
-		{
+		while (tmpLine != null) {
 			this.file.add(tmpLine);
 			tmpLine = reader.readLine();
 		}
@@ -46,61 +47,53 @@ public class Scanner {
 		this.currentToken = new Token();
 		this.nextToken = new Token();
 
-		
 		this.lineNumber = 0;
 		this.linePosition = 0; // reset position
-		
-        String line = this.readLine();
+
+		String line = this.readLine();
 		this.currentLine = line.toCharArray();
-		//System.out.printf(" %d %s\n", this.lineNumber, line);
+		// System.out.printf(" %d %s\n", this.lineNumber, line);
 		getNext(); // Read the first token into next
 		this.currentToken.tokenStr = "PROGRAM_START";
 	}
-	
-	public void skipTo(String target) throws ParserException
-	{
-		while (!this.currentToken.tokenStr.equals(target))
-		{
+
+	public void skipTo(String target) throws ParserException {
+		while (!this.currentToken.tokenStr.equals(target)) {
 			if (this.getNext().equals(""))
-					throw new ParserException(this.currentToken.iSourceLineNr
-							, "Error missing \'" + target + "\'"
-							, this.sourceFileName);
+				throw new ParserException(this.currentToken.iSourceLineNr, "Error missing \'" + target + "\'",
+						this.sourceFileName);
 		}
 	}
 
-	public void jumpToPosition(int lineNumber, int linePosition) throws ParserException
-	{
+	public void jumpToPosition(int lineNumber, int linePosition) throws ParserException {
 		// Read the line
 		String line;
-		this.lineNumber = lineNumber-1;
+		this.lineNumber = lineNumber - 1;
 		this.linePosition = linePosition;
 		line = this.readLine();
-		if (line == null)
-		{
+		if (line == null) {
 			// Out of bounds error
 			return;
 		}
-        this.currentLine = line.toCharArray();
-        this.getNext(); // Read the current token
-        this.getNext(); // and the next
+		this.currentLine = line.toCharArray();
+		this.getNext(); // Read the current token
+		this.getNext(); // and the next
 	}
-	
-	private String readLine()
-	{
+
+	private String readLine() {
 		String tmpLine;
 		this.lineNumber++;
 		try {
-			tmpLine = file.get(this.lineNumber-1);
-		} catch (IndexOutOfBoundsException e)
-		{
+			tmpLine = file.get(this.lineNumber - 1);
+		} catch (IndexOutOfBoundsException e) {
 			return null;
 		}
 		return tmpLine;
 	}
-	
+
 	/**
-	 * Populates the public currentToken property with the appropriate token information and
-	 * returns the Token's tokenString value
+	 * Populates the public currentToken property with the appropriate token
+	 * information and returns the Token's tokenString value
 	 * <p>
 	 *
 	 * @return a String representation of the token
@@ -114,17 +107,15 @@ public class Scanner {
 		int tokenEnd;
 
 		// Skip white space
-		while (currentLine.length == this.linePosition || currentLine[linePosition] == '\t' || currentLine[linePosition] == ' ')
-		{
+		while (currentLine.length == this.linePosition || currentLine[linePosition] == '\t'
+				|| currentLine[linePosition] == ' ') {
 			// If we have reached the end of the line
-			if (currentLine.length == this.linePosition)
-			{
+			if (currentLine.length == this.linePosition) {
 				// Read the next line
 				String line;
 
 				line = this.readLine();
-				if (line == null)
-				{
+				if (line == null) {
 					// EOF
 					nextToken.primClassif = Token.EOF;
 					nextToken.tokenStr = "";
@@ -132,31 +123,28 @@ public class Scanner {
 					nextToken.iSourceLineNr = this.lineNumber;
 					return currentToken.tokenStr;
 				}
-                this.currentLine = line.toCharArray();
+				this.currentLine = line.toCharArray();
 				this.linePosition = 0;
-				//System.out.printf(" %d %s\n", this.lineNumber, line);
-			}
-			else
-			{
+				// System.out.printf(" %d %s\n", this.lineNumber, line);
+			} else {
 				this.linePosition++;
 			}
 		}
 		tokenStart = linePosition;
 		// Find the next delimiter
-		while (!delimiters.contains(Character.toString(currentLine[linePosition]))) 
-		{
+		while (!delimiters.contains(Character.toString(currentLine[linePosition]))) {
 			this.linePosition++;
-			
-			if(this.linePosition == currentLine.length)
-			    break;
+
+			if (this.linePosition == currentLine.length)
+				break;
 		}
 		tokenEnd = linePosition;
 
-		// get the classf and subClassf for the token using starting and ending position
+		// get the classf and subClassf for the token using starting and ending
+		// position
 		classify(tokenStart, tokenEnd);
-		
-		if(Parser.bShowToken)
-		{
+
+		if (Parser.bShowToken) {
 			currentToken.printToken();
 		}
 
@@ -168,8 +156,10 @@ public class Scanner {
 	 * on the string found within tokenStart and tokenEnd on the currentLine
 	 * <p>
 	 *
-	 * @param tokenStart - Beginning index of the token
-	 * @param tokenEnd - Ending index of the token
+	 * @param tokenStart
+	 *            - Beginning index of the token
+	 * @param tokenEnd
+	 *            - Ending index of the token
 	 * @throws Exception
 	 */
 	private void classify(int tokenStart, int tokenEnd) throws ParserException {
@@ -177,21 +167,17 @@ public class Scanner {
 		this.nextToken.iSourceLineNr = this.lineNumber;
 		this.nextToken.iColPos = tokenStart;
 
-
-		if (Character.isAlphabetic(currentLine[tokenStart]))
-		{
+		if (Character.isAlphabetic(currentLine[tokenStart])) {
 			// identifier
 			classifyIdentifier(tokenStart, tokenEnd);
 		}
 
-		if (Character.isDigit(currentLine[tokenStart]))
-		{
+		if (Character.isDigit(currentLine[tokenStart])) {
 			// numeric constant
 			classifyNumericConstant(tokenStart, tokenEnd);
 		}
 
-		if (tokenStart == tokenEnd)
-		{
+		if (tokenStart == tokenEnd) {
 			// operator or separator
 			classifySpecialCharacter(tokenStart, tokenEnd);
 		}
@@ -199,68 +185,67 @@ public class Scanner {
 	}
 
 	/**
-	 * Helper method to the classify method used to set values for a numeric constant
+	 * Helper method to the classify method used to set values for a numeric
+	 * constant
 	 * <p>
-	 * @param tokenStart - Beginning index of the token
-	 * @param tokenEnd - Ending index of the token
+	 * 
+	 * @param tokenStart
+	 *            - Beginning index of the token
+	 * @param tokenEnd
+	 *            - Ending index of the token
 	 * @throws NumberFormatException
 	 */
-	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException
-	{
+	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException {
 		if (this.currentLine[tokenEnd] == '.') // Handle a . inside numeric
 		{
 			tokenEnd++;
-			while (!delimiters.contains(Character.toString(currentLine[tokenEnd])))
-			{
+			while (!delimiters.contains(Character.toString(currentLine[tokenEnd]))) {
 				tokenEnd++;
 				if (tokenEnd == currentLine.length)
-				    break;
+					break;
 			}
 			this.linePosition = tokenEnd;
 		}
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 
 		// For floating point values
-		if (token.contains("."))
-		{
-			try
-			{
+		if (token.contains(".")) {
+			try {
 				Double.parseDouble(token);
 				this.nextToken.primClassif = Token.OPERAND;
 				this.nextToken.subClassif = Token.FLOAT;
 				this.nextToken.tokenStr = token;
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				error("Could not parse floating point token %s at position %d", token, tokenStart);
 			}
 		}
 		// For integer values
-		else
-		{
-			try
-			{
+		else {
+			try {
 
 				Integer.parseInt(token);
 				this.nextToken.primClassif = Token.OPERAND;
 				this.nextToken.subClassif = Token.INTEGER;
 				this.nextToken.tokenStr = token;
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				error("Could not parse integer token %s at position %d", token, tokenStart);
 			}
 		}
 	}
 
 	/**
-	 * Helper method to the classify method used to set values for a numeric constant
+	 * Helper method to the classify method used to set values for a numeric
+	 * constant
 	 * <p>
-	 * This function will need to be updated to use the SymbolTable for classifications
-	 * Currently classifications are not working, Identifier subClassif not working correctly.
-	 * classification of new functions and identifiers not working correctly.
-	 * @param tokenStart - Beginning index of the token
-	 * @param tokenEnd - Ending index of the token
+	 * This function will need to be updated to use the SymbolTable for
+	 * classifications Currently classifications are not working, Identifier
+	 * subClassif not working correctly. classification of new functions and
+	 * identifiers not working correctly.
+	 * 
+	 * @param tokenStart
+	 *            - Beginning index of the token
+	 * @param tokenEnd
+	 *            - Ending index of the token
 	 */
 	private void classifyIdentifier(int tokenStart, int tokenEnd) {
 
@@ -269,50 +254,42 @@ public class Scanner {
 		STControl foundControl;
 		STFunction foundFunction;
 		STIdentifier foundIdentifier;
-		
+
 		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart);
 		found = symbolTable.getSymbol(token);
-		if (found != null)
-		{
+		if (found != null) {
 			// set classifications based on resulting values from stEntry
-			if (found instanceof STControl)
-			{
+			if (found instanceof STControl) {
 				foundControl = (STControl) found;
 				this.nextToken.primClassif = foundControl.primClassif;
 				this.nextToken.subClassif = foundControl.subClassif;
 				this.nextToken.tokenStr = token;
 			}
-			if (found instanceof STFunction)
-			{
+			if (found instanceof STFunction) {
 				foundFunction = (STFunction) found;
 				this.nextToken.primClassif = foundFunction.primClassif;
 				this.nextToken.subClassif = foundFunction.definedBy;
 				this.nextToken.tokenStr = token;
 			}
-			if (found instanceof STIdentifier)
-			{
+			if (found instanceof STIdentifier) {
 				foundIdentifier = (STIdentifier) found;
 				this.nextToken.primClassif = foundIdentifier.primClassif;
 				this.nextToken.subClassif = Token.IDENTIFIER;
 				this.nextToken.tokenStr = token;
 			}
-			if (found instanceof STTuple)
-			{
+			if (found instanceof STTuple) {
 				foundTuple = (STTuple) found;
 				this.nextToken.primClassif = foundTuple.primClassif;
 				this.nextToken.subClassif = foundTuple.subClassif;
 				this.nextToken.tokenStr = token;
-			}
-			else
-			{
+			} else {
 				this.nextToken.primClassif = found.primClassif;
 				this.nextToken.subClassif = found.subClassif;
 				this.nextToken.tokenStr = token;
 			}
 		}
 		// ELSE st.putSymbol(TOKEN) add the token as an identifier to ST
-		else 
-		{
+		else {
 			this.nextToken.primClassif = Token.OPERAND;
 			this.nextToken.subClassif = Token.IDENTIFIER;
 			this.nextToken.tokenStr = token;
@@ -320,104 +297,108 @@ public class Scanner {
 	}
 
 	/**
-	 * Helper method to the classify method used to set values for a special characters
+	 * Helper method to the classify method used to set values for a special
+	 * characters
 	 * <p>
-	 * Also handles skipping comments and combination of two character operators.
+	 * Also handles skipping comments and combination of two character
+	 * operators.
 	 * <p>
-	 * @param tokenStart - Beginning index of the token
-	 * @param tokenEnd - Ending index of the token
+	 * 
+	 * @param tokenStart
+	 *            - Beginning index of the token
+	 * @param tokenEnd
+	 *            - Ending index of the token
 	 * @throws Exception
 	 */
 	private void classifySpecialCharacter(int tokenStart, int tokenEnd) throws ParserException {
 
-		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart+1);
+		String token = new String(currentLine, tokenStart, tokenEnd - tokenStart + 1);
 		this.linePosition++;
-		switch (currentLine[tokenStart])
-		{
-			case '/':
-				if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '/'))
-				{
-					String line;
+		switch (currentLine[tokenStart]) {
+		case '/':
+			if ((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart + 1] == '/')) {
+				String line;
 
-					line = this.readLine();
-					if (line == null)
-					{
-						// EOF
-						nextToken.primClassif = Token.EOF;
-						nextToken.tokenStr = "";
-						if(tokenStart+2 == currentLine.length)
-						{
-							this.linePosition++;
-							nextToken = currentToken;
-							getNext();
-						}
-						break;
+				line = this.readLine();
+				if (line == null) {
+					// EOF
+					nextToken.primClassif = Token.EOF;
+					nextToken.tokenStr = "";
+					if (tokenStart + 2 == currentLine.length) {
+						this.linePosition++;
+						nextToken = currentToken;
+						getNext();
 					}
-					this.currentLine = line.toCharArray();
-					this.linePosition = 0;
-					nextToken = currentToken;
-					getNext();
 					break;
 				}
-			case '+':
-            case '-':
-			case '<':
-			case '>':
-			case '!':
-			case '=':
-			case '*':
-			case '#':
-                if((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart+1] == '='))
-                {
-                    nextToken.tokenStr = String.valueOf(currentLine, tokenStart, 2);
-                    this.nextToken.primClassif = Token.OPERATOR;
-                    this.nextToken.subClassif = 0;
-                    linePosition++;
-                    break;
-                }
-			case '^':
-				// All above symbols are operators
+				this.currentLine = line.toCharArray();
+				this.linePosition = 0;
+				nextToken = currentToken;
+				getNext();
+				break;
+			}
+		case '+':
+		case '-':
+		case '<':
+		case '>':
+		case '!':
+		case '=':
+		case '*':
+		case '#':
+			if ((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart + 1] == '=')) {
+				nextToken.tokenStr = String.valueOf(currentLine, tokenStart, 2);
 				this.nextToken.primClassif = Token.OPERATOR;
 				this.nextToken.subClassif = 0;
-				this.nextToken.tokenStr = token;
+				linePosition++;
 				break;
-			case '(':
-			case ')':
-			case ':':
-			case ';':
-			case '[':
-			case ']':
-			case ',':
-			case '.':
-				// All above symbols are separators
-				this.nextToken.primClassif = Token.SEPARATOR;
-				this.nextToken.subClassif = 0;
-				this.nextToken.tokenStr = token;
-				break;
-			case '\'':
-			case '\"':
-				// Above symbols are used for string constants
-				readStringConstant(tokenStart);
-				break;
-			default:
-				error("Could not read symbol %c at position %d", currentLine[tokenStart], tokenStart);
+			}
+		case '^':
+			// All above symbols are operators
+			this.nextToken.primClassif = Token.OPERATOR;
+			this.nextToken.subClassif = 0;
+			this.nextToken.tokenStr = token;
+			break;
+		case '(':
+		case ')':
+		case ':':
+		case ';':
+		case '[':
+		case ']':
+		case ',':
+		case '.':
+			// All above symbols are separators
+			this.nextToken.primClassif = Token.SEPARATOR;
+			this.nextToken.subClassif = 0;
+			this.nextToken.tokenStr = token;
+			break;
+		case '\'':
+		case '\"':
+			// Above symbols are used for string constants
+			readStringConstant(tokenStart);
+			break;
+		default:
+			error("Could not read symbol %c at position %d", currentLine[tokenStart], tokenStart);
 		}
 	}
 
 	/**
 	 * Helper method used to complete the reading of a string constant.
 	 * <p>
-	 * Also handles escape characters and replaces them with the correct byte codes.
+	 * Also handles escape characters and replaces them with the correct byte
+	 * codes.
 	 * <p>
-	 * @param tokenStart - Beginning of the string
-	 * @throws Exception - Custom exception in case of a format error
+	 * 
+	 * @param tokenStart
+	 *            - Beginning of the string
+	 * @throws Exception
+	 *             - Custom exception in case of a format error
 	 */
 	private void readStringConstant(int tokenStart) throws ParserException {
 
-		int tokenEnd = tokenStart+1;
+		int tokenEnd = tokenStart + 1;
 		// While we are still within a valid string constant
-		while (currentLine[tokenStart] != currentLine[tokenEnd] || (currentLine[tokenEnd-1] == '\\' && currentLine[tokenEnd-2] != '\\'))
-		{
+		while (currentLine[tokenStart] != currentLine[tokenEnd]
+				|| (currentLine[tokenEnd - 1] == '\\' && currentLine[tokenEnd - 2] != '\\')) {
 			tokenEnd++;
 			// If we have gone past the end of the line
 			if (tokenEnd >= currentLine.length)
@@ -425,72 +406,66 @@ public class Scanner {
 
 		}
 
-		String token = new String(currentLine, tokenStart+1, tokenEnd - tokenStart - 1);
+		String token = new String(currentLine, tokenStart + 1, tokenEnd - tokenStart - 1);
 		char[] retCharM = new char[token.length()];
 		int charPosition = 0;
-        for (int i = 0; i < token.length(); i++) {
-            char c = token.charAt(i);
-            if(c == '\\'){
-                switch (token.charAt(i+1))
-                {
-                    case '"':
-                        retCharM[charPosition] = '"';
-                        break;
-                    case '\'':
-                        retCharM[charPosition] = '\'';
-                        break;
-                    case '\\':
-                        retCharM[charPosition] = '\\';
-                        break;
-                    case 'n':
-                        retCharM[charPosition] = 0x0A;
-                        break;
-                    case 't':
-                        retCharM[charPosition] = 0x09;
-                        break;
-                    case 'a':
-                        retCharM[charPosition] = 0x07;
-                        break;
-                    default:
-                        error("Unknown escape value:\"%c%c\"", c,token.charAt(i+1));
-                }
-                charPosition++;
-                if(i < token.length())
-                {
-                    i++;
-                }
-            }
-            else
-            {
-                retCharM[charPosition] = c;
-                charPosition++;
-            }
-        }
-        this.linePosition = tokenEnd+1;
+		for (int i = 0; i < token.length(); i++) {
+			char c = token.charAt(i);
+			if (c == '\\') {
+				switch (token.charAt(i + 1)) {
+				case '"':
+					retCharM[charPosition] = '"';
+					break;
+				case '\'':
+					retCharM[charPosition] = '\'';
+					break;
+				case '\\':
+					retCharM[charPosition] = '\\';
+					break;
+				case 'n':
+					retCharM[charPosition] = 0x0A;
+					break;
+				case 't':
+					retCharM[charPosition] = 0x09;
+					break;
+				case 'a':
+					retCharM[charPosition] = 0x07;
+					break;
+				default:
+					error("Unknown escape value:\"%c%c\"", c, token.charAt(i + 1));
+				}
+				charPosition++;
+				if (i < token.length()) {
+					i++;
+				}
+			} else {
+				retCharM[charPosition] = c;
+				charPosition++;
+			}
+		}
+		this.linePosition = tokenEnd + 1;
 		this.nextToken.primClassif = Token.OPERAND;
 		this.nextToken.subClassif = Token.STRING;
-		this.nextToken.tokenStr = String.valueOf(retCharM,0,charPosition);
+		this.nextToken.tokenStr = String.valueOf(retCharM, 0, charPosition);
 	}
 
 	/**
-	 * Error method used to print appropriate messages to the user in the case of syntax errors.
+	 * Error method used to print appropriate messages to the user in the case
+	 * of syntax errors.
 	 * <p>
-	 * @param fmt - Format string
-	 * @param varArgs - Any number of arguments used by the format string to print the error message
-	 * @throws Exception - Once the error has been generated throw a custom ParserException with the correct string representation
+	 * 
+	 * @param fmt
+	 *            - Format string
+	 * @param varArgs
+	 *            - Any number of arguments used by the format string to print
+	 *            the error message
+	 * @throws Exception
+	 *             - Once the error has been generated throw a custom
+	 *             ParserException with the correct string representation
 	 */
-	public void error(String fmt, Object... varArgs) throws ParserException
-	{
+	public void error(String fmt, Object... varArgs) throws ParserException {
 		String diagnosticTxt = String.format(fmt, varArgs);
-		throw new ParserException(this.lineNumber
-				, diagnosticTxt
-				, this.sourceFileName);
+		throw new ParserException(this.lineNumber, diagnosticTxt, this.sourceFileName);
 	}
 
-
-
-
-
 }
-
-

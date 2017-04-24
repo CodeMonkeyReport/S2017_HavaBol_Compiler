@@ -113,3 +113,18 @@ i = a + referenceExample(Ref a, b, c);
 
 print("How about now?");
 print("a is: ", a, " i is: ", i);
+
+a = 2;
+b = 4;
+c = 6;
+
+i = referenceExample(a, b, c) + a;
+
+print("What if we add the term after the function call?");
+print("a is: ", a, " i is: ", i);
+
+i = referenceExample(Ref a, b, c) + a;
+
+print("The value of 'a' is changed before its evaluated here so 'i' should be changed");
+print("a is: ", a, " i is: ", i);
+

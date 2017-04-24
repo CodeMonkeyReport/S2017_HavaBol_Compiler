@@ -1,0 +1,118 @@
+
+
+tuple Student:
+	Float gpa;
+	String name;
+	String major;
+endtuple;
+
+tuple Node:
+	Student student;
+	Node Ref next;
+endtuple;
+
+tuple LinkedList:
+	Node head;
+	Int size;
+endtuple;
+
+func LinkedList newList():
+	LinkedList list;
+	list.size = 0;
+	return list;
+endfunc;
+
+func Void printStudent(Student student):
+	print(student.gpa, " ", student.name, " ", student.major);
+endfunc;
+
+func Void insertLinkedList(LinkedList list, Student newStudent):
+	Node Ref pNode;
+	Node New;
+	Node placeholder;
+	New.next = placeholder;
+	
+	New.student = newStudent;
+	if list.size == 0:
+		list.head = New;
+		list.size = 1;
+		return 0;
+	endif;
+	
+	Ref pNode = list.head;
+	Int i = 0;
+	
+	while i < list.size:
+		Ref pNode = pNode.next;
+		printStudent(pNode.student);
+		i += 1;
+	endwhile;
+	
+	list.size += 1;
+	pNode.next = New;
+endfunc;
+
+func Void printLinkedList(LinkedList list):
+	Node pNode;
+	pNode = list.head;
+	Int i = 0;
+	while i < list.size:
+		Ref pNode = pNode.next;
+		i += 1;
+	endwhile;
+endfunc;
+
+func Student newStudent(Float gpa, String name, String major):
+	Student student;
+	student.gpa = gpa;
+	student.name = name;
+	student.major = major;
+	return student;
+endfunc;
+
+print("p5Reference4.txt");
+print("******** Linked list stuff ********");
+
+LinkedList list = newList();
+
+Student student1 = newStudent(3.5, 'Steve Jobs', 'CS');
+
+Student student2 = newStudent(3.2, 'What A Scrub', 'BS');
+
+Student student3 = newStudent(4.0, 'The Best Around', 'ALL');
+
+insertLinkedList(list, student1);
+insertLinkedList(list, student2);
+insertLinkedList(list, student3);
+
+print("list has size: ", list.size);
+
+printStudent(list.head.student);
+
+Node pNode = list.head;
+
+Int i = 0;
+while i < list.size:
+	printStudent(pNode.student);
+	pNode = pNode.next;
+	i += 1;
+endwhile;
+
+//printLinkedList(list);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

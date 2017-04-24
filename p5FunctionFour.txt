@@ -1,0 +1,74 @@
+
+tuple Student:
+	Float gpa;
+	String name;
+	String major;
+endtuple;
+
+// Function definitions *************************************************
+
+func Student newStudent(Float gpa, String name, String major):
+	Student student;
+	student.gpa = gpa;
+	student.name = name;
+	student.major = major;
+	return student;
+endfunc;
+
+func Void printStudent(Student student):
+	print(student.gpa, " ", student.name, " ", student.major);
+endfunc;
+
+func Void printBetterStudent(Student studentOne, Student studentTwo):
+	if studentOne.gpa > studentTwo.gpa:
+		printStudent(studentOne);
+	else:
+		printStudent(studentTwo);
+	endif;
+endfunc;
+
+func Void printBestStudent(Student studentM[]):
+	Int iBestIndex = 0;
+	for Int i = 0 to ELEM(studentM) by 1:
+		if studentM[i].gpa > studentM[iBestIndex].gpa:
+			iBestIndex = i;
+		endif;
+	endfor;
+	printStudent(studentM[iBestIndex]);
+endfunc;
+
+func Student[] getStudentArray():
+	
+	Student student1 = newStudent(3.5, 'Steve Jobs', 'CS');
+	Student student2 = newStudent(3.2, 'What A Scrub', 'BS');
+	Student student3 = newStudent(4.0, 'The Best Around', 'ALL');
+	
+	Student studentM[] = student1, student2, student3;
+	
+	return studentM;
+endfunc;
+
+func Student getBestStudent(Student studentM[]):
+	Int iBestIndex = 0;
+	for Int i = 0 to ELEM(studentM) by 1:
+		if studentM[i].gpa > studentM[iBestIndex].gpa:
+			iBestIndex = i;
+		endif;
+	endfor;
+	return studentM[iBestIndex];
+endfunc;
+
+Student student1 = newStudent(3.5, 'Steve Jobs', 'CS');
+
+Student student2 = newStudent(3.2, 'What A Scrub', 'BS');
+
+Student student3 = newStudent(4.0, 'The Best Around', 'ALL');
+
+Student studentM[] = getStudentArray();
+
+print("******** Printing an array returned from a function ********");
+
+printStudent(studentM[0]);
+printStudent(studentM[1]);
+printStudent(studentM[2]);
+

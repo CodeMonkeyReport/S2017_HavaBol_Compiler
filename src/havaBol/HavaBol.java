@@ -20,27 +20,21 @@ package havaBol;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
-public class HavaBol
-{
-    public static void main(String[] args) 
-    {
-        // Create the SymbolTable
-        SymbolTable symbolTable = new SymbolTable();
-        try
-        {
-            
-            
-            // Used to abstract out the file reader
-            FileReader fr = new FileReader(args[0]);
-            BufferedReader br = new BufferedReader(fr);
-            Scanner scan = new Scanner(args[0], br, symbolTable);
-            StorageManager sm = new StorageManager();
-            Parser parser = new Parser(scan, sm);
-            parser.statements(true);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+public class HavaBol {
+	public static void main(String[] args) {
+		// Create the SymbolTable
+		SymbolTable symbolTable = new SymbolTable();
+		try {
+
+			// Used to abstract out the file reader
+			FileReader fr = new FileReader(args[0]);
+			BufferedReader br = new BufferedReader(fr);
+			Scanner scan = new Scanner(args[0], br, symbolTable);
+			StorageManager sm = new StorageManager();
+			Parser parser = new Parser(scan, sm);
+			parser.statements(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
