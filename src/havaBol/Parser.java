@@ -809,7 +809,6 @@ public class Parser {
 		ResultValue res = new ResultValue(Type.BOOL);
 		res.internalValue = "T";
 		
-		
 		if(bExecuting == false)
 		{
 			scanner.skipTo(";");
@@ -826,7 +825,6 @@ public class Parser {
 		
 		arg = expression(")");
 		
-		
 		//set res to False if string isn't empty
 		if(!arg.internalValue.isEmpty()){
 			Character c;
@@ -839,7 +837,6 @@ public class Parser {
 				}
 			}
 		}
-		
 		return res;
 	}
 	
@@ -908,7 +905,7 @@ public class Parser {
 	 * @param bExecuting
 	 * @throws ParserException
 	 */
-	private void functionPrint(boolean bExecuting) throws ParserException 
+	private void functionPrint(boolean bExecuting) throws ParserException
 	{
 		
 		if(bExecuting == false)
