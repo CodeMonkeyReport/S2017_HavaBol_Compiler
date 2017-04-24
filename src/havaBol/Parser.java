@@ -261,8 +261,6 @@ public class Parser {
 			case "ELEM":
 				res = functionElem(bExecuting);
 				break;
-			case "MAXLENGTH":
-				res = functionMaxLength(bExecuting);
 			case "MAXELEM":
 				res = functionMaxElem(bExecuting);
 				break;
@@ -817,7 +815,6 @@ public class Parser {
 		}
 		return res;
 	}
-
 	/*
 	 * Handles the string maxLength builtin function <p> on entering the method
 	 * the currentToken should be on 'SPACES' on leaving the method the current
