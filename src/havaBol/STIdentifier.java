@@ -1,32 +1,24 @@
 package havaBol;
 
-public class STIdentifier extends STEntry 
-{
-	/*declaration type
-	 *  1: Non primitive (struct)
-	 * 	2: int
-	 * 	3: float
-	 * 	4: String
-	 *  5: Bool
-	 *  6: Date
+public class STIdentifier extends STEntry {
+	/*
+	 * declaration type 1: Non primitive (struct) 2: int 3: float 4: String 5:
+	 * Bool 6: Date
 	 */
 	String type;
-	
+
 	String valueString;
-	
-	
-	/* parameter type
-	 * 	1: not a parm
-	 *  2: by reference
-	 *  3: by value
+
+	/*
+	 * parameter type 1: not a parm 2: by reference 3: by value
 	 */
 	int referenceType;
-	
-	//non-local base address ref
+
+	// non-local base address ref
 	int nonLocal;
-		
-	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal, int environmentVector)
-	{
+
+	public STIdentifier(String symbol, String valueString, int structureType, int referenceType, int nonlocal,
+			int environmentVector) {
 		super(symbol, Token.OPERAND, Token.IDENTIFIER, environmentVector);
 
 		this.valueString = valueString;
