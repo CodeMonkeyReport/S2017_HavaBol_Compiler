@@ -1922,9 +1922,12 @@ public class Parser {
 
 		int expected = Token.OPERAND; // The type of term we are expecting next
 		boolean bOperatorFound = false;
-
-		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(",")
-				&& !scanner.currentToken.tokenStr.equals(":") && !scanner.currentToken.tokenStr.equals(";")) // Until
+		//The added OR conditions are for the unique case where a string only contains a ",", ";", or a ":"
+		//This way they will be processed as strings not separators
+		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) 
+		        && (!scanner.currentToken.tokenStr.equals(",") || scanner.currentToken.primClassif == 1)
+			&& (!scanner.currentToken.tokenStr.equals(":") || scanner.currentToken.primClassif == 1)  
+		        && (!scanner.currentToken.tokenStr.equals(";") || scanner.currentToken.primClassif == 1)) // Until
 																												// we
 																												// reach
 																												// a
