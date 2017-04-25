@@ -724,18 +724,64 @@ public class Parser {
 	 * @return
 	 */
 	private ResultValue stringIndex(ResultValue target) throws ParserException {
+		ResultValue stringSlice = new ResultValue(Type.STRING);
+		ResultValue index;
+		
 		scanner.getNext();// Set rid of '['
-
-		ResultValue index = expression("]");
-		if (!index.type.equals(Type.INT)) {
-			throw new ParserException(scanner.currentToken.iSourceLineNr, "Index to String must be an Int ",
-					scanner.sourceFileName);
+		
+		int begin, end;
+		
+		
+		//slice begins with number, not spanner
+		if(scanner.currentToken.primClassif == Token.IDENTIFIER || scanner.currentToken.tokenStr.equals("("))
+		{
+			index = expression("]");
+			begin = Integer.parseInt(index.getInternalValue());
 		}
+		else if(scanner.currentToken.tokenStr.equals("~"))
+		{
+			begin = 0;
+			scanner.getNext();
+		}
+		else
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, 
+					  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+                     scanner.sourceFileName);
+		}
+		
+		if(scanner.currentToken.tokenStr.equals("]"))
+			end = begin+1;
+		else if(scanner.currentToken.primClassif == Token.IDENTIFIER)
+		{
+			index = expression("]");
+			end = Integer.parseInt(index.getInternalValue());
+		}
+		else if (scanner.currentToken.tokenStr.equals("~"))
+		{
+			scanner.getNext();
+			if(scanner.currentToken.tokenStr.equals("]"))
+			{
+				end = target.internalValue.length();
+			}
+			else//assume token is identifier
+			{
+				index = expression("]");
+				end = Integer.parseInt(index.getInternalValue());
+			}
+		}
+		else{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, 
+					  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+                   scanner.sourceFileName);
+		}
+		
+		
+		
+		
+		stringSlice.internalValue = Utility.getStringSlice(target.internalValue, begin, end);
 
-		ResultValue stringIndex = new ResultValue(Type.STRING);
-		stringIndex.internalValue = Utility.getStringIndex(target.internalValue, Integer.parseInt(index.internalValue));
-
-		return stringIndex;
+		return stringSlice;
 	}
 
 	/**
@@ -1924,13 +1970,15 @@ public class Parser {
 		boolean bOperatorFound = false;
 
 		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(",")
-				&& !scanner.currentToken.tokenStr.equals(":") && !scanner.currentToken.tokenStr.equals(";")) // Until
+				&& !scanner.currentToken.tokenStr.equals(":") && !scanner.currentToken.tokenStr.equals(";")
+				&& !scanner.currentToken.tokenStr.equals("~")) // Until
 																												// we
 																												// reach
 																												// a
 																												// semicolon,
 																												// colon,
-																												// comma
+																												// comma,
+																												// spanner
 																												// or
 																												// terminator
 		{
