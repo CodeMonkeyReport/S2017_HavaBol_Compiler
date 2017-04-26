@@ -50,7 +50,7 @@ public class SlicesTest {
 		}
 	}
 	
-	/*@Test
+	@Test
 	public void arraySliceAssignment()
 	{
 		// Set up the inital 'file' to be read
@@ -58,7 +58,8 @@ public class SlicesTest {
 						 + "Int th = 3;\n"
 						 + "String stg[5];\n"
 						 + "stg = str[th~];\n"
-						 + "String s = stg[0]";
+						 + "String s;\n"
+						 + "s = stg[0];\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -71,15 +72,13 @@ public class SlicesTest {
 			// Use this area to run tests	
 			parser.statements(true);
 
-			assertEquals("s", storageManager.getVariableValue("four").internalValue);
+			assertEquals("four", storageManager.getVariableValue("s").internalValue);
 			
-			
-			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
 			assertTrue(false);
 		}
-	}*/
+	}
 
 }

@@ -22,6 +22,8 @@ public class ArrayTest {
 	@Rule
 	public ExpectedException  expectedEx = ExpectedException.none();
 	
+
+	
 	@Test
 	public void simpleArrayDeclarationWithoutInitThrowsException() throws Exception
 	{

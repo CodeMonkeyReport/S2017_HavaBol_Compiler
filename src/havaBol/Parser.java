@@ -719,7 +719,8 @@ public class Parser {
 	}
 
 	/**
-	 * assume current token is on [
+	 * assume current token is [ upon entry
+	 * assume current token is ] upon exit
 	 * 
 	 * @return
 	 */
@@ -751,7 +752,9 @@ public class Parser {
 		}
 		
 		if(scanner.currentToken.tokenStr.equals("]"))
+		{
 			end = begin+1;
+		}
 		else if(scanner.currentToken.primClassif == Token.IDENTIFIER)
 		{
 			index = expression("]");
@@ -770,18 +773,103 @@ public class Parser {
 				end = Integer.parseInt(index.getInternalValue());
 			}
 		}
-		else{
+		else
+		{
 			throw new ParserException(scanner.currentToken.iSourceLineNr, 
 					  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
                    scanner.sourceFileName);
 		}
 		
-		
-		
-		
 		stringSlice.internalValue = Utility.getStringSlice(target.internalValue, begin, end);
-
 		return stringSlice;
+	}
+		
+		/**
+		 * assume current token is [ upon entry
+		 * assume current token is ] upon exit
+		 * 
+		 * @return
+		 */
+		private ResultValue arraySlice(ResultList oldArray) throws ParserException 
+		{
+			ResultValue index;
+			ResultValue result;
+			
+			scanner.getNext();// Set rid of '['
+			
+			int begin, end;
+			
+			
+			//slice begins with number, not spanner
+			if(scanner.currentToken.primClassif == Token.IDENTIFIER || scanner.currentToken.tokenStr.equals("(") || scanner.currentToken.tokenStr.equals("-"))
+			{
+				index = expression("]");
+				begin = Integer.parseInt(index.getInternalValue());
+			}
+			else if(scanner.currentToken.tokenStr.equals("~"))
+			{
+				begin = 0;
+				scanner.getNext();
+			}
+			else
+			{
+				throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+	                     scanner.sourceFileName);
+			}
+			
+			if(scanner.currentToken.tokenStr.equals("]"))
+				end = begin+1;
+			else if(scanner.currentToken.primClassif == Token.IDENTIFIER)
+			{
+				index = expression("]");
+				end = Integer.parseInt(index.getInternalValue());
+			}
+			else if (scanner.currentToken.tokenStr.equals("~"))
+			{
+				scanner.getNext();
+				if(scanner.currentToken.tokenStr.equals("]"))
+				{
+					end = oldArray.iCurrentSize;
+				}
+				else//assume token is identifier
+				{
+					index = expression("]");
+					end = Integer.parseInt(index.getInternalValue());
+				}
+			}
+			else{
+				throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+	                   scanner.sourceFileName);
+			}
+		
+		    int size = end-begin;
+		    
+		    /*if(size<1)
+		    {
+		    	throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Invalid array indexes",
+	                   scanner.sourceFileName);
+		    }*/
+		    
+		    if(size==1)
+		    {
+		    	return result = oldArray.get(this, begin);
+		    }
+		   
+		    result = new ResultList(oldArray.defaultValue, size);
+		    
+		    //System.out.println("begin = " + begin + "end " + end);
+		    
+		    int newIndex = 0;
+		    for(int i = begin; i<end; i++)
+		    {
+		    	((ResultList) result).insert(this, newIndex++, oldArray.get(this, i));
+		    	//System.out.println(i);
+		    }
+		    return (ResultValue)result;
+		    
 	}
 
 	/**
@@ -2219,10 +2307,11 @@ public class Parser {
 																// an index
 					{
 						scanner.getNext();
-						scanner.getNext(); // Move past the [ and onto the
+						//scanner.getNext(); // Move past the [ and onto the
 											// expression
-						int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
-						res = ((ResultList) res).get(this, index);
+						//int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
+						//res = ((ResultList) res).get(this, index);
+						res = arraySlice((ResultList)res);
 					} else
 						break;
 				}
