@@ -9,7 +9,7 @@ public class Token {
 	public int iColPos = 0;
 	// Constants for primClassif
 	public static final int OPERAND = 1; // constants, identifier
-	public static final int OPERATOR = 2; // + - * / < > = !
+	public static final int OPERATOR = 2; // + - * / < > = ! ~
 	public static final int SEPARATOR = 3; // ( ) , : ; [ ]
 	public static final int FUNCTION = 4; // TBD
 	public static final int CONTROL = 5; // TBD

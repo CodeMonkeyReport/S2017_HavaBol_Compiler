@@ -1028,8 +1028,8 @@ public class Utility {
 		return newString.toString();
 	}
 
-	public static String getStringIndex(String target, int index) {
-		return Character.toString(target.charAt(index));
+	public static String getStringSlice(String target, int begin, int end) {
+		return target.substring(begin, end);
 	}
 
 	public static boolean isPrimitiveType(Token typeToken) {

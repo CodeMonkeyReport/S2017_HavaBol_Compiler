@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Scanner {
 
-	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,.^\n";
+	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,.^\n~";
 
 	public Token currentToken;
 	public Token nextToken;
@@ -345,6 +345,7 @@ public class Scanner {
 		case '=':
 		case '*':
 		case '#':
+		case '~':
 			if ((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart + 1] == '=')) {
 				nextToken.tokenStr = String.valueOf(currentLine, tokenStart, 2);
 				this.nextToken.primClassif = Token.OPERATOR;
