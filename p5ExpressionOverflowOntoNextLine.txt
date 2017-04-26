@@ -1,0 +1,8 @@
+
+func Int gimmeAFive():
+	return 5;
+endfunc;
+
+Int i = 1 - 12
+
+i = gimmeAFive();

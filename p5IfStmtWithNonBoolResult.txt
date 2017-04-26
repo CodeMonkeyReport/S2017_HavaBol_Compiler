@@ -1,0 +1,4 @@
+
+if "Thats not a bool":
+	print("How are we even here?");
+endif;

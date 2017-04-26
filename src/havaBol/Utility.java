@@ -86,6 +86,7 @@ public class Utility {
 		if (target.type.equals(value.type)) // If the types are the same
 											// assignment is simple
 		{
+			value = Utility.coerceToType(parser, value.type, value);
 			target.set(parser, value);
 			return;
 		}
@@ -437,9 +438,12 @@ public class Utility {
 	 * @throws ParserException
 	 */
 	public static ResultValue divide(Parser parser, ResultValue leftValue, ResultValue rightValue)
-			throws ParserException {
+			throws ParserException 
+	{
 		ResultValue subResult = new ResultValue(leftValue.type);
 		ResultValue tempResult;
+		try 
+		{
 		if (leftValue.type.equals(Type.INT)) // Integer case
 		{
 			tempResult = Utility.coerceToInt(parser, rightValue);
@@ -461,6 +465,12 @@ public class Utility {
 		} else {
 			throw new ParserException(parser.scanner.lineNumber,
 					"Can not divide variable of type \'" + leftValue.type + "\'", parser.scanner.sourceFileName);
+		}
+		}
+		catch (ArithmeticException e)
+		{
+			throw new ParserException(parser.scanner.lineNumber,
+					"Dividing by zero detected", parser.scanner.sourceFileName);
 		}
 		return subResult;
 	}

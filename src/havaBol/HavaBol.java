@@ -25,14 +25,18 @@ public class HavaBol {
 		// Create the SymbolTable
 		SymbolTable symbolTable = new SymbolTable();
 		try {
-
+			ResultValue res;
 			// Used to abstract out the file reader
 			FileReader fr = new FileReader(args[0]);
 			BufferedReader br = new BufferedReader(fr);
 			Scanner scan = new Scanner(args[0], br, symbolTable);
 			StorageManager sm = new StorageManager();
 			Parser parser = new Parser(scan, sm);
-			parser.statements(true);
+			res = parser.statements(true);
+			
+			if (res.terminatingStr.equals("return"))
+				throw new ParserException(scan.currentToken.iSourceLineNr,
+						"return statment outside of function definition", scan.sourceFileName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

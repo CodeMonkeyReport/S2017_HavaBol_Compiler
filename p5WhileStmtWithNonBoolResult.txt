@@ -1,0 +1,6 @@
+
+Int i = 0;
+
+while i:
+	print("This doesn't make sense");
+endwhile;

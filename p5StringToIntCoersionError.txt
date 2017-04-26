@@ -1,0 +1,4 @@
+String s = "hello";
+
+Int i = s;
+

@@ -1,0 +1,3 @@
+String s = "5";
+
+Int i = s

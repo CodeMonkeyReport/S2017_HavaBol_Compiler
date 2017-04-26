@@ -1,0 +1,4 @@
+
+Int i;
+
+Int j = i;

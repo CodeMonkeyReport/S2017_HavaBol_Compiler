@@ -57,8 +57,10 @@ public class Scanner {
 		this.currentToken.tokenStr = "PROGRAM_START";
 	}
 
-	public void skipTo(String target) throws ParserException {
-		while (!this.currentToken.tokenStr.equals(target)) {
+	public void skipTo(String target) throws ParserException 
+	{
+		while (! this.currentToken.tokenStr.equals(target) ) 
+		{
 			if (this.getNext().equals(""))
 				throw new ParserException(this.currentToken.iSourceLineNr, "Error missing \'" + target + "\'",
 						this.sourceFileName);
@@ -196,7 +198,8 @@ public class Scanner {
 	 * @throws NumberFormatException
 	 */
 	private void classifyNumericConstant(int tokenStart, int tokenEnd) throws ParserException {
-		if (this.currentLine[tokenEnd] == '.') // Handle a . inside numeric
+		
+		if (tokenEnd < this.currentLine.length && this.currentLine[tokenEnd] == '.') // Handle a . inside numeric
 		{
 			tokenEnd++;
 			while (!delimiters.contains(Character.toString(currentLine[tokenEnd]))) {
