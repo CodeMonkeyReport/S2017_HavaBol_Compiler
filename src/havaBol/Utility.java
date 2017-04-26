@@ -1,6 +1,8 @@
 package havaBol;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utility {
 
@@ -142,9 +144,16 @@ public class Utility {
 	 * @param value
 	 * @return
 	 */
-	private static ResultValue coerceToDate(Parser parser, ResultValue value) {
-		// TODO NOT IMPLEMENTED
-		return null;
+	private static ResultValue coerceToDate(Parser parser, ResultValue value) throws ParserException{
+		ResultValue res = new ResultValue(Type.DATE);
+		res.internalValue = value.internalValue;
+		if(!checkForDate(value))
+		{
+			throw new ParserException(parser.scanner.lineNumber,
+					"Token "+value.internalValue+" is not a valid date",
+					parser.scanner.sourceFileName);
+		}
+		return res;
 	}
 
 	/**
@@ -1047,6 +1056,116 @@ public class Utility {
 		default:
 			return false;
 		}
+	}
+	
+	public static int dateAge(String date1, String date2)
+	{
+		int d1 = date2Int(date1);
+		int d2 = date2Int(date2);
+		
+		return (d1-d2)/365;
+	}
+	
+	public static String dateAdj(String date, int adj)
+	{
+		int newD = date2Int(date);
+		newD+=adj;
+		return int2Date(newD);
+	}
+	public static int dateDiff(String date1, String date2)
+	{
+		int newD = date2Int(date1);
+		int oldD = date2Int(date2);
+		return newD-oldD;
+	}
+	
+	
+	
+	public static int date2Int(String date)
+	{
+		int i;
+		int days=0;
+		int yr = Integer.parseInt(date.substring(0,4));
+		int mo = Integer.parseInt(date.substring(5,7));
+		int dy = Integer.parseInt(date.substring(9));
+		
+		for(i=0;i<yr; i++)
+		{
+			days+=365;
+			if(days%4==0)
+				days++;
+		}
+		for(i=0;i<mo;i++)
+		{
+			days+=daysinMonth(i, yr);
+		}
+		days+=dy;
+		
+		return days;
+	}
+	
+	public static String int2Date(int date)
+	{
+		int yr = 0;
+		int mo = 0;
+		int dy = 0;
+		
+		while((yr%4==0 && date>=366) || (yr%4!=0 && date>=365)) 
+		{
+			date-=365;
+			if(yr++%4==0)
+				date--;
+		}
+		System.out.println("days left: " + date);
+		while(date>daysinMonth(mo, yr))
+		{
+			date-=daysinMonth(mo++, yr);
+		}
+		dy = date;
+		
+		return yr+"-"+mo+"-"+dy;
+	}
+	
+	
+	//tells you how many days are in each month
+	//accepts as int from 1-12
+	//returns the number of days in that month, -1 if invalid month given
+	public static int daysinMonth(int month, int year)
+	{
+		switch(month)
+		{
+		case 1:return 31;
+		case 2:
+				if(year%4== 0)
+					return 29;
+				else
+					return 28;
+		case 3:return 31;
+		case 4:return 30;
+		case 5:return 31;
+		case 6:return 30;
+		case 7:return 31;
+		case 8:return 31;
+		case 9:return 30;
+		case 10:return 31;
+		case 11:return 30;
+		case 12:return 31;
+		default:return -1;
+		}
+	}
+	
+	public static Boolean checkForDate(ResultValue check)
+	{
+		String validate = check.internalValue;
+		
+		String pattern = "(\\d{4})-(\\d{2})-(\\d{2})";
+		Pattern r = Pattern.compile(pattern);
+		Matcher m = r.matcher(validate);
+		
+		if(m.matches())
+			return true;
+		else
+			return false;
 	}
 
 }

@@ -60,6 +60,9 @@ public class SymbolTable implements Cloneable {
 		globalST.put("SPACES", new STFunction("SPACES", Type.INT, Token.BUILTIN, 1, 0));
 		globalST.put("ELEM", new STFunction("ELEM", Type.INT, Token.BUILTIN, 1, 0));
 		globalST.put("MAXELEM", new STFunction("MAXELEM", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateDiff", new STFunction("dateDiff", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateAdj", new STFunction("dateAdj", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateAge", new STFunction("dateAge", Type.INT, Token.BUILTIN, 1, 0));
 
 		globalST.put("and", new STEntry("and", Token.OPERATOR, 0, 0));
 		globalST.put("or", new STEntry("or", Token.OPERATOR, 0, 0));
