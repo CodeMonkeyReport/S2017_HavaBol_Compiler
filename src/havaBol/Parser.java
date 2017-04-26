@@ -10,6 +10,11 @@ public class Parser {
 	ArrayList<ActivationRecord> callStack = new ArrayList<ActivationRecord>();
 	int environmentVector;
 
+	public static final int EXECUTE= 1;
+	public static final int IGNORE_EXEC= 2;
+	public static final int BREAK_EXEC = 3;
+	public static final int CONTINUE_EXEC = 4;
+
 	public static boolean bShowToken = false;
 	boolean bShowExpr = false;
 	public boolean bShowAssign = false;
@@ -104,6 +109,13 @@ public class Parser {
 					{
 						referenceAssignment(bExecuting);
 					}
+					if(temp.tokenStr.equals("select"))
+                    {
+                        if(bExecuting)
+					        res = selectStmt(EXECUTE);
+                        else
+                            res = selectStmt(IGNORE_EXEC);
+                    }
 					break;
 				case Token.END:
 					if (temp.tokenStr.equals("else")) {
@@ -128,7 +140,27 @@ public class Parser {
 						} else {
 							scanner.skipTo(";");
 						}
-					} else if (!scanner.nextToken.tokenStr.equals(";")) {
+					} else if(temp.tokenStr.equals("when")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "when";
+                        return res;
+					} else if(temp.tokenStr.equals("default")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "default";
+                        return res;
+                    } else if (!scanner.nextToken.tokenStr.equals(";")) {
 						throw new ParserException(scanner.currentToken.iSourceLineNr,
 								"Missing simicolon after: \'" + temp.tokenStr + "\'", scanner.sourceFileName);
 					} else if (temp.tokenStr.equals("endif")) {
@@ -161,6 +193,16 @@ public class Parser {
 							res.internalValue = "F";
 						res.terminatingStr = "endfor";
 						return res;
+					}else if(temp.tokenStr.equals("endselect")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "endselect";
+                        return res;
 					} else if (temp.tokenStr.equals("endfunc")) {
 						return null;
 					}
@@ -772,7 +814,7 @@ public class Parser {
 		return res;
 	}
 
-	/*
+	/**
 	 * Handles the string length builtin function <p> on entering the method the
 	 * currentToken should be on 'SPACES' on leaving the method the current
 	 * token should be on ';' <p>
@@ -815,7 +857,7 @@ public class Parser {
 		}
 		return res;
 	}
-	/*
+	/**
 	 * Handles the string maxLength builtin function <p> on entering the method
 	 * the currentToken should be on 'SPACES' on leaving the method the current
 	 * token should be on ';' <p>
@@ -1168,7 +1210,45 @@ public class Parser {
 		return res;
 	}
 
-	/**
+    public ResultValue selectStmt(int iExecMode) throws ParserException{
+        ResultValue res = null,controlVal,whenVal;
+        scanner.getNext();
+        controlVal = expression(":");
+        scanner.getNext();
+
+        while(scanner.currentToken.tokenStr.equals("when") || scanner.currentToken.tokenStr.equals("default")){
+            //System.out.println("Test");
+            scanner.getNext();
+            ArrayList<Token> cases = new ArrayList<>();
+            while (!scanner.currentToken.tokenStr.equals(":")) {
+                if (!scanner.currentToken.tokenStr.equals(",") || scanner.currentToken.primClassif == 1) {
+                    cases.add(scanner.currentToken);
+                }
+                scanner.getNext();
+            }
+            if(iExecMode == IGNORE_EXEC){
+                res = statements(false);
+            }
+            if(iExecMode == EXECUTE) {
+                for (Token temp : cases) {
+                    if (temp.tokenStr.equals(controlVal.internalValue)) {
+                        res = statements(true);
+                        iExecMode = IGNORE_EXEC;
+
+                    }
+                }
+                if(iExecMode != IGNORE_EXEC)
+                    res = statements(false);
+            }
+            if(scanner.currentToken.tokenStr.equals("default") && iExecMode == EXECUTE){
+                res = statements(true);
+            }
+        }
+        return res;
+    }
+
+
+    /**
 	 * handles the execution of while statements
 	 * <p>
 	 * On entering the method the currentToken should be on 'while' On exiting
@@ -1339,7 +1419,6 @@ public class Parser {
 	 * Create a tuple and return it
 	 * 
 	 * @param typeToken
-	 * @param variableToken
 	 * @return
 	 */
 	private ResultTuple declareTuple(Token typeToken, STTuple tupleDefinition) {

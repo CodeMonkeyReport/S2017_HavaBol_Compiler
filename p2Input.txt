@@ -1,9 +1,27 @@
-Int i;
-Int n = 4;
-Int inc=1;
-Float data2 [10] = 91.0, 51.0, 1.0, 2.0;
-String s = "string";
-for i in s:
-    print ("i=", i);
-    n += 1;
-endfor;
+String grade = "B";
+String student = "bob";
+select grade:
+    when "A", "B":
+        print ("doing well");
+        select grade:
+            when "A":
+                print ("fantastic");
+                select student:
+                            when "bob":
+                                print("job bob");
+                            when "joe":
+                                print("job joe");
+            when "B":
+                print ("great");
+            endselect;
+    when "C":
+        print ("average");
+    when "D":
+         print ("warning");
+    when "F":
+         print ("oh noooo");
+     default:
+         print("unknown grade:"
+              , grade);
+endselect;
+print("text");
