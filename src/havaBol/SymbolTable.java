@@ -34,6 +34,7 @@ public class SymbolTable implements Cloneable {
 		globalST.put("while", new STControl("while", Token.FLOW, 0));
 		globalST.put("return", new STControl("return", Token.FLOW, 0));
 		globalST.put("Ref", new STControl("Ref", Token.FLOW, 0));
+		globalST.put("select", new STControl("select", Token.FLOW, 0));
 
 		globalST.put("endif", new STControl("endif", Token.END, 0));
 		globalST.put("endfunc", new STControl("endfunc", Token.END, 0));
@@ -41,7 +42,13 @@ public class SymbolTable implements Cloneable {
 		globalST.put("endfor", new STControl("endfor", Token.END, 0));
 		globalST.put("endwhile", new STControl("endwhile", Token.END, 0));
 		globalST.put("endtuple", new STControl("endtuple", Token.END, 0));
+		globalST.put("when", new STControl("when", Token.END,0));
+		globalST.put("default", new STControl("default", Token.END,0));
+		globalST.put("endselect", new STControl("endselect", Token.END,0));
 		globalST.put("return", new STControl("return", Token.END, 0));
+        globalST.put("break", new STControl("break", Token.END,0));
+        globalST.put("continue", new STControl("continue", Token.END, 0));
+
 
 		globalST.put("Int", new STControl("Int", Token.DECLARE, 0));
 		globalST.put("Float", new STControl("Float", Token.DECLARE, 0));
