@@ -537,6 +537,7 @@ public class Parser {
 	 */
 	private ResultValue functionElem(boolean bExecuting) throws ParserException {
 		ResultValue res = new ResultValue(Type.INT);
+		ResultList arg;
 
 		if (bExecuting == false) {
 			scanner.skipTo(";");
@@ -550,7 +551,14 @@ public class Parser {
 		}
 		scanner.getNext();
 
-		ResultList arg = (ResultList) expression(")");
+		try{
+			arg = (ResultList) expression(")");
+		}catch(Exception e)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, "Arguement to ElEM Not An Array",
+					scanner.sourceFileName);
+		}
+		
 
 		if (arg.structure != Type.ARRAY) {
 			throw new ParserException(scanner.currentToken.iSourceLineNr, "Arguement to ElEM Not An Array",

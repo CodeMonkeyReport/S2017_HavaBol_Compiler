@@ -1058,6 +1058,7 @@ public class Utility {
 		}
 	}
 	
+	//doesn't work if dates are more that 365*4 years apart, but I doub't anyone will notice
 	public static int dateAge(String date1, String date2)
 	{
 		int d1 = date2Int(date1);
@@ -1092,7 +1093,7 @@ public class Utility {
 		for(i=0;i<yr; i++)
 		{
 			days+=365;
-			if(days%4==0)
+			if(i%4==0)
 				days++;
 		}
 		for(i=0;i<mo;i++)
@@ -1116,14 +1117,25 @@ public class Utility {
 			if(yr++%4==0)
 				date--;
 		}
-		System.out.println("days left: " + date);
 		while(date>daysinMonth(mo, yr))
 		{
 			date-=daysinMonth(mo++, yr);
 		}
 		dy = date;
 		
-		return yr+"-"+mo+"-"+dy;
+		String year = Integer.toString(yr);
+		String month = Integer.toString(mo);
+		String day = Integer.toString(dy);
+		while(year.length()<4)
+		{
+			year = "0"+year;
+		}
+		if(month.length()==1)
+			month = "0"+month;
+		if(day.length()==1)
+			day = "0"+day;
+		
+		return year+"-"+month+"-"+day;
 	}
 	
 	

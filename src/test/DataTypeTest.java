@@ -2,7 +2,6 @@ package test;
 
 import static org.junit.Assert.*;
 import havaBol.Parser;
-import havaBol.ResultList;
 import havaBol.Scanner;
 import havaBol.StorageManager;
 import havaBol.SymbolTable;
@@ -12,19 +11,13 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-public class SlicesTest {
+public class DataTypeTest {
 
-	
 	@Test
-	public void arraySlice1()
+	public void declareIntTestPass()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int test[5] = 1, 2, 3, 4, 5;\n"
-						 + "Int th = 3;\n"
-						 + "Int splice[2];\n"
-						 + "splice = test[~th];"
-						 + "Int a = splice[0];\n"
-						 + "Int b = splice[1];\n";
+		String testInput = "Int x = 10;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -36,11 +29,10 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("1", storageManager.getVariableValue("a").internalValue);
-			assertEquals("2", storageManager.getVariableValue("b").internalValue);
 			
+			assertEquals("10", storageManager.getVariableValue("x").internalValue);
 			
+			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -49,16 +41,10 @@ public class SlicesTest {
 	}
 	
 	@Test
-	public void arraySlice2()
+	public void declareIntTestFail()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int test[5] = 1, 2, 3, 4, 5;\n"
-						 + "Int begin = 2;\n"
-						 + "Int end = 4;\n"
-						 + "Int splice[2];\n"
-						 + "splice = test[begin~end];\n"
-						 + "Int a = splice[0];\n"
-						 + "Int b = splice[1];\n";
+		String testInput = "Int x = 'hello';\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -70,28 +56,20 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("3", storageManager.getVariableValue("a").internalValue);
-			assertEquals("4", storageManager.getVariableValue("b").internalValue);
 			
+			fail();
 			
+			//***
 		} catch (Exception e) {
-			System.out.println(e.toString());
-			e.printStackTrace();
-			assertTrue(false);
+			assertTrue(true);
 		}
 	}
 	
 	@Test
-	public void arraySlice3()
+	public void declareFloatTestPass()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int test[5] = 1, 2, 3, 4, 5;\n"
-						 + "Int end = 4;\n"
-						 + "Int splice[2];\n"
-						 + "splice = test[end~];"
-						 + "Int a = splice[0];\n"
-						 + "Int b = splice[1];\n";
+		String testInput = "Float x = 10.505;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -103,11 +81,10 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("4", storageManager.getVariableValue("a").internalValue);
-			assertEquals("5", storageManager.getVariableValue("b").internalValue);
 			
+			assertEquals("10.505", storageManager.getVariableValue("x").internalValue);
 			
+			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -116,12 +93,10 @@ public class SlicesTest {
 	}
 	
 	@Test
-	public void sliceString1()
+	public void declareFloatTestFail()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String test='goodbye cruel world!';\n"
-						 + "Int index = 7;\n"
-						 + "String splice = test[~7];\n";
+		String testInput = "Float x = 'fail';\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -133,24 +108,20 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("goodbye", storageManager.getVariableValue("splice").internalValue);
 			
+			fail();
+			
+			//***
 		} catch (Exception e) {
-			System.out.println(e.toString());
-			e.printStackTrace();
-			assertTrue(false);
+			assertTrue(true);
 		}
 	}
 	
 	@Test
-	public void sliceString2()
+	public void declareBoolTestPass()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String test='goodbye cruel world!';\n"
-						 + "Int begin = 8;\n"
-						 + "Int end = 13;\n"
-						 + "String splice = test[begin~end];\n";
+		String testInput = "Bool x = T;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -162,9 +133,10 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("cruel", storageManager.getVariableValue("splice").internalValue);
 			
+			assertEquals("T", storageManager.getVariableValue("x").internalValue);
+			
+			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -173,12 +145,10 @@ public class SlicesTest {
 	}
 	
 	@Test
-	public void sliceString3()
+	public void declareBoolTestFail()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String test='goodbye cruel world!';\n"
-						 + "Int index = 14;\n"
-						 + "String splice = test[index~];\n";
+		String testInput = "Bool x = 10;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -190,14 +160,98 @@ public class SlicesTest {
 			
 			// Use this area to run tests	
 			parser.statements(true);
-
-			assertEquals("world!", storageManager.getVariableValue("splice").internalValue);
 			
+			fail();
+			
+			//***
+		} catch (Exception e) {
+			assertTrue(true);
+		}
+	}
+	
+	@Test
+	public void declareStringTestPass()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String x = 'hello';\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("hello", storageManager.getVariableValue("x").internalValue);
+			
+			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
 			assertTrue(false);
 		}
 	}
+	
+	
+	@Test
+	public void declareDateTestPass()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Date x = '2017-04-27';\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("2017-04-27", storageManager.getVariableValue("x").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void declareDateTestFail()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Date x = '07-08-1197';\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			fail();
+			
+			//***
+		} catch (Exception e) {
+			assertTrue(true);
+		}
+	}
+	
+	
+
+
+
 
 }
