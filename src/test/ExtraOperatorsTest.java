@@ -46,7 +46,7 @@ public class ExtraOperatorsTest {
 	{
 		// Set up the inital 'file' to be read
 		String testInput = "Int x = 10;\n"
-						 + "x+=5;\n";
+						 + "x-=5;\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);

@@ -87,7 +87,7 @@ public class SlicesTest {
 	{
 		// Set up the inital 'file' to be read
 		String testInput = "Int test[5] = 1, 2, 3, 4, 5;\n"
-						 + "Int end = 4;\n"
+						 + "Int end = 3;\n"
 						 + "Int splice[2];\n"
 						 + "splice = test[end~];"
 						 + "Int a = splice[0];\n"
