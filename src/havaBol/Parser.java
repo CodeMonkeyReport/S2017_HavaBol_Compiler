@@ -233,7 +233,7 @@ public class Parser {
 	}
 
 	/**
-	 * Not yet implemented
+	 * 
 	 * 
 	 * @param bExecuting
 	 * @return
@@ -263,6 +263,15 @@ public class Parser {
 				break;
 			case "MAXELEM":
 				res = functionMaxElem(bExecuting);
+				break;
+			case "dateDiff":
+				res = functionDateDiff(bExecuting);
+				break;
+			case "dateAdj":
+				res = functionDateAdj(bExecuting);
+				break;
+			case "dateAge":
+				res = functionDateAge(bExecuting);
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr,
@@ -389,13 +398,100 @@ public class Parser {
 			return res;
 		return null;
 	}
+	
+	/**
+	 * Handles the dateDiff builtin function
+	 * <p>
+	 * On entering the function, token should be "dateDiff"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateDiff(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		scanner.getNext();//get rid of dateDiff
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Integer.toString(Utility.dateDiff(args.get(0).internalValue, args.get(1).internalValue));
+		return res;
+ 	}
+	
+	/**
+	 * Handles the dateAdj builtin function
+	 * <p>
+	 * On entering the function, token should be "dateAdj"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateAdj(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.DATE);
+		
+		scanner.getNext();//get rid of dateAdj
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Utility.dateAdj(args.get(0).internalValue, Integer.parseInt(args.get(1).internalValue));
+		return res;
+ 	}
+	
+	/**
+	 * Handles the dateAge builtin function
+	 * <p>
+	 * On entering the function, token should be "dateAge"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateAge(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		scanner.getNext();//get rid of dateAge
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Integer.toString(Utility.dateAge(args.get(0).internalValue, args.get(1).internalValue));
+		return res;
+ 	}
 
 	/**
 	 * Handles the MAXELEM builtin function
 	 * <p>
 	 * On entering the method the currentToken should be on 'MAXELEM' On leaving
 	 * the method the currentToken should be on ';'
-	 * <p>
+	 * </p>
 	 * 
 	 * @param bExecuting
 	 * @return

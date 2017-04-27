@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Scanner {
 
@@ -449,6 +451,7 @@ public class Scanner {
 		this.nextToken.subClassif = Token.STRING;
 		this.nextToken.tokenStr = String.valueOf(retCharM, 0, charPosition);
 	}
+	
 
 	/**
 	 * Error method used to print appropriate messages to the user in the case
