@@ -1,0 +1,10 @@
+String str[4] = 'one', 'two', 'three', 'four';
+print(str);
+Int th = 2;
+print(th);
+String stg[5];
+stg = str[th~];
+print(stg);
+String s;
+s = stg[0];
+print(s);

@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Scanner {
 
-	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,.^\n";
+	private static final String delimiters = " \t;:()\'\"=!<>+-*/[]#,.^\n~";
 
 	public Token currentToken;
 	public Token nextToken;
@@ -345,6 +347,7 @@ public class Scanner {
 		case '=':
 		case '*':
 		case '#':
+		case '~':
 			if ((tokenStart + 1 != currentLine.length) && (currentLine[tokenStart + 1] == '=')) {
 				nextToken.tokenStr = String.valueOf(currentLine, tokenStart, 2);
 				this.nextToken.primClassif = Token.OPERATOR;
@@ -448,6 +451,7 @@ public class Scanner {
 		this.nextToken.subClassif = Token.STRING;
 		this.nextToken.tokenStr = String.valueOf(retCharM, 0, charPosition);
 	}
+	
 
 	/**
 	 * Error method used to print appropriate messages to the user in the case
