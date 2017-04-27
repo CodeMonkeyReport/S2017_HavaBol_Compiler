@@ -1,0 +1,6 @@
+String x = "5";
+Int y = x;
+print(y);
+x="Hello";
+y = x;
+print(y);
