@@ -7,6 +7,7 @@ public class ResultValue implements Cloneable {
 
 	public int structure = Type.SCALAR; // Default to primitive type
 	public String terminatingStr = "";
+	public int iExecMode = 0;
 
 	public ResultValue() {
 
@@ -25,6 +26,7 @@ public class ResultValue implements Cloneable {
 		res.internalValue = this.internalValue;
 		res.structure = this.structure;
 		res.terminatingStr = this.terminatingStr;
+		res.iExecMode = this.iExecMode;
 
 		return res;
 	}
