@@ -87,6 +87,26 @@ public class Parser {
 				case Token.FLOW:
 					if (temp.tokenStr.equals("if")) {
                         res = ifStmt(bExecuting);
+                        switch (res.terminatingStr) {
+                            case "else":
+                                if (res.getInternalValue().equals("T")) // If we
+                                    // executed
+                                    // the if
+                                    // part
+                                    res = elseStmt(false); // Don't execute else
+                                else
+                                    res = elseStmt(bExecuting); // Or do
+                                break;
+                            case "return":
+                                return res; // If we hit a return statement inside
+
+                            // of a function we want to return all
+                            // the way out
+                            case "break":
+                                return res;
+                            case "continue":
+                                return res;
+                        }
                     }
 					if (temp.tokenStr.equals("while")) {
 						res = whileStmt(bExecuting);
@@ -1635,28 +1655,6 @@ public class Parser {
 			res = statements(true);
 		else
 			res = statements(false);
-
-        if (res.terminatingStr.equals("else")) {
-            if (res.getInternalValue().equals("T")) // If we
-                                                    // executed
-                                                    // the if
-                                                    // part
-                res = elseStmt(false); // Don't execute else
-            else
-                res = elseStmt(bExecuting); // Or do
-        } else if (res.terminatingStr.equals("return")) {
-            return res; // If we hit a return statement inside
-                        // of a function we want to return all
-                        // the way out
-        } else if (res.terminatingStr.equals("break")){
-            return res;
-        } else if (res.terminatingStr.equals("continue")){
-            return res;
-        }
-        if (!res.terminatingStr.equals("endif")) {
-            throw new ParserException(scanner.currentToken.iSourceLineNr,
-                    "Expected \'endif\' after \'if\' statement", scanner.sourceFileName);
-        }
 
 		return res;
 	}
