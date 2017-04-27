@@ -912,7 +912,7 @@ public class Utility {
 		return res;
 	}
 
-	private static ResultValue or(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
+	private static ResultValue and(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
 		// TODO Auto-generated method stub
 		ResultValue res = new ResultValue(Type.BOOL);
 
@@ -924,7 +924,7 @@ public class Utility {
 		return res;
 	}
 
-	private static ResultValue and(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
+	private static ResultValue or(Parser parser, ResultValue operandOne, ResultValue operandTwo) {
 
 		ResultValue res = new ResultValue(Type.BOOL);
 

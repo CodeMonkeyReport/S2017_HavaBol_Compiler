@@ -46,6 +46,9 @@ public class SymbolTable implements Cloneable {
 		globalST.put("default", new STControl("default", Token.END,0));
 		globalST.put("endselect", new STControl("endselect", Token.END,0));
 		globalST.put("return", new STControl("return", Token.END, 0));
+        globalST.put("break", new STControl("break", Token.END,0));
+        globalST.put("continue", new STControl("continue", Token.END, 0));
+
 
 		globalST.put("Int", new STControl("Int", Token.DECLARE, 0));
 		globalST.put("Float", new STControl("Float", Token.DECLARE, 0));
