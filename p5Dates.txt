@@ -1,0 +1,15 @@
+Date a = "2017-03-01";
+Date b = "2016-02-09";
+String d = "2016-03-01";
+Int e = dateDiff(a,d);
+print(e);
+e = dateDiff("2017-02-01","2016-02-01");
+print(e);
+Date c = dateAdj(a, -365);
+print(c);
+c = dateAdj(a, 365);
+print(c);
+e = dateAge(a,d);
+print(e);
+e = dateAge("2017-02-01", "1957-12-04");
+print(e);

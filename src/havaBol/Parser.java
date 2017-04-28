@@ -10,6 +10,12 @@ public class Parser {
 	ArrayList<ActivationRecord> callStack = new ArrayList<ActivationRecord>();
 	int environmentVector;
 
+	public static final int EXECUTE= 1;
+	public static final int IGNORE_EXEC= 2;
+	public static final int BREAK_EXEC = 3;
+	public static final int CONTINUE_EXEC = 4;
+
+	public static int iLoopCounter = 0;
 	public static boolean bShowToken = false;
 	boolean bShowExpr = false;
 	public boolean bShowAssign = false;
@@ -70,6 +76,9 @@ public class Parser {
 		while (!scanner.getNext().isEmpty()) // While we have not reached the
 												// EOF
 		{
+            if(res != null && (res.iExecMode == BREAK_EXEC || res.iExecMode == CONTINUE_EXEC) && iLoopCounter > 0){
+                return res;
+            }
 			Token temp = scanner.currentToken;
 			switch (temp.primClassif) 
 			{
@@ -82,32 +91,30 @@ public class Parser {
 						assignmentStmt(bExecuting);
 					break;
 				case Token.FLOW:
-					if (temp.tokenStr.equals("if")) 
-					{
-						res = ifStmt(bExecuting);
-						if (res.terminatingStr.equals("else")) 
-						{
-							if (res.getInternalValue().equals("T")) // If we
-																	// executed
-																	// the if
-																	// part
-								elseStmt(false); // Don't execute else
-							else
-								elseStmt(bExecuting); // Or do
-						} 
-						else if (res.terminatingStr.equals("return")) 
-						{
-							return res; // If we hit a return statement inside
-										// of a function we want to return all
-										// the way out
-						} else if (!res.terminatingStr.equals("endif")) 
-						{
-							throw new ParserException(scanner.currentToken.iSourceLineNr,
-									"Expected \'endif\' after \'if\' statement", scanner.sourceFileName);
-						}
-					}
-					if (temp.tokenStr.equals("while")) 
-					{
+					if (temp.tokenStr.equals("if")) {
+                        res = ifStmt(bExecuting);
+                        switch (res.terminatingStr) {
+                            case "else":
+                                if (res.getInternalValue().equals("T")) // If we
+                                    // executed
+                                    // the if
+                                    // part
+                                    res = elseStmt(false); // Don't execute else
+                                else
+                                    res = elseStmt(bExecuting); // Or do
+                                break;
+                            case "return":
+                                return res; // If we hit a return statement inside
+
+                            // of a function we want to return all
+                            // the way out
+                            case "break":
+                                return res;
+                            case "continue":
+                                return res;
+                        }
+                    }
+					if (temp.tokenStr.equals("while")) {
 						res = whileStmt(bExecuting);
 					}
 					if (temp.tokenStr.equals("for"))
@@ -116,6 +123,13 @@ public class Parser {
 					{
 						referenceAssignment(bExecuting);
 					}
+					if(temp.tokenStr.equals("select"))
+                    {
+                        if(bExecuting)
+					        res = selectStmt(EXECUTE);
+                        else
+                            res = selectStmt(IGNORE_EXEC);
+                    }
 					break;
 				case Token.END:
 					if (temp.tokenStr.equals("else")) 
@@ -150,9 +164,27 @@ public class Parser {
 						{
 							scanner.skipTo(";");
 						}
-					} 
-					else if (!scanner.nextToken.tokenStr.equals(";"))
-					{
+					} else if(temp.tokenStr.equals("when")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "when";
+                        return res;
+					} else if(temp.tokenStr.equals("default")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "default";
+                        return res;
+                    } else if (!scanner.nextToken.tokenStr.equals(";")) {
 						throw new ParserException(scanner.currentToken.iSourceLineNr,
 								"Missing simicolon after: \'" + temp.tokenStr + "\'", scanner.sourceFileName);
 					} 
@@ -189,11 +221,47 @@ public class Parser {
 							res.internalValue = "F";
 						res.terminatingStr = "endfor";
 						return res;
-					} 
-					else if (temp.tokenStr.equals("endfunc")) 
-					{
+					}else if(temp.tokenStr.equals("endselect")) {
+                        res = new ResultValue(Type.BOOL); // Build a result
+                        // object and return
+                        // it
+                        if (bExecuting)
+                            res.internalValue = "T";
+                        else
+                            res.internalValue = "F";
+                        res.terminatingStr = "endselect";
+                        return res;
+					} else if (temp.tokenStr.equals("endfunc")) {
 						return null;
 					}
+					else if(temp.tokenStr.equals("break")){
+					    if(iLoopCounter > 0) {
+                            res = new ResultValue(Type.BOOL);
+                            if (bExecuting) {
+                                res.internalValue = "T";
+                                res.terminatingStr = "break";
+                                res.iExecMode = BREAK_EXEC;
+                                return res;
+                            }
+                        } else {
+                            throw new ParserException(scanner.currentToken.iSourceLineNr,
+                                    "Break statement must be inside while or for loop", scanner.sourceFileName);
+                        }
+
+                    }else if(temp.tokenStr.equals("continue")) {
+                        if(iLoopCounter > 0) {
+                            res = new ResultValue(Type.BOOL);
+                            if (bExecuting) {
+                                res.internalValue = "T";
+                                res.terminatingStr = "continue";
+                                res.iExecMode = CONTINUE_EXEC;
+                                return res;
+                            }
+                        } else {
+                            throw new ParserException(scanner.currentToken.iSourceLineNr,
+                                    "Continue statement must be inside while or for loop", scanner.sourceFileName);
+                        }
+                    }
 					break;
 				case Token.DEBUG:
 					// Handle debug statements here
@@ -265,7 +333,7 @@ public class Parser {
 	}
 
 	/**
-	 * Not yet implemented
+	 * 
 	 * 
 	 * @param bExecuting
 	 * @return
@@ -298,6 +366,15 @@ public class Parser {
 				break;
 			case "MAXELEM":
 				res = functionMaxElem(bExecuting);
+				break;
+			case "dateDiff":
+				res = functionDateDiff(bExecuting);
+				break;
+			case "dateAdj":
+				res = functionDateAdj(bExecuting);
+				break;
+			case "dateAge":
+				res = functionDateAge(bExecuting);
 				break;
 			default:
 				throw new ParserException(scanner.currentToken.iSourceLineNr,
@@ -430,13 +507,100 @@ public class Parser {
 			return res;
 		return null;
 	}
+	
+	/**
+	 * Handles the dateDiff builtin function
+	 * <p>
+	 * On entering the function, token should be "dateDiff"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateDiff(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		scanner.getNext();//get rid of dateDiff
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Integer.toString(Utility.dateDiff(args.get(0).internalValue, args.get(1).internalValue));
+		return res;
+ 	}
+	
+	/**
+	 * Handles the dateAdj builtin function
+	 * <p>
+	 * On entering the function, token should be "dateAdj"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateAdj(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.DATE);
+		
+		scanner.getNext();//get rid of dateAdj
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Utility.dateAdj(args.get(0).internalValue, Integer.parseInt(args.get(1).internalValue));
+		return res;
+ 	}
+	
+	/**
+	 * Handles the dateAge builtin function
+	 * <p>
+	 * On entering the function, token should be "dateAge"
+	 * on exit, current token should be on ;
+	 * </p>
+	 * @param bExectuing
+	 * @return
+	 * 		resultValue containg an int representing the difference in days between the dates
+	 */
+	private ResultValue functionDateAge(boolean bExectuing) throws ParserException
+	{
+		ResultValue res = new ResultValue(Type.INT);
+		
+		scanner.getNext();//get rid of dateAge
+		scanner.getNext();//get rid of (
+		
+		ArrayList<ResultValue> args = argList(")");
+		/*if((!args.get(0).type.equals(Type.DATE)) || (!args.get(1).type.equals(Type.DATE)))
+		{
+			throw new ParserException(
+					scanner.currentToken.iSourceLineNr, 
+					"args to function dateDiff are not Dates",
+					scanner.sourceFileName);
+		}*/
+		res.internalValue = Integer.toString(Utility.dateAge(args.get(0).internalValue, args.get(1).internalValue));
+		return res;
+ 	}
 
 	/**
 	 * Handles the MAXELEM builtin function
 	 * <p>
 	 * On entering the method the currentToken should be on 'MAXELEM' On leaving
 	 * the method the currentToken should be on ';'
-	 * <p>
+	 * </p>
 	 * 
 	 * @param bExecuting
 	 * @return
@@ -486,6 +650,7 @@ public class Parser {
 	private ResultValue functionElem(boolean bExecuting) throws ParserException 
 	{
 		ResultValue res = new ResultValue(Type.INT);
+		ResultList arg;
 
 		if (bExecuting == false) 
 		{
@@ -500,7 +665,14 @@ public class Parser {
 		}
 		scanner.getNext();
 
-		ResultList arg = (ResultList) expression(")");
+		try{
+			arg = (ResultList) expression(")");
+		}catch(Exception e)
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, "Arguement to ElEM Not An Array",
+					scanner.sourceFileName);
+		}
+		
 
 		if (arg.structure != Type.ARRAY) 
 		{
@@ -770,23 +942,157 @@ public class Parser {
 	}
 
 	/**
-	 * assume current token is on [
+	 * assume current token is [ upon entry
+	 * assume current token is ] upon exit
 	 * 
 	 * @return
 	 */
 	private ResultValue stringIndex(ResultValue target) throws ParserException {
+		ResultValue stringSlice = new ResultValue(Type.STRING);
+		ResultValue index;
+		
 		scanner.getNext();// Set rid of '['
-
-		ResultValue index = expression("]");
-		if (!index.type.equals(Type.INT)) {
-			throw new ParserException(scanner.currentToken.iSourceLineNr, "Index to String must be an Int ",
-					scanner.sourceFileName);
+		
+		int begin, end;
+		
+		
+		//slice begins with number, not spanner
+		if(scanner.currentToken.primClassif == Token.IDENTIFIER || scanner.currentToken.tokenStr.equals("("))
+		{
+			index = expression("]");
+			begin = Integer.parseInt(index.getInternalValue());
 		}
-
-		ResultValue stringIndex = new ResultValue(Type.STRING);
-		stringIndex.internalValue = Utility.getStringIndex(target.internalValue, Integer.parseInt(index.internalValue));
-
-		return stringIndex;
+		else if(scanner.currentToken.tokenStr.equals("~"))
+		{
+			begin = 0;
+			scanner.getNext();
+		}
+		else
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, 
+					  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+                     scanner.sourceFileName);
+		}
+		
+		if(scanner.currentToken.tokenStr.equals("]"))
+		{
+			end = begin+1;
+		}
+		else if(scanner.currentToken.primClassif == Token.IDENTIFIER)
+		{
+			index = expression("]");
+			end = Integer.parseInt(index.getInternalValue());
+		}
+		else if (scanner.currentToken.tokenStr.equals("~"))
+		{
+			scanner.getNext();
+			if(scanner.currentToken.tokenStr.equals("]"))
+			{
+				end = target.internalValue.length();
+			}
+			else//assume token is identifier
+			{
+				index = expression("]");
+				end = Integer.parseInt(index.getInternalValue());
+			}
+		}
+		else
+		{
+			throw new ParserException(scanner.currentToken.iSourceLineNr, 
+					  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+                   scanner.sourceFileName);
+		}
+		
+		stringSlice.internalValue = Utility.getStringSlice(target.internalValue, begin, end);
+		return stringSlice;
+	}
+		
+		/**
+		 * assume current token is [ upon entry
+		 * assume current token is ] upon exit
+		 * 
+		 * @return
+		 */
+		private ResultValue arraySlice(ResultList oldArray) throws ParserException 
+		{
+			ResultValue index;
+			ResultValue result;
+			
+			scanner.getNext();// Set rid of '['
+			
+			int begin, end;
+			
+			
+			//slice begins with number, not spanner
+			if(scanner.currentToken.primClassif == Token.IDENTIFIER || scanner.currentToken.tokenStr.equals("(") || scanner.currentToken.tokenStr.equals("-"))
+			{
+				index = expression("]");
+				begin = Integer.parseInt(index.getInternalValue());
+			}
+			else if(scanner.currentToken.tokenStr.equals("~"))
+			{
+				begin = 0;
+				scanner.getNext();
+			}
+			else
+			{
+				throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+	                     scanner.sourceFileName);
+			}
+			
+			if(scanner.currentToken.tokenStr.equals("]"))
+				end = begin+1;
+			else if(scanner.currentToken.primClassif == Token.IDENTIFIER)
+			{
+				index = expression("]");
+				end = Integer.parseInt(index.getInternalValue());
+			}
+			else if (scanner.currentToken.tokenStr.equals("~"))
+			{
+				scanner.getNext();
+				if(scanner.currentToken.tokenStr.equals("]"))
+				{
+					end = oldArray.iCurrentSize;
+				}
+				else//assume token is identifier
+				{
+					index = expression("]");
+					end = Integer.parseInt(index.getInternalValue());
+				}
+			}
+			else{
+				throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Unexpected token /" + scanner.currentToken.tokenStr + "/ in slice",
+	                   scanner.sourceFileName);
+			}
+		
+		    int size = end-begin;
+		    
+		    /*if(size<1)
+		    {
+		    	throw new ParserException(scanner.currentToken.iSourceLineNr, 
+						  "Invalid array indexes",
+	                   scanner.sourceFileName);
+		    }*/
+		    
+		    if(size==1)
+		    {
+		    	return result = oldArray.get(this, begin);
+		    }
+		   
+		    result = new ResultList(oldArray.defaultValue, size);
+		    
+		    //System.out.println("begin = " + begin + "end " + end);
+		    
+		    int newIndex = 0;
+		    for(int i = begin; i<end; i++)
+		    {
+		    	((ResultList) result).insert(this, newIndex++, oldArray.get(this, i));
+		    	//System.out.println(i);
+		    }
+		    return (ResultValue)result;
+		    
 	}
 
 	/**
@@ -823,7 +1129,7 @@ public class Parser {
 		return res;
 	}
 
-	/*
+	/**
 	 * Handles the string length builtin function <p> on entering the method the
 	 * currentToken should be on 'SPACES' on leaving the method the current
 	 * token should be on ';' <p>
@@ -866,7 +1172,7 @@ public class Parser {
 		}
 		return res;
 	}
-	/*
+	/**
 	 * Handles the string maxLength builtin function <p> on entering the method
 	 * the currentToken should be on 'SPACES' on leaving the method the current
 	 * token should be on ';' <p>
@@ -989,7 +1295,16 @@ public class Parser {
 	}
 
 	/**
-	 * Not yet implemented
+	 * Handles execution of all for statements:
+     *  counting,
+     *  by element in array,
+     *  tokenizing,
+     *  by character in string.
+     *
+     *  <p>
+     *      On entering this method the current token should be on 'for', on exiting
+     *      this method the current token should be on 'endfor'
+     *  </p>
 	 * 
 	 * @param bExecuting
 	 * @return
@@ -1004,6 +1319,7 @@ public class Parser {
 			res = statements(false);
 			return res;
 		}
+		iLoopCounter++;
 		scanner.getNext();
 
 		// Adding support for declare statement in for statements
@@ -1090,6 +1406,12 @@ public class Parser {
 																// every
 																// iteration
 				res = statements(true); // Evaluate statements in for loop
+                if(res.iExecMode == BREAK_EXEC){
+                    res = breakStatement(res, "endfor");
+                }
+                if(res.iExecMode == CONTINUE_EXEC){
+                    continueStatement("endfor");
+                }
 			}
 			break;
 		/*
@@ -1136,9 +1458,19 @@ public class Parser {
 			forToken = scanner.currentToken;
 			String[] tokens = limitVal.getInternalValue().split(delimVal.getInternalValue());
 			for (String token : tokens) {
-				scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                if(controlVal == null){
+                    throw new ParserException(scanner.currentToken.iSourceLineNr,
+                            "Cannot iterate over empty control value", scanner.sourceFileName);
+                }
 				controlVal.internalValue = token;
 				res = statements(true);
+                if(res.iExecMode == BREAK_EXEC){
+                    res = breakStatement(res, "endfor");
+                }
+                if(res.iExecMode == CONTINUE_EXEC){
+                    continueStatement("endfor");
+                }
 			}
 			break;
 		/*
@@ -1189,6 +1521,12 @@ public class Parser {
 					if (((ResultList) limitVal).get(this, i) != null) {
 						Utility.assign(this, controlVal, ((ResultList) limitVal).get(this, i));
 						res = statements(true);
+                        if(res.iExecMode == BREAK_EXEC){
+                            res = breakStatement(res, "endfor");
+                        }
+                        if(res.iExecMode == CONTINUE_EXEC){
+                            continueStatement("endfor");
+                        }
 					} else
 						res = statements(false);
 				}
@@ -1198,9 +1536,19 @@ public class Parser {
 			else if (limitVal.type.equals(Type.STRING)) {
 				max = limitVal.getInternalValue().length();
 				for (int i = 0; i < max; i++) {
-					scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    scanner.jumpToPosition(forToken.iSourceLineNr, forToken.iColPos);
+                    if(controlVal == null){
+                        throw new ParserException(scanner.currentToken.iSourceLineNr,
+                                "Cannot iterate over empty control value", scanner.sourceFileName);
+                    }
 					controlVal.internalValue = String.valueOf(limitVal.getInternalValue().charAt(i));
 					res = statements(true);
+                    if(res.iExecMode == BREAK_EXEC){
+                        res = breakStatement(res, "endfor");
+                    }
+                    if(res.iExecMode == CONTINUE_EXEC){
+                        continueStatement("endfor");
+                    }
 				}
 			} else
 				throw new ParserException(scanner.currentToken.iSourceLineNr,
@@ -1215,11 +1563,63 @@ public class Parser {
 							+ "\'",
 					scanner.sourceFileName);
 		}
-
+		iLoopCounter--;
 		return res;
 	}
 
-	/**
+
+    /**
+     * Handles execution of select statements
+     * <p>
+     *     On entering this method the current token should be on 'select', on exiting
+     *     this method the current token should be on endselect
+     * </p>
+     * @param iExecMode
+     * @return
+     * @throws ParserException
+     */
+    public ResultValue selectStmt(int iExecMode) throws ParserException{
+	    int iSelectLn = scanner.currentToken.iSourceLineNr;
+        ResultValue res = null,controlVal,whenVal;
+        scanner.getNext();
+        controlVal = expression(":");
+        scanner.getNext();
+
+        while(scanner.currentToken.tokenStr.equals("when") || scanner.currentToken.tokenStr.equals("default")){
+            scanner.getNext();
+            ArrayList<Token> cases = new ArrayList<>();
+            while (!scanner.currentToken.tokenStr.equals(":")) {
+                if (!scanner.currentToken.tokenStr.equals(",") || scanner.currentToken.primClassif == 1) {
+                    cases.add(scanner.currentToken);
+                }
+                scanner.getNext();
+            }
+            if(iExecMode == IGNORE_EXEC){
+                res = statements(false);
+            }
+            if(iExecMode == EXECUTE) {
+                for (Token temp : cases) {
+                    if (temp.tokenStr.equals(controlVal.internalValue)) {
+                        res = statements(true);
+                        iExecMode = IGNORE_EXEC;
+
+                    }
+                }
+                if(iExecMode != IGNORE_EXEC)
+                    res = statements(false);
+            }
+            if(scanner.currentToken.tokenStr.equals("default") && iExecMode == EXECUTE){
+                res = statements(true);
+            }
+        }
+        if(!scanner.currentToken.tokenStr.equals("endselect"))
+            throw new ParserException(iSelectLn,
+                    "Expected \"endselect\" after select statement",scanner.sourceFileName);
+        return res;
+    }
+
+
+    /**
 	 * handles the execution of while statements
 	 * <p>
 	 * On entering the method the currentToken should be on 'while' On exiting
@@ -1239,27 +1639,33 @@ public class Parser {
 			res = statements(false);
 			return res;
 		}
-
+        iLoopCounter++;
 		scanner.getNext();
 		res = expression(":");
 
 		while (res.getInternalValue().equals("T")) {
-			statements(true);
-			scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
-			scanner.getNext();
-			res = expression(":");
-		}
-		if (!res.getInternalValue().equals("F"))
-			throw new ParserException(scanner.currentToken.iSourceLineNr,
-					"Expression result \'" + res.getInternalValue() + "\' can not be parsed as Bool", scanner.sourceFileName);
 
-		res = statements(false);
+			res = statements(true);
+            if(res.iExecMode == BREAK_EXEC){
+                res = breakStatement(res,"endwhile");
+                break;
+            }
+            if(res.iExecMode == CONTINUE_EXEC){
+                continueStatement("endwhile");
+            }
+            scanner.jumpToPosition(whileToken.iSourceLineNr, whileToken.iColPos);
+            scanner.getNext();
+            res = expression(":");
+		}
+		if(res.internalValue.equals("F"))
+            res = statements(false);
 
 		if (!scanner.currentToken.tokenStr.equals("endwhile")) {
 			throw new ParserException(scanner.currentToken.iSourceLineNr,
 					"Expected \'endwhile\' after \'while\' statement", scanner.sourceFileName);
 		}
-		return res;
+        iLoopCounter--;
+        return res;
 	}
 
 	/**
@@ -1302,6 +1708,37 @@ public class Parser {
 
 		return res;
 	}
+
+    /**
+     * Handles execution of break statements
+     * <p>
+     * Sets the appropriate flag for breaking execution and skips to the end of the current loop
+     * <p>
+     *
+     * @param res Result value to be modified for break flag
+     * @param terminatingStr Terminating string from calling flow control statement
+     * @return - Modified result value with break execution flag
+     * @throws ParserException
+     */
+	public ResultValue breakStatement(ResultValue res, String terminatingStr) throws ParserException{
+        scanner.skipTo(terminatingStr);
+        res.terminatingStr = terminatingStr;
+        //res.internalValue = "F";
+        return res;
+    }
+
+    /**
+     * Handles execution of continue statements
+     * <p>
+     * Sets the appropriate flag for continue execution and skips to the end of the current loop
+     * <p>
+     *
+     * @param terminatingStr Terminating string from calling flow control statement
+     * @throws ParserException
+     */
+    public void continueStatement(String terminatingStr) throws ParserException{
+	    scanner.skipTo(terminatingStr);
+    }
 
 	/**
 	 * This code handles evaluation of comma separated expressions
@@ -1404,7 +1841,6 @@ public class Parser {
 	 * Create a tuple and return it
 	 * 
 	 * @param typeToken
-	 * @param variableToken
 	 * @return
 	 */
 	private ResultTuple declareTuple(Token typeToken, STTuple tupleDefinition) {
@@ -1991,14 +2427,20 @@ public class Parser {
 		boolean bOperatorFound = false;
 		int iStartingLineNumber = scanner.currentToken.iSourceLineNr;
 
-		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) && !scanner.currentToken.tokenStr.equals(",")
-				&& !scanner.currentToken.tokenStr.equals(":") && !scanner.currentToken.tokenStr.equals(";")) // Until
+    //The added OR conditions are for the unique case where a string only contains a ",", ";","~", or a ":"
+		//This way they will be processed as strings not separators
+		while (!scanner.currentToken.tokenStr.equals(expectedTerminator) 
+        && (!scanner.currentToken.tokenStr.equals(",") || scanner.currentToken.primClassif == 1)
+				&& (!scanner.currentToken.tokenStr.equals(":") || scanner.currentToken.primClassif == 1)
+        && (!scanner.currentToken.tokenStr.equals(";") || scanner.currentToken.primClassif == 1)
+				&& (!scanner.currentToken.tokenStr.equals("~") || scanner.currentToken.primClassif == 1)) // Until
 																												// we
 																												// reach
 																												// a
 																												// semicolon,
 																												// colon,
-																												// comma
+																												// comma,
+																												// spanner
 																												// or
 																												// terminator
 		{
@@ -2250,10 +2692,11 @@ public class Parser {
 																// an index
 					{
 						scanner.getNext();
-						scanner.getNext(); // Move past the [ and onto the
+						//scanner.getNext(); // Move past the [ and onto the
 											// expression
-						int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
-						res = ((ResultList) res).get(this, index);
+						//int index = Integer.parseInt(Utility.coerceToInt(this, expression("]")).getInternalValue());
+						//res = ((ResultList) res).get(this, index);
+						res = arraySlice((ResultList)res);
 					} else
 						break;
 				}

@@ -1,0 +1,17 @@
+String list = "apple, orange, tomato, strawberry, peach";
+String list2 = "one:two:three:four:five";
+String delim = ":";
+print("Fruits list:");
+for fruit from list by ", ":
+    print(fruit);
+endfor;
+
+print("\nNumbers list:");
+for num from list2 by delim:
+    print(num);
+endfor;
+
+print("\nNames list:");
+for name from "Bob Joe Steve Dave" by " ":
+    print(name);
+endfor;

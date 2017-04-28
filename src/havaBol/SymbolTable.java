@@ -34,6 +34,7 @@ public class SymbolTable implements Cloneable {
 		globalST.put("while", new STControl("while", Token.FLOW, 0));
 		globalST.put("return", new STControl("return", Token.FLOW, 0));
 		globalST.put("Ref", new STControl("Ref", Token.FLOW, 0));
+		globalST.put("select", new STControl("select", Token.FLOW, 0));
 
 		globalST.put("endif", new STControl("endif", Token.END, 0));
 		globalST.put("endfunc", new STControl("endfunc", Token.END, 0));
@@ -41,7 +42,13 @@ public class SymbolTable implements Cloneable {
 		globalST.put("endfor", new STControl("endfor", Token.END, 0));
 		globalST.put("endwhile", new STControl("endwhile", Token.END, 0));
 		globalST.put("endtuple", new STControl("endtuple", Token.END, 0));
+		globalST.put("when", new STControl("when", Token.END,0));
+		globalST.put("default", new STControl("default", Token.END,0));
+		globalST.put("endselect", new STControl("endselect", Token.END,0));
 		globalST.put("return", new STControl("return", Token.END, 0));
+        globalST.put("break", new STControl("break", Token.END,0));
+        globalST.put("continue", new STControl("continue", Token.END, 0));
+
 
 		globalST.put("Int", new STControl("Int", Token.DECLARE, 0));
 		globalST.put("Float", new STControl("Float", Token.DECLARE, 0));
@@ -60,6 +67,9 @@ public class SymbolTable implements Cloneable {
 		globalST.put("SPACES", new STFunction("SPACES", Type.INT, Token.BUILTIN, 1, 0));
 		globalST.put("ELEM", new STFunction("ELEM", Type.INT, Token.BUILTIN, 1, 0));
 		globalST.put("MAXELEM", new STFunction("MAXELEM", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateDiff", new STFunction("dateDiff", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateAdj", new STFunction("dateAdj", Type.INT, Token.BUILTIN, 1, 0));
+		globalST.put("dateAge", new STFunction("dateAge", Type.INT, Token.BUILTIN, 1, 0));
 
 		globalST.put("and", new STEntry("and", Token.OPERATOR, 0, 0));
 		globalST.put("or", new STEntry("or", Token.OPERATOR, 0, 0));

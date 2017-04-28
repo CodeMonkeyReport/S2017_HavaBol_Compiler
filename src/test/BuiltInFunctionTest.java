@@ -11,15 +11,99 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-public class CoercionTest {
-	
+public class BuiltInFunctionTest {
 	
 	@Test
-	public void intToString()
+	public void spacesTest()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int x = 5;\n"
-						 + "String y = x;\n";
+		String testInput = "String empty;\n"
+						 + "empty = '  ';\n"
+						 + "Bool true = SPACES(empty);\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("T", storageManager.getVariableValue("true").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void spacesTest2()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String nonempty;\n"
+						 + "nonempty = '///n';\n"
+						 + "Bool true = SPACES(nonempty);\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("F", storageManager.getVariableValue("true").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	@Test
+	public void LengthTest()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "String test='length';\n"
+						 + "Int x = LENGTH(test);\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("6", storageManager.getVariableValue("x").internalValue);
+			
+			//***
+		} catch (Exception e) {
+			System.out.println(e.toString());
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void elemTest()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Int x[10] = 1,2,3,4,5;\n"
+						 + "Int y = ELEM(x);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -43,11 +127,11 @@ public class CoercionTest {
 	}
 	
 	@Test
-	public void intToFloat()
+	public void maxelemTest()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int x = 5;\n"
-						 + "Float y = x;\n";
+		String testInput = "Int x[10] = 1,2,3,4,5;\n"
+						 + "Int y = MAXELEM(x);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -60,7 +144,7 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			assertEquals("5.0", storageManager.getVariableValue("y").internalValue);
+			assertEquals("10", storageManager.getVariableValue("y").internalValue);
 			
 			//***
 		} catch (Exception e) {
@@ -71,11 +155,12 @@ public class CoercionTest {
 	}
 	
 	@Test
-	public void intToBooleanFail()
+	public void dateDiffTest1()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "Int x = 1;\n"
-						 + "Boolean y = x;\n";
+		String testInput = "Date d1 = '2017-03-01';\n"
+						 + "Date d2 = '2016-03-01';\n"
+						 + "Int y = dateDiff(d1,d2);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -88,35 +173,8 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			fail();
+			assertEquals("365", storageManager.getVariableValue("y").internalValue);
 			
-			//***
-		} catch (Exception e) {
-			assertTrue(true);
-		}
-	}
-
-	@Test
-	public void stringToIntPass()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "String x = '5';\n"
-						 + "Int y = x + 1;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("6", storageManager.getVariableValue("y").internalValue);
-			
-			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -125,11 +183,12 @@ public class CoercionTest {
 	}
 	
 	@Test
-	public void stringToIntFail()
+	public void dateDiffTest2()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String x = 'h';\n"
-						 + "Int y = x + 1;\n";
+		String testInput = "Date d1 = '2017-02-01';\n"
+						 + "Date d2 = '2016-02-01';\n"
+						 + "Int y = dateDiff(d1,d2);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -142,35 +201,8 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			fail();
+			assertEquals("366", storageManager.getVariableValue("y").internalValue);
 			
-			//***
-		} catch (Exception e) {
-			assertTrue(true);
-		}
-	}
-	
-	@Test
-	public void stringToFloatPass()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "String x = '5.6';\n"
-						 + "Float y = x;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("5.6", storageManager.getVariableValue("y").internalValue);
-			
-			//***
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -179,11 +211,12 @@ public class CoercionTest {
 	}
 	
 	@Test
-	public void stringToFloatFail()
+	public void dateAdjTest1()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String x = 'h';\n"
-						 + "Float y = x + 1;\n";
+		String testInput = "Date d1 = '2017-03-01';\n"
+						 + "Int adj = -365;\n"
+						 + "Date y = dateAdj(d1,adj);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -196,20 +229,22 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			fail();
+			assertEquals("2016-03-01", storageManager.getVariableValue("y").internalValue);
 			
-			//***
 		} catch (Exception e) {
-			assertTrue(true);
+			System.out.println(storageManager.getVariableValue("y").internalValue);
+			e.printStackTrace();
+			assertTrue(false);
 		}
 	}
 	
 	@Test
-	public void stringToDatePass()
+	public void dateAdjTest2()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String x = '2017-04-27';\n"
-						 + "Date y = x;\n";
+		String testInput = "Date d1 = '2017-03-01';\n"
+						 + "Int adj = 365;\n"
+						 + "Date y = dateAdj(d1,adj);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -222,9 +257,36 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			assertEquals("2017-04-27", storageManager.getVariableValue("y").internalValue);
+			assertEquals("2018-03-01", storageManager.getVariableValue("y").internalValue);
 			
-			//***
+		} catch (Exception e) {
+			System.out.println(storageManager.getVariableValue("y").internalValue);
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
+	
+	@Test
+	public void dateAgeTest1()
+	{
+		// Set up the inital 'file' to be read
+		String testInput = "Date d1 = '2017-03-01';\n"
+						 + "Date d2 = '2016-03-01';\n"
+						 + "Int y = dateAge(d1,d2);\n";
+		
+		StringReader testReader = new StringReader(testInput);
+		BufferedReader br = new BufferedReader(testReader);
+		SymbolTable st = new SymbolTable();
+		StorageManager storageManager = new StorageManager();
+		try {
+			Scanner testScanner = new Scanner("TEST", br, st);
+			Parser parser = new Parser(testScanner, storageManager);
+			
+			// Use this area to run tests	
+			parser.statements(true);
+			
+			assertEquals("1", storageManager.getVariableValue("y").internalValue);
+			
 		} catch (Exception e) {
 			System.out.println(e.toString());
 			e.printStackTrace();
@@ -233,11 +295,12 @@ public class CoercionTest {
 	}
 	
 	@Test
-	public void stringToDateFail()
+	public void dateAgeTest2()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String x = 'hello';\n"
-						 + "Date y = x;\n";
+		String testInput = "Date d1 = '2017-02-01';\n"
+						 + "Date d2 = '2016-02-01';\n"
+						 + "Int y = dateAge(d1,d2);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -250,48 +313,22 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			fail();
+			assertEquals("1", storageManager.getVariableValue("y").internalValue);
 			
-			//***
 		} catch (Exception e) {
-			assertTrue(true);
-		}
-	}
-	
-	@Test
-	public void stringToBoolPass()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "String x = 'T';\n"
-						 + "Bool y = x;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("T", storageManager.getVariableValue("y").internalValue);
-			
-			//***
-		} catch (Exception e) {
-			System.out.println(e.toString());
+			System.out.println(storageManager.getVariableValue("y").internalValue);
 			e.printStackTrace();
 			assertTrue(false);
 		}
 	}
 	
 	@Test
-	public void stringToBoolFail()
+	public void dateAgeTest3()
 	{
 		// Set up the inital 'file' to be read
-		String testInput = "String x = 'Ten';\n"
-						 + "Bool y = x;\n";
+		String testInput = "Date d1 = '2017-02-01';\n"
+						 + "Date d2 = '1957-12-04';\n"
+						 + "Int y = dateAge(d1,d2);\n";
 		
 		StringReader testReader = new StringReader(testInput);
 		BufferedReader br = new BufferedReader(testReader);
@@ -304,95 +341,15 @@ public class CoercionTest {
 			// Use this area to run tests	
 			parser.statements(true);
 			
-			fail();
+			assertEquals("59", storageManager.getVariableValue("y").internalValue);
 			
-			//***
 		} catch (Exception e) {
-			assertTrue(true);
-		}
-	}
-	@Test
-	public void dateToString()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "Date x = '2017-04-27';\n"
-						 + "String y = x;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("2017-04-27", storageManager.getVariableValue("y").internalValue);
-			
-			//***
-		} catch (Exception e) {
-			System.out.println(e.toString());
+			System.out.println(storageManager.getVariableValue("y").internalValue);
 			e.printStackTrace();
 			assertTrue(false);
 		}
 	}
 	
-	@Test
-	public void floatToInt()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "Float x = '5.6';\n"
-						 + "Int y = x + 1;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("6", storageManager.getVariableValue("y").internalValue);
-			
-			//***
-		} catch (Exception e) {
-			System.out.println(e.toString());
-			e.printStackTrace();
-			assertTrue(false);
-		}
-	}
 	
-	@Test
-	public void floatToString()
-	{
-		// Set up the inital 'file' to be read
-		String testInput = "Float x = '5.6';\n"
-						 + "String y = x;\n";
-		
-		StringReader testReader = new StringReader(testInput);
-		BufferedReader br = new BufferedReader(testReader);
-		SymbolTable st = new SymbolTable();
-		StorageManager storageManager = new StorageManager();
-		try {
-			Scanner testScanner = new Scanner("TEST", br, st);
-			Parser parser = new Parser(testScanner, storageManager);
-			
-			// Use this area to run tests	
-			parser.statements(true);
-			
-			assertEquals("5.6", storageManager.getVariableValue("y").internalValue);
-			
-			//***
-		} catch (Exception e) {
-			System.out.println(e.toString());
-			e.printStackTrace();
-			assertTrue(false);
-		}
-	}
-
+	
 }
