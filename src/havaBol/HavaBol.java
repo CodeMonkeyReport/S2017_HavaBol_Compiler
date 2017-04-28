@@ -34,9 +34,13 @@ public class HavaBol {
 			Parser parser = new Parser(scan, sm);
 			res = parser.statements(true);
 			
-			if (res.terminatingStr.equals("return"))
+			if(res != null)
+			{
+				if (res.terminatingStr.equals("return"))
 				throw new ParserException(scan.currentToken.iSourceLineNr,
 						"return statment outside of function definition", scan.sourceFileName);
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
